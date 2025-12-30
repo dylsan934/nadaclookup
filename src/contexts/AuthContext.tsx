@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   isSubscribed: boolean;
+  isAdmin: boolean;
   subscriptionEnd: string | null;
   checkSubscription: () => Promise<void>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -21,14 +22,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
 
+  const checkAdminRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (!error && data) {
+        setIsAdmin(true);
+        // Admins bypass subscription check
+        setIsSubscribed(true);
+        return true;
+      }
+      setIsAdmin(false);
+      return false;
+    } catch (error) {
+      console.error("Error checking admin role:", error);
+      return false;
+    }
+  };
+
   const checkSubscription = async () => {
-    if (!session?.access_token) {
+    if (!session?.access_token || !user) {
       setIsSubscribed(false);
       setSubscriptionEnd(null);
       return;
     }
+
+    // Check if admin first - admins bypass subscription
+    const adminCheck = await checkAdminRole(user.id);
+    if (adminCheck) return;
 
     try {
       const { data, error } = await supabase.functions.invoke('check-subscription', {
@@ -69,13 +98,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Check subscription when session changes
   useEffect(() => {
-    if (session) {
+    if (session && user) {
       checkSubscription();
     } else {
       setIsSubscribed(false);
+      setIsAdmin(false);
       setSubscriptionEnd(null);
     }
-  }, [session]);
+  }, [session, user]);
 
   // Periodic subscription check
   useEffect(() => {
@@ -119,6 +149,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       session, 
       isLoading, 
       isSubscribed, 
+      isAdmin,
       subscriptionEnd,
       checkSubscription,
       signUp, 
