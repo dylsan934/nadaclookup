@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Calculator, ChevronDown, ChevronUp, Lock } from "lucide-react";
+import { Calculator, ChevronDown, ChevronUp, Lock, Bookmark, BookmarkCheck, Crown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export interface DrugData {
   ndc: string;
@@ -25,7 +27,67 @@ interface DrugCardProps {
 export const DrugCard = ({ drug, index }: DrugCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [quantity, setQuantity] = useState<string>("");
-  const { user } = useAuth();
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { user, isSubscribed } = useAuth();
+
+  useEffect(() => {
+    if (user && isSubscribed) {
+      checkIfSaved();
+    }
+  }, [user, isSubscribed, drug.ndc]);
+
+  const checkIfSaved = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("saved_drugs")
+        .select("id")
+        .eq("ndc", drug.ndc)
+        .maybeSingle();
+
+      if (!error && data) {
+        setIsSaved(true);
+      }
+    } catch (error) {
+      console.error("Error checking saved status:", error);
+    }
+  };
+
+  const handleSave = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user || !isSubscribed) return;
+
+    setIsSaving(true);
+    try {
+      if (isSaved) {
+        const { error } = await supabase
+          .from("saved_drugs")
+          .delete()
+          .eq("ndc", drug.ndc);
+
+        if (error) throw error;
+        setIsSaved(false);
+        toast.success("Drug removed from saved list");
+      } else {
+        const { error } = await supabase
+          .from("saved_drugs")
+          .insert({
+            user_id: user.id,
+            ndc: drug.ndc,
+            drug_name: drug.drugName,
+          });
+
+        if (error) throw error;
+        setIsSaved(true);
+        toast.success("Drug saved to your list");
+      }
+    } catch (error) {
+      console.error("Error saving drug:", error);
+      toast.error("Failed to save drug");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -78,6 +140,21 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
             </p>
           </div>
           <div className="shrink-0 flex items-center gap-2">
+            {user && isSubscribed && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleSave}
+                disabled={isSaving}
+                className={isSaved ? "text-primary" : "text-muted-foreground"}
+              >
+                {isSaved ? (
+                  <BookmarkCheck className="h-5 w-5" />
+                ) : (
+                  <Bookmark className="h-5 w-5" />
+                )}
+              </Button>
+            )}
             {!user && (
               <Lock className="h-4 w-4 text-muted-foreground" />
             )}
@@ -148,6 +225,15 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
                   </div>
                 )}
               </div>
+
+              {!isSubscribed && (
+                <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                  <Crown className="h-4 w-4 text-primary" />
+                  <span className="text-sm text-muted-foreground">
+                    Upgrade to Pro to save drugs and monitor prices
+                  </span>
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3 py-4 text-center">
