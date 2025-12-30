@@ -9,8 +9,8 @@ const corsHeaders = {
 const NADAC_DATASET_ID = 'f38d0706-1239-442c-a3cc-40ef1b686ac0';
 
 interface NADACRecord {
-  ndc: string;
   ndc_description: string;
+  ndc: string;
   nadac_per_unit: string;
   effective_date: string;
   pricing_unit: string;
@@ -25,17 +25,37 @@ function parseCSV(csvText: string): NADACRecord[] {
   const lines = csvText.trim().split('\n');
   if (lines.length < 2) return [];
 
-  // Parse header row
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+  // Parse header row - handle quoted headers
+  const headerLine = lines[0];
+  const headers: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let j = 0; j < headerLine.length; j++) {
+    const char = headerLine[j];
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      headers.push(current.trim().toLowerCase().replace(/ /g, '_'));
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  headers.push(current.trim().toLowerCase().replace(/ /g, '_'));
+
+  console.log('Parsed headers:', headers);
   
   const records: NADACRecord[] = [];
   
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
+    if (!line.trim()) continue;
+    
     // Handle CSV parsing with quoted fields
     const values: string[] = [];
-    let current = '';
-    let inQuotes = false;
+    current = '';
+    inQuotes = false;
     
     for (let j = 0; j < line.length; j++) {
       const char = line[j];
@@ -50,7 +70,7 @@ function parseCSV(csvText: string): NADACRecord[] {
     }
     values.push(current.trim());
 
-    // Map to object
+    // Map to object using normalized headers
     const record: any = {};
     headers.forEach((header, idx) => {
       record[header] = values[idx] || '';
@@ -60,6 +80,20 @@ function parseCSV(csvText: string): NADACRecord[] {
   }
 
   return records;
+}
+
+function parseDate(dateStr: string): string {
+  // Handle MM/DD/YYYY format from CSV
+  if (!dateStr) return new Date().toISOString().split('T')[0];
+  
+  const parts = dateStr.split('/');
+  if (parts.length === 3) {
+    const [month, day, year] = parts;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+  
+  // Already in YYYY-MM-DD format
+  return dateStr;
 }
 
 Deno.serve(async (req) => {
@@ -90,14 +124,14 @@ Deno.serve(async (req) => {
     const today = new Date();
     const datesToTry: string[] = [];
     
-    // Try the last 7 days (NADAC updates weekly on Wednesdays)
-    for (let i = 0; i < 7; i++) {
+    // Try the last 14 days (NADAC updates weekly on Wednesdays)
+    for (let i = 0; i < 14; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       datesToTry.push(date.toISOString().split('T')[0]);
     }
 
-    console.log('Dates to try:', datesToTry);
+    console.log('Dates to try:', datesToTry.slice(0, 5), '...');
 
     let totalInserted = 0;
     let successfulDate: string | null = null;
@@ -121,21 +155,26 @@ Deno.serve(async (req) => {
 
       const csvText = await response.text();
       
-      // Check if we got actual data
-      if (!csvText || csvText.trim().length < 100) {
-        console.log(`Date ${asOfDate} returned empty or minimal data, trying next...`);
+      // Check if we got actual data (more than just headers)
+      const lineCount = csvText.split('\n').length;
+      if (!csvText || lineCount < 10) {
+        console.log(`Date ${asOfDate} returned only ${lineCount} lines, trying next...`);
         continue;
       }
 
-      console.log(`Got CSV data for ${asOfDate}, parsing...`);
+      console.log(`Got CSV data for ${asOfDate} with ${lineCount} lines, parsing...`);
       successfulDate = asOfDate;
 
       const records = parseCSV(csvText);
       console.log(`Parsed ${records.length} records`);
 
       if (records.length === 0) {
+        console.log('No records parsed, trying next date...');
         continue;
       }
+
+      // Log first record to verify parsing
+      console.log('First record sample:', JSON.stringify(records[0]));
 
       // Transform and insert records in batches
       const batchSize = 500;
@@ -145,11 +184,11 @@ Deno.serve(async (req) => {
         const drugsToInsert = batch
           .filter(record => record.ndc && record.nadac_per_unit)
           .map(record => ({
-            ndc: record.ndc,
+            ndc: String(record.ndc).padStart(11, '0'), // Ensure NDC is properly formatted
             drug_name: record.ndc_description || 'Unknown',
             nadac_per_unit: parseFloat(record.nadac_per_unit) || 0,
-            effective_date: record.effective_date || record.as_of_date || asOfDate,
-            pricing_unit: record.pricing_unit || 'EACH',
+            effective_date: parseDate(record.effective_date || record.as_of_date || asOfDate),
+            pricing_unit: record.pricing_unit || 'EA',
             pharmacy_type: record.pharmacy_type_indicator === 'C/I' ? 'Community/Independent' : 
                            record.pharmacy_type_indicator === 'C/C' ? 'Chain' : 
                            record.pharmacy_type_indicator || 'Unknown',
@@ -161,27 +200,33 @@ Deno.serve(async (req) => {
             .from('nadac_drugs')
             .upsert(drugsToInsert, { 
               onConflict: 'ndc,effective_date',
-              ignoreDuplicates: true 
+              ignoreDuplicates: false 
             });
 
           if (insertError) {
-            console.error('Insert error:', insertError);
+            console.error('Insert error:', insertError.message);
+            // Log a sample of what we tried to insert
+            console.log('Sample insert attempt:', JSON.stringify(drugsToInsert[0]));
           } else {
             totalInserted += drugsToInsert.length;
-            console.log(`Batch inserted. Total: ${totalInserted}`);
+            if (i % 5000 === 0) {
+              console.log(`Batch ${i / batchSize + 1} inserted. Total: ${totalInserted}`);
+            }
           }
         }
       }
 
-      // We found data, break out of the date loop
-      break;
+      // We found and processed data, break out of the date loop
+      if (totalInserted > 0) {
+        break;
+      }
     }
 
-    if (totalInserted === 0 && !successfulDate) {
+    if (totalInserted === 0) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Could not find NADAC data for recent dates. The data may not be available yet.' 
+          error: 'Could not sync NADAC data. Check logs for details.' 
         }),
         { 
           status: 500,
