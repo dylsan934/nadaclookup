@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Calculator, ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calculator, ChevronDown, ChevronUp, Lock } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface DrugData {
   ndc: string;
@@ -22,6 +25,7 @@ interface DrugCardProps {
 export const DrugCard = ({ drug, index }: DrugCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [quantity, setQuantity] = useState<string>("");
+  const { user } = useAuth();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -73,7 +77,10 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
               NDC: <span className="font-mono text-xs sm:text-sm">{drug.ndc}</span>
             </p>
           </div>
-          <div className="shrink-0">
+          <div className="shrink-0 flex items-center gap-2">
+            {!user && (
+              <Lock className="h-4 w-4 text-muted-foreground" />
+            )}
             {isExpanded ? (
               <ChevronUp className="h-5 w-5 text-muted-foreground" />
             ) : (
@@ -115,32 +122,46 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
           className="mt-4 pt-4 border-t border-border"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <Calculator className="h-5 w-5 text-primary" />
-              <span className="text-sm font-medium text-foreground">Calculate Total</span>
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <div className="flex items-center gap-3 flex-1">
-                <Input
-                  type="number"
-                  placeholder="Enter quantity"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  className="flex-1 sm:w-32 sm:flex-none"
-                  min="0"
-                  step="any"
-                />
-                <span className="text-sm text-muted-foreground shrink-0">{drug.pricingUnit}s</span>
+          {user ? (
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <Calculator className="h-5 w-5 text-primary" />
+                <span className="text-sm font-medium text-foreground">Calculate Total</span>
               </div>
-              {parsedQuantity > 0 && (
-                <div className="text-left sm:text-right pt-2 sm:pt-0 border-t sm:border-t-0 border-border">
-                  <p className="text-sm text-muted-foreground">Total Price</p>
-                  <p className="text-xl font-bold text-primary">{formatTotalPrice(totalPrice)}</p>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="flex items-center gap-3 flex-1">
+                  <Input
+                    type="number"
+                    placeholder="Enter quantity"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    className="flex-1 sm:w-32 sm:flex-none"
+                    min="0"
+                    step="any"
+                  />
+                  <span className="text-sm text-muted-foreground shrink-0">{drug.pricingUnit}s</span>
                 </div>
-              )}
+                {parsedQuantity > 0 && (
+                  <div className="text-left sm:text-right pt-2 sm:pt-0 border-t sm:border-t-0 border-border">
+                    <p className="text-sm text-muted-foreground">Total Price</p>
+                    <p className="text-xl font-bold text-primary">{formatTotalPrice(totalPrice)}</p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3 py-4 text-center">
+              <Lock className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                Sign in to use the quantity calculator
+              </p>
+              <Link to="/auth" onClick={(e) => e.stopPropagation()}>
+                <Button size="sm" variant="default">
+                  Sign In
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </Card>
