@@ -14,7 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      nadac_drugs: {
+        Row: {
+          created_at: string
+          drug_name: string
+          effective_date: string
+          explanation: string | null
+          id: string
+          nadac_per_unit: number
+          ndc: string
+          pharmacy_type: string | null
+          pricing_unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          drug_name: string
+          effective_date: string
+          explanation?: string | null
+          id?: string
+          nadac_per_unit: number
+          ndc: string
+          pharmacy_type?: string | null
+          pricing_unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          drug_name?: string
+          effective_date?: string
+          explanation?: string | null
+          id?: string
+          nadac_per_unit?: number
+          ndc?: string
+          pharmacy_type?: string | null
+          pricing_unit?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
