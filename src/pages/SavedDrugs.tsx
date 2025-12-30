@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,8 @@ import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, RefreshCw, Crown, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Trash2, RefreshCw, Crown, Loader2, ArrowUpDown, Bell } from "lucide-react";
 import { toast } from "sonner";
 
 interface SavedDrug {
@@ -23,13 +24,16 @@ interface DrugPrice {
   pricing_unit: string;
 }
 
+type SortOption = "name-asc" | "name-desc" | "ndc-asc" | "ndc-desc" | "price-asc" | "price-desc";
+
 export default function SavedDrugs() {
-  const { user, isSubscribed, session } = useAuth();
+  const { user, isSubscribed } = useAuth();
   const navigate = useNavigate();
   const [savedDrugs, setSavedDrugs] = useState<SavedDrug[]>([]);
   const [drugPrices, setDrugPrices] = useState<Record<string, DrugPrice>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>("name-asc");
 
   useEffect(() => {
     if (!user) {
@@ -89,6 +93,33 @@ export default function SavedDrugs() {
     setDrugPrices(prices);
   };
 
+  const sortedDrugs = useMemo(() => {
+    return [...savedDrugs].sort((a, b) => {
+      switch (sortBy) {
+        case "name-asc":
+          return a.drug_name.localeCompare(b.drug_name);
+        case "name-desc":
+          return b.drug_name.localeCompare(a.drug_name);
+        case "ndc-asc":
+          return a.ndc.localeCompare(b.ndc);
+        case "ndc-desc":
+          return b.ndc.localeCompare(a.ndc);
+        case "price-asc": {
+          const priceA = drugPrices[a.ndc]?.nadac_per_unit ?? Infinity;
+          const priceB = drugPrices[b.ndc]?.nadac_per_unit ?? Infinity;
+          return priceA - priceB;
+        }
+        case "price-desc": {
+          const priceA = drugPrices[a.ndc]?.nadac_per_unit ?? -Infinity;
+          const priceB = drugPrices[b.ndc]?.nadac_per_unit ?? -Infinity;
+          return priceB - priceA;
+        }
+        default:
+          return 0;
+      }
+    });
+  }, [savedDrugs, drugPrices, sortBy]);
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await fetchSavedDrugs();
@@ -146,7 +177,7 @@ export default function SavedDrugs() {
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-foreground">Saved Drugs</h1>
               <Badge className="bg-primary/10 text-primary">
@@ -154,16 +185,44 @@ export default function SavedDrugs() {
                 Pro
               </Badge>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-              Refresh Prices
-            </Button>
+            <div className="flex items-center gap-2">
+              <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+                <SelectTrigger className="w-[180px]">
+                  <ArrowUpDown className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                  <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+                  <SelectItem value="ndc-asc">NDC (Ascending)</SelectItem>
+                  <SelectItem value="ndc-desc">NDC (Descending)</SelectItem>
+                  <SelectItem value="price-asc">Price (Low to High)</SelectItem>
+                  <SelectItem value="price-desc">Price (High to Low)</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </div>
+
+          <Card className="p-4 mb-6 bg-primary/5 border-primary/20">
+            <div className="flex items-center gap-3">
+              <Bell className="h-5 w-5 text-primary" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Price Change Alerts Active</p>
+                <p className="text-xs text-muted-foreground">
+                  You'll receive email alerts when prices change by more than 1%
+                </p>
+              </div>
+            </div>
+          </Card>
 
           {savedDrugs.length === 0 ? (
             <Card className="p-8 text-center">
@@ -180,7 +239,7 @@ export default function SavedDrugs() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {savedDrugs.map((drug) => {
+              {sortedDrugs.map((drug) => {
                 const price = drugPrices[drug.ndc];
                 return (
                   <Card key={drug.id} className="p-4 flex items-center justify-between">
@@ -188,7 +247,7 @@ export default function SavedDrugs() {
                       <h3 className="font-semibold text-foreground">{drug.drug_name}</h3>
                       <p className="text-sm text-muted-foreground">NDC: {drug.ndc}</p>
                       {price && (
-                        <div className="mt-2 flex items-center gap-4">
+                        <div className="mt-2 flex flex-wrap items-center gap-4">
                           <span className="text-lg font-bold text-primary">
                             {formatPrice(price.nadac_per_unit)}
                           </span>

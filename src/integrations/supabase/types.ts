@@ -53,6 +53,50 @@ export type Database = {
         }
         Relationships: []
       }
+      price_alerts: {
+        Row: {
+          drug_name: string
+          id: string
+          ndc: string
+          new_price: number
+          old_price: number
+          price_change_percent: number
+          saved_drug_id: string | null
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          drug_name: string
+          id?: string
+          ndc: string
+          new_price: number
+          old_price: number
+          price_change_percent: number
+          saved_drug_id?: string | null
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          drug_name?: string
+          id?: string
+          ndc?: string
+          new_price?: number
+          old_price?: number
+          price_change_percent?: number
+          saved_drug_id?: string | null
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_alerts_saved_drug_id_fkey"
+            columns: ["saved_drug_id"]
+            isOneToOne: false
+            referencedRelation: "saved_drugs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -82,6 +126,8 @@ export type Database = {
           created_at: string
           drug_name: string
           id: string
+          last_notified_at: string | null
+          last_notified_price: number | null
           ndc: string
           user_id: string
         }
@@ -89,6 +135,8 @@ export type Database = {
           created_at?: string
           drug_name: string
           id?: string
+          last_notified_at?: string | null
+          last_notified_price?: number | null
           ndc: string
           user_id: string
         }
@@ -96,6 +144,8 @@ export type Database = {
           created_at?: string
           drug_name?: string
           id?: string
+          last_notified_at?: string | null
+          last_notified_price?: number | null
           ndc?: string
           user_id?: string
         }
