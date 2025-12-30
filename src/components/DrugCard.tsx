@@ -58,43 +58,49 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
 
   return (
     <Card 
-      className="p-6 shadow-card hover:shadow-glow transition-all duration-300 border-border/50 bg-card animate-slide-up cursor-pointer"
+      className="p-4 sm:p-6 shadow-card hover:shadow-glow transition-all duration-300 border-border/50 bg-card animate-slide-up cursor-pointer"
       style={{ animationDelay: `${index * 50}ms` }}
       onClick={() => setIsExpanded(!isExpanded)}
     >
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-lg text-foreground truncate">
-            {drug.drugName}
-          </h3>
-          <p className="text-muted-foreground text-sm mt-1">
-            NDC: <span className="font-mono">{drug.ndc}</span>
-          </p>
+      <div className="flex flex-col gap-4">
+        {/* Top row: Drug info and expand icon */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-base sm:text-lg text-foreground line-clamp-2">
+              {drug.drugName}
+            </h3>
+            <p className="text-muted-foreground text-sm mt-1">
+              NDC: <span className="font-mono text-xs sm:text-sm">{drug.ndc}</span>
+            </p>
+          </div>
+          <div className="shrink-0">
+            {isExpanded ? (
+              <ChevronUp className="h-5 w-5 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+            )}
+          </div>
         </div>
-        
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="secondary" className="bg-accent text-accent-foreground">
-            {drug.pricingUnit}
-          </Badge>
-          <Badge variant="outline" className="text-muted-foreground">
-            {drug.pharmacyType}
-          </Badge>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <div className="text-right lg:min-w-[140px]">
-            <p className="text-2xl font-bold text-primary">
+
+        {/* Middle row: Badges and price */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="secondary" className="bg-accent text-accent-foreground text-xs">
+              {drug.pricingUnit}
+            </Badge>
+            <Badge variant="outline" className="text-muted-foreground text-xs">
+              {drug.pharmacyType}
+            </Badge>
+          </div>
+          
+          <div className="text-right">
+            <p className="text-xl sm:text-2xl font-bold text-primary">
               {formatPrice(drug.nadacPerUnit)}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground">
               Effective: {formatDate(drug.effectiveDate)}
             </p>
           </div>
-          {isExpanded ? (
-            <ChevronUp className="h-5 w-5 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-muted-foreground" />
-          )}
         </div>
       </div>
       
@@ -109,29 +115,31 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
           className="mt-4 pt-4 border-t border-border"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
               <Calculator className="h-5 w-5 text-primary" />
               <span className="text-sm font-medium text-foreground">Calculate Total</span>
             </div>
-            <div className="flex items-center gap-3 flex-1">
-              <Input
-                type="number"
-                placeholder="Enter quantity"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                className="w-32"
-                min="0"
-                step="any"
-              />
-              <span className="text-sm text-muted-foreground">{drug.pricingUnit}s</span>
-            </div>
-            {parsedQuantity > 0 && (
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Total Price</p>
-                <p className="text-xl font-bold text-primary">{formatTotalPrice(totalPrice)}</p>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="flex items-center gap-3 flex-1">
+                <Input
+                  type="number"
+                  placeholder="Enter quantity"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  className="flex-1 sm:w-32 sm:flex-none"
+                  min="0"
+                  step="any"
+                />
+                <span className="text-sm text-muted-foreground shrink-0">{drug.pricingUnit}s</span>
               </div>
-            )}
+              {parsedQuantity > 0 && (
+                <div className="text-left sm:text-right pt-2 sm:pt-0 border-t sm:border-t-0 border-border">
+                  <p className="text-sm text-muted-foreground">Total Price</p>
+                  <p className="text-xl font-bold text-primary">{formatTotalPrice(totalPrice)}</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

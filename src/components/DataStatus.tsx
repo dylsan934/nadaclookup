@@ -82,16 +82,16 @@ export const DataStatus = ({
   return (
     <Card className="p-4 bg-card border-border/50">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-6 text-sm text-muted-foreground">
+        <div className="flex flex-col xs:flex-row items-start xs:items-center gap-3 sm:gap-6 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
-            <Database className="h-4 w-4" />
+            <Database className="h-4 w-4 shrink-0" />
             <span>
               <span className="font-medium text-foreground">{totalRecords.toLocaleString()}</span> drugs
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <span>
+            <Calendar className="h-4 w-4 shrink-0" />
+            <span className="break-words">
               Updated: <span className="font-medium text-foreground">{formatDate(lastUpdate)}</span>
             </span>
           </div>
@@ -101,6 +101,7 @@ export const DataStatus = ({
           disabled={isSyncing}
           variant="ghost"
           size="sm"
+          className="w-full sm:w-auto"
         >
           {isSyncing ? (
             <>
