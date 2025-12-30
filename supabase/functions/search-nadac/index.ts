@@ -28,17 +28,26 @@ Deno.serve(async (req) => {
 
     const term = searchTerm.trim();
     
+    // Normalize NDC: remove dashes and leading zeros for flexible matching
+    const normalizeNDC = (ndc: string) => ndc.replace(/[-]/g, '').replace(/^0+/, '');
+    
     // Determine if searching by NDC or drug name
-    const isNDC = /^[\\d-]+$/.test(term);
+    // NDC can be digits only or digits with dashes
+    const isNDC = /^[\d-]+$/.test(term);
     
     let query;
     
     if (isNDC) {
-      // Search by NDC (exact or partial match)
+      // Normalize the search term for NDC matching
+      const normalizedTerm = normalizeNDC(term);
+      console.log(`NDC search - original: "${term}", normalized: "${normalizedTerm}"`);
+      
+      // First try exact match with the original term
+      // Then we'll also search using a pattern that accounts for missing dashes/zeros
       query = supabase
         .from('nadac_drugs')
         .select('*')
-        .ilike('ndc', `%${term}%`)
+        .or(`ndc.ilike.%${term}%,ndc.ilike.%${normalizedTerm}%`)
         .order('effective_date', { ascending: false })
         .limit(limit);
     } else {
