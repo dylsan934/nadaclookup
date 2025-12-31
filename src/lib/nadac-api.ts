@@ -84,4 +84,39 @@ export const nadacApi = {
 
     return { hasData: false, totalRecords: 0, lastUpdate: undefined };
   },
+
+  async getSuggestions(searchTerm: string, limit = 10): Promise<string[]> {
+    if (!searchTerm || searchTerm.length < 2) return [];
+
+    const { data, error } = await supabase
+      .from('nadac_drugs')
+      .select('drug_name')
+      .ilike('drug_name', `%${searchTerm}%`)
+      .limit(100);
+
+    if (error || !data) return [];
+
+    // Get unique drug names (first part before specific details)
+    const uniqueNames = new Map<string, number>();
+    
+    data.forEach(drug => {
+      const name = drug.drug_name;
+      // Prioritize exact prefix matches
+      const isExactPrefix = name.toUpperCase().startsWith(searchTerm.toUpperCase());
+      const score = isExactPrefix ? 100 : 0;
+      
+      if (!uniqueNames.has(name) || uniqueNames.get(name)! < score) {
+        uniqueNames.set(name, score);
+      }
+    });
+
+    // Sort by score (exact matches first) then alphabetically
+    return Array.from(uniqueNames.entries())
+      .sort((a, b) => {
+        if (b[1] !== a[1]) return b[1] - a[1];
+        return a[0].localeCompare(b[0]);
+      })
+      .slice(0, limit)
+      .map(([name]) => name);
+  },
 };
