@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RefreshCw, Loader2, ArrowUpDown, Bell, ArrowLeft, BookmarkCheck, Tag, Search } from "lucide-react";
+import { RefreshCw, Loader2, ArrowUpDown, Bell, ArrowLeft, BookmarkCheck, Tag, Search, Crown, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { CategoryManager, Category, getCategoryColors } from "@/components/CategoryManager";
 import { SavedDrugCard } from "@/components/SavedDrugCard";
@@ -56,12 +56,11 @@ export default function SavedDrugs() {
       navigate("/auth");
       return;
     }
-    if (!isSubscribed) {
-      navigate("/");
-      return;
+    // Allow access for subscribed users - non-subscribed will see the paywall
+    if (user) {
+      fetchAllData();
     }
-    fetchAllData();
-  }, [user, isSubscribed, navigate]);
+  }, [user, navigate]);
 
   const fetchAllData = async () => {
     await Promise.all([
@@ -350,6 +349,19 @@ export default function SavedDrugs() {
     return result;
   }, [savedDrugs, drugPrices, sortBy, selectedCategory, drugCategoryLinks, searchQuery]);
 
+  const handleUpgrade = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout');
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error creating checkout:', error);
+      toast.error('Failed to start checkout');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -357,7 +369,87 @@ export default function SavedDrugs() {
         <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Loading saved drugs...</p>
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Show paywall for non-subscribers
+  if (!isSubscribed) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 container mx-auto px-4 py-6 md:py-8">
+          <div className="max-w-2xl mx-auto space-y-6">
+            {/* Back button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="text-muted-foreground hover:text-foreground -ml-2"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1.5" />
+              Back to Search
+            </Button>
+
+            {/* Paywall Card */}
+            <Card className="p-8 text-center border-amber-200/50 dark:border-amber-800/30 bg-gradient-to-b from-amber-50/50 to-background dark:from-amber-950/20">
+              <div className="flex flex-col items-center gap-4">
+                <div className="p-4 rounded-full bg-amber-100 dark:bg-amber-900/30">
+                  <Crown className="h-10 w-10 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold text-foreground">Upgrade to Pro</h1>
+                  <p className="text-sm text-muted-foreground mt-2 max-w-md">
+                    Unlock premium features to get the most out of NADAC Pricing
+                  </p>
+                </div>
+
+                {/* Features list */}
+                <div className="w-full max-w-sm mt-4 space-y-3 text-left">
+                  <div className="flex items-center gap-3 p-3 bg-card rounded-lg border">
+                    <BookmarkCheck className="h-5 w-5 text-primary shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Save Drugs</p>
+                      <p className="text-xs text-muted-foreground">Build your personal drug list</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-card rounded-lg border">
+                    <Bell className="h-5 w-5 text-primary shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Price Alerts</p>
+                      <p className="text-xs text-muted-foreground">Get notified when prices change</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-card rounded-lg border">
+                    <Tag className="h-5 w-5 text-primary shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Categories & Notes</p>
+                      <p className="text-xs text-muted-foreground">Organize drugs your way</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-card rounded-lg border">
+                    <ArrowUpDown className="h-5 w-5 text-primary shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Quantity Calculator</p>
+                      <p className="text-xs text-muted-foreground">Calculate costs for any quantity</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t w-full max-w-sm">
+                  <p className="text-2xl font-bold text-foreground">$25<span className="text-sm font-normal text-muted-foreground">/month</span></p>
+                </div>
+
+                <Button size="lg" onClick={handleUpgrade} className="mt-2">
+                  <Crown className="h-4 w-4 mr-2" />
+                  Upgrade to Pro
+                </Button>
+              </div>
+            </Card>
           </div>
         </main>
         <Footer />

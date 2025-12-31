@@ -89,6 +89,20 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
     }
   };
 
+  const handleUpgrade = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout');
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error creating checkout:', error);
+      toast.error('Failed to start checkout');
+    }
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -122,6 +136,9 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
   const parsedQuantity = parseFloat(quantity) || 0;
   const totalPrice = parsedQuantity * drug.nadacPerUnit;
 
+  // Premium features are locked for non-subscribers
+  const canAccessPremium = user && isSubscribed;
+
   return (
     <Card 
       className="p-4 sm:p-5 hover:shadow-md hover:border-border transition-all duration-200 cursor-pointer bg-card animate-slide-up"
@@ -140,7 +157,8 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
             </p>
           </div>
           <div className="shrink-0 flex items-center gap-1.5">
-            {user && isSubscribed && (
+            {/* Save button - only for premium users */}
+            {canAccessPremium && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -155,8 +173,17 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
                 )}
               </Button>
             )}
+            {/* Locked indicator for non-subscribers */}
+            {user && !isSubscribed && (
+              <div className="h-8 w-8 flex items-center justify-center">
+                <Lock className="h-4 w-4 text-muted-foreground/50" />
+              </div>
+            )}
+            {/* Sign in indicator for guests */}
             {!user && (
-              <Lock className="h-4 w-4 text-muted-foreground/50" />
+              <div className="h-8 w-8 flex items-center justify-center">
+                <Lock className="h-4 w-4 text-muted-foreground/50" />
+              </div>
             )}
             <div className="p-1.5 rounded-md hover:bg-muted transition-colors">
               {isExpanded ? (
@@ -201,7 +228,8 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
           className="mt-4 pt-4 border-t border-border/50"
           onClick={(e) => e.stopPropagation()}
         >
-          {user ? (
+          {/* Premium user - full calculator access */}
+          {canAccessPremium && (
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-md bg-primary/10">
@@ -229,17 +257,30 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
                   </div>
                 )}
               </div>
-
-              {!isSubscribed && (
-                <div className="flex items-center gap-2.5 p-3 bg-muted/50 rounded-lg border border-border/50">
-                  <Crown className="h-4 w-4 text-primary shrink-0" />
-                  <span className="text-xs text-muted-foreground">
-                    Upgrade to Pro to save drugs and monitor prices
-                  </span>
-                </div>
-              )}
             </div>
-          ) : (
+          )}
+
+          {/* Logged in but not subscribed - show upgrade prompt */}
+          {user && !isSubscribed && (
+            <div className="flex flex-col items-center gap-3 py-4 text-center">
+              <div className="p-3 rounded-full bg-amber-100 dark:bg-amber-900/30">
+                <Crown className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">Pro Feature</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Upgrade to unlock quantity calculator, save drugs, and get price alerts
+                </p>
+              </div>
+              <Button size="sm" onClick={handleUpgrade}>
+                <Crown className="h-4 w-4 mr-1.5" />
+                Upgrade to Pro - $25/mo
+              </Button>
+            </div>
+          )}
+
+          {/* Not logged in - show sign in prompt */}
+          {!user && (
             <div className="flex flex-col items-center gap-3 py-4 text-center">
               <div className="p-3 rounded-full bg-muted">
                 <Lock className="h-5 w-5 text-muted-foreground" />

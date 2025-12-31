@@ -1,4 +1,4 @@
-import { Pill, LogIn, LogOut, User, BookmarkCheck, Crown } from "lucide-react";
+import { Pill, LogIn, LogOut, User, BookmarkCheck, Crown, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -55,28 +55,32 @@ export const Header = () => {
             <div className="flex items-center gap-2">
               {user ? (
                 <>
+                  {/* Always show Saved link - paywall is on the page */}
+                  <Link to="/saved-drugs">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
+                    >
+                      {isSubscribed ? (
+                        <BookmarkCheck className="h-4 w-4" />
+                      ) : (
+                        <Lock className="h-4 w-4" />
+                      )}
+                      <span className="hidden sm:inline ml-1">Saved</span>
+                    </Button>
+                  </Link>
+                  
                   {isSubscribed ? (
-                    <>
-                      <Link to="/saved-drugs">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
-                        >
-                          <BookmarkCheck className="h-4 w-4" />
-                          <span className="hidden sm:inline ml-1">Saved</span>
-                        </Button>
-                      </Link>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={handleManageSubscription}
-                        className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
-                      >
-                        <Crown className="h-4 w-4" />
-                        <span className="hidden sm:inline ml-1">Plan</span>
-                      </Button>
-                    </>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={handleManageSubscription}
+                      className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
+                    >
+                      <Crown className="h-4 w-4" />
+                      <span className="hidden sm:inline ml-1">Plan</span>
+                    </Button>
                   ) : (
                     <Button 
                       size="sm"
