@@ -10,7 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RefreshCw, Loader2, ArrowUpDown, Bell, ArrowLeft, BookmarkCheck, Tag, Search, Crown, Lock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { RefreshCw, Loader2, ArrowUpDown, Bell, ArrowLeft, BookmarkCheck, Tag, Search, Crown, Lock, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { CategoryManager, Category, getCategoryColors } from "@/components/CategoryManager";
 import { SavedDrugCard } from "@/components/SavedDrugCard";
@@ -52,16 +55,65 @@ export default function SavedDrugs() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("name-asc");
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [notifyAllDrugs, setNotifyAllDrugs] = useState(true);
+  const [alertThreshold, setAlertThreshold] = useState(5);
+  const [isLoadingPrefs, setIsLoadingPrefs] = useState(false);
 
   useEffect(() => {
     // Only fetch data for subscribed users
     if (user && isSubscribed) {
       fetchAllData();
+      fetchNotificationPrefs();
     } else {
       // Non-subscribers and non-logged-in users see the preview immediately
       setIsLoading(false);
     }
   }, [user, isSubscribed]);
+
+  const fetchNotificationPrefs = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('notify_saved_drugs, large_change_threshold')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!error && data) {
+      setNotifyAllDrugs(data.notify_saved_drugs ?? true);
+      setAlertThreshold(data.large_change_threshold ?? 5);
+    }
+  };
+
+  const updateNotifyAllDrugs = async (enabled: boolean) => {
+    if (!user) return;
+    setIsLoadingPrefs(true);
+    setNotifyAllDrugs(enabled);
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ notify_saved_drugs: enabled })
+      .eq('user_id', user.id);
+
+    setIsLoadingPrefs(false);
+    if (error) {
+      setNotifyAllDrugs(!enabled);
+      toast.error("Failed to update preference");
+    }
+  };
+
+  const updateAlertThreshold = async (value: number) => {
+    if (!user) return;
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update({ large_change_threshold: value })
+      .eq('user_id', user.id);
+
+    if (error) {
+      toast.error("Failed to update threshold");
+    }
+  };
 
   const fetchAllData = async () => {
     await Promise.all([
@@ -492,7 +544,7 @@ export default function SavedDrugs() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-foreground">Avoid Surprise Cost Increases</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Get email alerts when prices shift by more than 1%</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Get in-app alerts when drug prices change significantly</p>
                   </div>
                 </div>
               </Card>
@@ -607,16 +659,54 @@ export default function SavedDrugs() {
             />
           </div>
 
-          {/* Alerts info */}
-          <Card className="p-4 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200/50 dark:border-emerald-800/30">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
-                <Bell className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          {/* Notification Settings */}
+          <Card className="p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Settings className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Alert Settings</span>
+            </div>
+            
+            <div className="space-y-5">
+              {/* Toggle all saved drugs */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="notify-all" className="text-sm font-medium">
+                    Enable alerts for all saved drugs
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Get notified in-app when prices change for your saved drugs
+                  </p>
+                </div>
+                <Switch
+                  id="notify-all"
+                  checked={notifyAllDrugs}
+                  onCheckedChange={updateNotifyAllDrugs}
+                  disabled={isLoadingPrefs}
+                />
               </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Price Change Alerts Active</p>
+              
+              {/* Threshold slider */}
+              <div className={`space-y-3 ${!notifyAllDrugs ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">
+                    Alert threshold
+                  </Label>
+                  <span className="text-sm font-semibold text-primary tabular-nums">
+                    {alertThreshold}%
+                  </span>
+                </div>
+                <Slider
+                  value={[alertThreshold]}
+                  onValueChange={([value]) => setAlertThreshold(value)}
+                  onValueCommit={([value]) => updateAlertThreshold(value)}
+                  min={1}
+                  max={20}
+                  step={1}
+                  className="w-full"
+                  disabled={!notifyAllDrugs}
+                />
                 <p className="text-xs text-muted-foreground">
-                  You'll receive email alerts when prices change by more than 1%
+                  Only notify when price changes by {alertThreshold}% or more
                 </p>
               </div>
             </div>
