@@ -183,6 +183,7 @@ export type Database = {
       }
       saved_drugs: {
         Row: {
+          alerts_enabled: boolean
           created_at: string
           drug_name: string
           id: string
@@ -193,6 +194,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          alerts_enabled?: boolean
           created_at?: string
           drug_name: string
           id?: string
@@ -203,6 +205,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          alerts_enabled?: boolean
           created_at?: string
           drug_name?: string
           id?: string

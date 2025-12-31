@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Trash2, Calculator, Tag, StickyNote, Check, X, Plus } from "lucide-react";
+import { Trash2, Calculator, Tag, StickyNote, Check, X, Plus, Bell, BellOff } from "lucide-react";
 import { Category, getCategoryColors } from "./CategoryManager";
 
 interface DrugPrice {
@@ -23,6 +25,7 @@ interface SavedDrug {
   ndc: string;
   drug_name: string;
   notes: string | null;
+  alerts_enabled: boolean;
   created_at: string;
 }
 
@@ -35,6 +38,7 @@ interface SavedDrugCardProps {
   onRemove: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => Promise<void>;
   onToggleCategory: (drugId: string, categoryId: string, isAdding: boolean) => Promise<void>;
+  onToggleAlerts: (id: string, enabled: boolean) => Promise<void>;
 }
 
 export const SavedDrugCard = ({
@@ -46,11 +50,13 @@ export const SavedDrugCard = ({
   onRemove,
   onUpdateNotes,
   onToggleCategory,
+  onToggleAlerts,
 }: SavedDrugCardProps) => {
   const [quantity, setQuantity] = useState("");
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notes, setNotes] = useState(drug.notes || "");
   const [isSavingNotes, setIsSavingNotes] = useState(false);
+  const [isTogglingAlerts, setIsTogglingAlerts] = useState(false);
 
   useEffect(() => {
     setNotes(drug.notes || "");
@@ -103,6 +109,15 @@ export const SavedDrugCard = ({
   const availableCategories = allCategories.filter(
     (cat) => !drugCategories.includes(cat.id)
   );
+
+  const handleToggleAlerts = async (checked: boolean) => {
+    setIsTogglingAlerts(true);
+    try {
+      await onToggleAlerts(drug.id, checked);
+    } finally {
+      setIsTogglingAlerts(false);
+    }
+  };
 
   return (
     <Card className="p-4 hover:shadow-md hover:border-border transition-all duration-200">
@@ -219,6 +234,29 @@ export const SavedDrugCard = ({
             </div>
           </div>
         )}
+
+        {/* Price Alerts Toggle */}
+        <div className="pt-3 border-t border-border/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {drug.alerts_enabled ? (
+                <Bell className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              ) : (
+                <BellOff className="h-3.5 w-3.5 text-muted-foreground" />
+              )}
+              <Label htmlFor={`alerts-${drug.id}`} className="text-xs font-medium text-muted-foreground cursor-pointer">
+                Price Change Alerts
+              </Label>
+            </div>
+            <Switch
+              id={`alerts-${drug.id}`}
+              checked={drug.alerts_enabled}
+              onCheckedChange={handleToggleAlerts}
+              disabled={isTogglingAlerts}
+              className="data-[state=checked]:bg-emerald-600"
+            />
+          </div>
+        </div>
 
         {/* Notes */}
         <div className="pt-3 border-t border-border/50">

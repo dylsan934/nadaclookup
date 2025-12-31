@@ -20,6 +20,7 @@ interface SavedDrug {
   ndc: string;
   drug_name: string;
   notes: string | null;
+  alerts_enabled: boolean;
   created_at: string;
 }
 
@@ -74,7 +75,7 @@ export default function SavedDrugs() {
     try {
       const { data, error } = await supabase
         .from("saved_drugs")
-        .select("id, ndc, drug_name, notes, created_at")
+        .select("id, ndc, drug_name, notes, alerts_enabled, created_at")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -223,6 +224,26 @@ export default function SavedDrugs() {
       prev.map((d) => (d.id === drugId ? { ...d, notes: notes || null } : d))
     );
     toast.success("Notes saved");
+  };
+
+  // Toggle alerts
+  const handleToggleAlerts = async (drugId: string, enabled: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("saved_drugs")
+        .update({ alerts_enabled: enabled })
+        .eq("id", drugId);
+
+      if (error) throw error;
+
+      setSavedDrugs((prev) =>
+        prev.map((d) => (d.id === drugId ? { ...d, alerts_enabled: enabled } : d))
+      );
+      toast.success(enabled ? "Price alerts enabled" : "Price alerts disabled");
+    } catch (error) {
+      console.error("Error toggling alerts:", error);
+      toast.error("Failed to update alert settings");
+    }
   };
 
   // Remove drug
@@ -489,6 +510,7 @@ export default function SavedDrugs() {
                   onRemove={handleRemove}
                   onUpdateNotes={handleUpdateNotes}
                   onToggleCategory={handleToggleCategory}
+                  onToggleAlerts={handleToggleAlerts}
                 />
               ))}
             </div>
