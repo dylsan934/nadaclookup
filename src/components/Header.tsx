@@ -101,6 +101,17 @@ export const Header = () => {
                 </>
               ) : (
                 <>
+                  {/* Saved link for non-logged-in users */}
+                  <Link to="/saved-drugs">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
+                    >
+                      <Lock className="h-4 w-4" />
+                      <span className="hidden sm:inline ml-1">Saved</span>
+                    </Button>
+                  </Link>
                   {/* Upgrade CTA for non-logged-in users */}
                   <Button 
                     size="sm"
