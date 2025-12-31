@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
+import { LockedNotificationDropdown } from "@/components/LockedNotificationDropdown";
 
 export const Header = () => {
   const { user, isSubscribed, signOut } = useAuth();
@@ -97,21 +98,7 @@ export const Header = () => {
                       onUnreadCountChange={setUnreadCount}
                     />
                   ) : (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="text-primary-foreground/50 cursor-not-allowed"
-                          disabled
-                        >
-                          <Bell className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" className="max-w-[200px]">
-                        <p className="text-sm">Avoid surprise cost increases with price change alerts</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <LockedNotificationDropdown onUpgradeClick={() => setShowUpgradeModal(true)} />
                   )}
 
                   {/* Always show Saved link - paywall is on the page */}
@@ -170,21 +157,7 @@ export const Header = () => {
               ) : (
                 <>
                   {/* Notification bell for non-logged-in users */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="text-primary-foreground/50 cursor-not-allowed"
-                        disabled
-                      >
-                        <Bell className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-[200px]">
-                      <p className="text-sm">Avoid surprise cost increases with price change alerts</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <LockedNotificationDropdown onUpgradeClick={() => setShowUpgradeModal(true)} />
 
                   {/* Saved link for non-logged-in users */}
                   <Link to="/saved-drugs">
