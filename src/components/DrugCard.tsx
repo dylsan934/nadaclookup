@@ -177,7 +177,7 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={(e) => handleLockedClick(e, "Save drugs to track prices and get alerts")}
+                  onClick={(e) => handleLockedClick(e, "Never miss a price change—get alerts when costs shift")}
                   className="h-8 w-8 text-muted-foreground/50 hover:text-muted-foreground"
                 >
                   <div className="relative">
@@ -296,7 +296,7 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
                       <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                     </div>
                     <span className="text-xs font-medium text-foreground">
-                      Upgrade to calculate 90-day supply cost
+                      Calculate true acquisition cost instantly
                     </span>
                     <Crown className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                   </div>

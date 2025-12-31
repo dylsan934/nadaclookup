@@ -420,9 +420,9 @@ export default function SavedDrugs() {
                   <Crown className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="font-semibold text-foreground">Save frequently used drugs and track price changes</h2>
+                  <h2 className="font-semibold text-foreground">Build your personalized drug formulary</h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Upgrade to Pro to save unlimited drugs, get email alerts when prices change, organize with categories, and add notes.
+                    Track your most-used medications, get notified before prices spike, and calculate costs for any quantity—all in one place.
                   </p>
                 </div>
                 <Button onClick={() => setShowUpgradeModal(true)} className="shrink-0">
@@ -476,7 +476,7 @@ export default function SavedDrugs() {
                 <div className="flex items-center gap-2 px-5 py-3 bg-background/95 backdrop-blur-sm rounded-xl border border-amber-200 dark:border-amber-800 shadow-lg hover:border-amber-300 dark:hover:border-amber-700 transition-colors">
                   <Lock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                   <span className="text-sm font-medium text-foreground">
-                    Unlock saved drugs with Pro
+                    Track your most-used drugs and spot price changes early
                   </span>
                   <Crown className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 </div>
@@ -491,8 +491,8 @@ export default function SavedDrugs() {
                     <Bell className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">Price Alerts</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Get notified when prices change by more than 1%</p>
+                    <p className="text-sm font-medium text-foreground">Avoid Surprise Cost Increases</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Get email alerts when prices shift by more than 1%</p>
                   </div>
                 </div>
               </Card>
@@ -502,8 +502,8 @@ export default function SavedDrugs() {
                     <Tag className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">Categories</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Organize drugs into custom categories</p>
+                    <p className="text-sm font-medium text-foreground">Keep Your Formulary Organized</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Group drugs by therapeutic class or custom tags</p>
                   </div>
                 </div>
               </Card>
@@ -513,8 +513,8 @@ export default function SavedDrugs() {
                     <ArrowUpDown className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">Cost Calculator</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Calculate total costs with saved quantities</p>
+                    <p className="text-sm font-medium text-foreground">Know Your True Costs</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Calculate acquisition cost for any quantity instantly</p>
                   </div>
                 </div>
               </Card>
@@ -524,8 +524,8 @@ export default function SavedDrugs() {
                     <BookmarkCheck className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">Unlimited Saves</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Save as many drugs as you need</p>
+                    <p className="text-sm font-medium text-foreground">Build Your Personal Watchlist</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Save unlimited drugs and access them anytime</p>
                   </div>
                 </div>
               </Card>
