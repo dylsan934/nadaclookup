@@ -129,6 +129,9 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          large_change_threshold: number
+          notify_large_changes_only: boolean
+          notify_saved_drugs: boolean
           updated_at: string
           user_id: string
         }
@@ -136,6 +139,9 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          large_change_threshold?: number
+          notify_large_changes_only?: boolean
+          notify_saved_drugs?: boolean
           updated_at?: string
           user_id: string
         }
@@ -143,6 +149,9 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          large_change_threshold?: number
+          notify_large_changes_only?: boolean
+          notify_saved_drugs?: boolean
           updated_at?: string
           user_id?: string
         }
