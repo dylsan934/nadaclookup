@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { Pill, LogIn, LogOut, User, BookmarkCheck, Crown, Lock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Pill, LogIn, LogOut, User, BookmarkCheck, Crown, Lock, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
@@ -11,6 +12,46 @@ import { UpgradeModal } from "@/components/UpgradeModal";
 export const Header = () => {
   const { user, isSubscribed, signOut } = useAuth();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnreadAlerts = async () => {
+      if (!user || !isSubscribed) {
+        setUnreadCount(0);
+        return;
+      }
+
+      const { count, error } = await supabase
+        .from('price_alerts')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .is('read_at', null);
+
+      if (!error && count !== null) {
+        setUnreadCount(count);
+      }
+    };
+
+    fetchUnreadAlerts();
+
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel('price_alerts_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'price_alerts',
+        },
+        () => fetchUnreadAlerts()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, isSubscribed]);
 
   const handleManageSubscription = async () => {
     try {
@@ -44,8 +85,43 @@ export const Header = () => {
 
             {/* Auth actions */}
             <div className="flex items-center gap-2">
+              <TooltipProvider>
               {user ? (
                 <>
+                  {/* Notification bell for premium users */}
+                  {isSubscribed ? (
+                    <Link to="/saved-drugs">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10 relative"
+                      >
+                        <Bell className="h-4 w-4" />
+                        {unreadCount > 0 && (
+                          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-semibold text-amber-950 px-1">
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                          </span>
+                        )}
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="text-primary-foreground/50 cursor-not-allowed"
+                          disabled
+                        >
+                          <Bell className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-[200px]">
+                        <p className="text-sm">Avoid surprise cost increases with price change alerts</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+
                   {/* Always show Saved link - paywall is on the page */}
                   <Link to="/saved-drugs">
                     <Button 
@@ -101,6 +177,23 @@ export const Header = () => {
                 </>
               ) : (
                 <>
+                  {/* Notification bell for non-logged-in users */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-primary-foreground/50 cursor-not-allowed"
+                        disabled
+                      >
+                        <Bell className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-[200px]">
+                      <p className="text-sm">Avoid surprise cost increases with price change alerts</p>
+                    </TooltipContent>
+                  </Tooltip>
+
                   {/* Saved link for non-logged-in users */}
                   <Link to="/saved-drugs">
                     <Button 
@@ -133,6 +226,7 @@ export const Header = () => {
                   </Link>
                 </>
               )}
+              </TooltipProvider>
             </div>
           </div>
         </div>
