@@ -124,112 +124,116 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
 
   return (
     <Card 
-      className="p-4 sm:p-6 shadow-card hover:shadow-glow transition-all duration-300 border-border/50 bg-card animate-slide-up cursor-pointer"
-      style={{ animationDelay: `${index * 50}ms` }}
+      className="p-4 sm:p-5 hover:shadow-md hover:border-border transition-all duration-200 cursor-pointer bg-card animate-slide-up"
+      style={{ animationDelay: `${index * 40}ms` }}
       onClick={() => setIsExpanded(!isExpanded)}
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         {/* Top row: Drug info and expand icon */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-base sm:text-lg text-foreground line-clamp-2">
+            <h3 className="font-semibold text-sm sm:text-base text-foreground leading-snug">
               {drug.drugName}
             </h3>
-            <p className="text-muted-foreground text-sm mt-1">
-              NDC: <span className="font-mono text-xs sm:text-sm">{drug.ndc}</span>
+            <p className="text-muted-foreground text-xs mt-1">
+              NDC: <span className="font-mono">{drug.ndc}</span>
             </p>
           </div>
-          <div className="shrink-0 flex items-center gap-2">
+          <div className="shrink-0 flex items-center gap-1.5">
             {user && isSubscribed && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleSave}
                 disabled={isSaving}
-                className={isSaved ? "text-primary" : "text-muted-foreground"}
+                className={`h-8 w-8 ${isSaved ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
               >
                 {isSaved ? (
-                  <BookmarkCheck className="h-5 w-5" />
+                  <BookmarkCheck className="h-4 w-4" />
                 ) : (
-                  <Bookmark className="h-5 w-5" />
+                  <Bookmark className="h-4 w-4" />
                 )}
               </Button>
             )}
             {!user && (
-              <Lock className="h-4 w-4 text-muted-foreground" />
+              <Lock className="h-4 w-4 text-muted-foreground/50" />
             )}
-            {isExpanded ? (
-              <ChevronUp className="h-5 w-5 text-muted-foreground" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-muted-foreground" />
-            )}
+            <div className="p-1.5 rounded-md hover:bg-muted transition-colors">
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
+            </div>
           </div>
         </div>
 
         {/* Middle row: Badges and price */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary" className="bg-accent text-accent-foreground text-xs">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge variant="secondary" className="text-xs font-normal">
               {drug.pricingUnit}
             </Badge>
-            <Badge variant="outline" className="text-muted-foreground text-xs">
+            <Badge variant="outline" className="text-xs font-normal text-muted-foreground">
               {drug.pharmacyType}
             </Badge>
           </div>
           
           <div className="text-right">
-            <p className="text-xl sm:text-2xl font-bold text-primary">
+            <p className="text-lg sm:text-xl font-bold text-primary tabular-nums">
               {formatPrice(drug.nadacPerUnit)}
             </p>
             <p className="text-xs text-muted-foreground">
-              Effective: {formatDate(drug.effectiveDate)}
+              {formatDate(drug.effectiveDate)}
             </p>
           </div>
         </div>
       </div>
       
       {drug.explanation && (
-        <p className="mt-4 text-sm text-muted-foreground border-t border-border pt-4">
+        <p className="mt-3 text-xs text-muted-foreground border-t border-border/50 pt-3 leading-relaxed">
           {drug.explanation}
         </p>
       )}
 
       {isExpanded && (
         <div 
-          className="mt-4 pt-4 border-t border-border"
+          className="mt-4 pt-4 border-t border-border/50"
           onClick={(e) => e.stopPropagation()}
         >
           {user ? (
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
-                <Calculator className="h-5 w-5 text-primary" />
+                <div className="p-1.5 rounded-md bg-primary/10">
+                  <Calculator className="h-4 w-4 text-primary" />
+                </div>
                 <span className="text-sm font-medium text-foreground">Calculate Total</span>
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <div className="flex items-center gap-3 flex-1">
                   <Input
                     type="number"
-                    placeholder="Enter quantity"
+                    placeholder="Quantity"
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
-                    className="flex-1 sm:w-32 sm:flex-none"
+                    className="flex-1 sm:w-28 sm:flex-none h-10"
                     min="0"
                     step="any"
                   />
                   <span className="text-sm text-muted-foreground shrink-0">{drug.pricingUnit}s</span>
                 </div>
                 {parsedQuantity > 0 && (
-                  <div className="text-left sm:text-right pt-2 sm:pt-0 border-t sm:border-t-0 border-border">
-                    <p className="text-sm text-muted-foreground">Total Price</p>
-                    <p className="text-xl font-bold text-primary">{formatTotalPrice(totalPrice)}</p>
+                  <div className="text-left sm:text-right pt-2 sm:pt-0 sm:pl-4 sm:border-l border-t sm:border-t-0 border-border/50">
+                    <p className="text-xs text-muted-foreground">Total</p>
+                    <p className="text-lg font-bold text-primary tabular-nums">{formatTotalPrice(totalPrice)}</p>
                   </div>
                 )}
               </div>
 
               {!isSubscribed && (
-                <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
-                  <Crown className="h-4 w-4 text-primary" />
-                  <span className="text-sm text-muted-foreground">
+                <div className="flex items-center gap-2.5 p-3 bg-muted/50 rounded-lg border border-border/50">
+                  <Crown className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-xs text-muted-foreground">
                     Upgrade to Pro to save drugs and monitor prices
                   </span>
                 </div>
@@ -237,12 +241,14 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3 py-4 text-center">
-              <Lock className="h-8 w-8 text-muted-foreground" />
+              <div className="p-3 rounded-full bg-muted">
+                <Lock className="h-5 w-5 text-muted-foreground" />
+              </div>
               <p className="text-sm text-muted-foreground">
                 Sign in to use the quantity calculator
               </p>
               <Link to="/auth" onClick={(e) => e.stopPropagation()}>
-                <Button size="sm" variant="default">
+                <Button size="sm">
                   Sign In
                 </Button>
               </Link>
