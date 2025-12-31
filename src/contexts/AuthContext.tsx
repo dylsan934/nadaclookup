@@ -9,6 +9,8 @@ interface AuthContextType {
   isSubscribed: boolean;
   isAdmin: boolean;
   subscriptionEnd: string | null;
+  isPasswordRecovery: boolean;
+  clearPasswordRecovery: () => void;
   checkSubscription: () => Promise<void>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -24,6 +26,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
+
+  const clearPasswordRecovery = () => {
+    setIsPasswordRecovery(false);
+  };
 
   const checkAdminRole = async (userId: string) => {
     try {
@@ -81,6 +88,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log("Auth event:", event);
+        
+        // Detect password recovery event
+        if (event === "PASSWORD_RECOVERY") {
+          console.log("Password recovery detected in AuthContext!");
+          setIsPasswordRecovery(true);
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
@@ -151,6 +166,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isSubscribed, 
       isAdmin,
       subscriptionEnd,
+      isPasswordRecovery,
+      clearPasswordRecovery,
       checkSubscription,
       signUp, 
       signIn, 
