@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
-import { Bell, TrendingUp, TrendingDown } from "lucide-react";
+import { Bell, TrendingUp, TrendingDown, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PriceAlert {
@@ -50,6 +50,9 @@ export const NotificationDropdown = ({
 
     if (!error && data) {
       setAlerts(data);
+      // Update unread count based on fetched data
+      const unread = data.filter(a => !a.read_at).length;
+      onUnreadCountChange(unread);
     }
   };
 
@@ -59,29 +62,48 @@ export const NotificationDropdown = ({
     }
   }, [isOpen, userId]);
 
-  const markAsRead = async (alertId: string) => {
-    await supabase
+  const markAsRead = async (e: React.MouseEvent, alertId: string) => {
+    e.stopPropagation();
+    
+    const { error } = await supabase
       .from('price_alerts')
       .update({ read_at: new Date().toISOString() })
       .eq('id', alertId);
     
-    onUnreadCountChange(Math.max(0, unreadCount - 1));
+    if (!error) {
+      // Update local state immediately
+      setAlerts(prev => prev.map(a => 
+        a.id === alertId ? { ...a, read_at: new Date().toISOString() } : a
+      ));
+      onUnreadCountChange(Math.max(0, unreadCount - 1));
+    }
   };
 
   const markAllAsRead = async () => {
-    await supabase
+    const { error } = await supabase
       .from('price_alerts')
       .update({ read_at: new Date().toISOString() })
       .eq('user_id', userId)
       .is('read_at', null);
     
-    setAlerts(prev => prev.map(a => ({ ...a, read_at: new Date().toISOString() })));
-    onUnreadCountChange(0);
+    if (!error) {
+      setAlerts(prev => prev.map(a => ({ ...a, read_at: new Date().toISOString() })));
+      onUnreadCountChange(0);
+    }
   };
 
   const handleNotificationClick = async (alert: PriceAlert) => {
     if (!alert.read_at) {
-      await markAsRead(alert.id);
+      // Mark as read without stopping propagation
+      await supabase
+        .from('price_alerts')
+        .update({ read_at: new Date().toISOString() })
+        .eq('id', alert.id);
+      
+      setAlerts(prev => prev.map(a => 
+        a.id === alert.id ? { ...a, read_at: new Date().toISOString() } : a
+      ));
+      onUnreadCountChange(Math.max(0, unreadCount - 1));
     }
     setIsOpen(false);
     // Navigate to home with search query for the drug
@@ -107,7 +129,7 @@ export const NotificationDropdown = ({
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-semibold text-amber-950 px-1">
+            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-semibold text-amber-950 px-1 animate-in zoom-in-50 duration-200">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
@@ -126,6 +148,7 @@ export const NotificationDropdown = ({
               className="h-auto py-1 px-2 text-xs text-muted-foreground hover:text-foreground"
               onClick={(e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 markAllAsRead();
               }}
             >
@@ -140,18 +163,18 @@ export const NotificationDropdown = ({
               No price alerts yet. Save drugs and enable alerts to get notified of price changes.
             </div>
           ) : (
-            alerts.map((alert) => {
-              const { text, isIncrease } = formatPriceChange(alert);
-              return (
-                <DropdownMenuItem
-                  key={alert.id}
-                  className={`flex flex-col items-start gap-1 p-3 cursor-pointer focus:bg-accent ${
-                    !alert.read_at ? 'bg-accent/50' : ''
-                  }`}
-                  onClick={() => handleNotificationClick(alert)}
-                >
-                  <div className="flex items-start gap-2 w-full">
-                    <div className={`mt-0.5 p-1 rounded ${isIncrease ? 'bg-destructive/10 text-destructive' : 'bg-emerald-500/10 text-emerald-600'}`}>
+            <TooltipProvider>
+              {alerts.map((alert) => {
+                const { text, isIncrease } = formatPriceChange(alert);
+                return (
+                  <div
+                    key={alert.id}
+                    className={`flex items-start gap-2 p-3 cursor-pointer hover:bg-accent transition-colors ${
+                      !alert.read_at ? 'bg-accent/50' : ''
+                    }`}
+                    onClick={() => handleNotificationClick(alert)}
+                  >
+                    <div className={`mt-0.5 p-1 rounded shrink-0 ${isIncrease ? 'bg-destructive/10 text-destructive' : 'bg-emerald-500/10 text-emerald-600'}`}>
                       {isIncrease ? (
                         <TrendingUp className="h-3 w-3" />
                       ) : (
@@ -169,13 +192,27 @@ export const NotificationDropdown = ({
                         {formatDistanceToNow(new Date(alert.sent_at), { addSuffix: true })}
                       </p>
                     </div>
-                    {!alert.read_at && (
-                      <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1" />
+                    {!alert.read_at ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={(e) => markAsRead(e, alert.id)}
+                            className="shrink-0 p-1 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left">
+                          <p className="text-xs">Mark as read</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <span className="w-5 shrink-0" />
                     )}
                   </div>
-                </DropdownMenuItem>
-              );
-            })
+                );
+              })}
+            </TooltipProvider>
           )}
         </ScrollArea>
       </DropdownMenuContent>
