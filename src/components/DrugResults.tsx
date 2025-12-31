@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { DrugCard, DrugData } from "./DrugCard";
-import { ResultsFilters, SortOption, DosageFilter, BrandFilter } from "./ResultsFilters";
+import { ResultsFilters, SortOption, DosageFilter } from "./ResultsFilters";
 import { FileSearch, Loader2 } from "lucide-react";
 
 interface DrugResultsProps {
@@ -27,26 +27,9 @@ const detectDosageForm = (drugName: string): DosageFilter => {
   return "other";
 };
 
-// Helper to detect if brand or generic (simplified heuristic)
-const detectBrandType = (drugName: string): BrandFilter => {
-  // Brand names are typically single words, generics often have chemical suffixes
-  const genericIndicators = ["HCL", "SODIUM", "SULFATE", "CHLORIDE", "ACETATE", "PHOSPHATE", "TARTRATE", "MALEATE", "FUMARATE", "CITRATE"];
-  const upperName = drugName.toUpperCase();
-  
-  for (const indicator of genericIndicators) {
-    if (upperName.includes(indicator)) return "generic";
-  }
-  
-  // If name starts with a typical generic suffix pattern, likely generic
-  if (/^[A-Z]+\s+(HCL|ER|SR|XR|CR|DR|IR|LA|SA)/i.test(drugName)) return "generic";
-  
-  return "all"; // Can't determine with certainty
-};
-
 export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugResultsProps) => {
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
   const [dosageFilter, setDosageFilter] = useState<DosageFilter>("all");
-  const [brandFilter, setBrandFilter] = useState<BrandFilter>("all");
   const [strengthFilter, setStrengthFilter] = useState<string>("all");
 
   // Extract available strengths from current results
@@ -70,14 +53,6 @@ export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugR
     // Apply dosage form filter
     if (dosageFilter !== "all") {
       result = result.filter(drug => detectDosageForm(drug.drugName) === dosageFilter);
-    }
-
-    // Apply brand/generic filter
-    if (brandFilter !== "all") {
-      result = result.filter(drug => {
-        const type = detectBrandType(drug.drugName);
-        return type === brandFilter || type === "all";
-      });
     }
 
     // Apply strength filter
@@ -105,7 +80,7 @@ export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugR
     }
 
     return result;
-  }, [drugs, sortBy, dosageFilter, brandFilter, strengthFilter]);
+  }, [drugs, sortBy, dosageFilter, strengthFilter]);
 
   if (isLoading) {
     return (
@@ -168,8 +143,6 @@ export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugR
         onSortChange={setSortBy}
         dosageFilter={dosageFilter}
         onDosageFilterChange={setDosageFilter}
-        brandFilter={brandFilter}
-        onBrandFilterChange={setBrandFilter}
         strengthFilter={strengthFilter}
         onStrengthFilterChange={setStrengthFilter}
         availableStrengths={availableStrengths}

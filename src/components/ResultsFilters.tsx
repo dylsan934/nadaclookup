@@ -12,15 +12,12 @@ import { SlidersHorizontal, X, ArrowUpDown } from "lucide-react";
 
 export type SortOption = "relevance" | "price-asc" | "price-desc" | "name-asc" | "name-desc";
 export type DosageFilter = "all" | "tablet" | "capsule" | "solution" | "injection" | "cream" | "other";
-export type BrandFilter = "all" | "generic" | "brand";
 
 interface ResultsFiltersProps {
   sortBy: SortOption;
   onSortChange: (sort: SortOption) => void;
   dosageFilter: DosageFilter;
   onDosageFilterChange: (filter: DosageFilter) => void;
-  brandFilter: BrandFilter;
-  onBrandFilterChange: (filter: BrandFilter) => void;
   strengthFilter: string;
   onStrengthFilterChange: (filter: string) => void;
   availableStrengths: string[];
@@ -32,8 +29,6 @@ export const ResultsFilters = ({
   onSortChange,
   dosageFilter,
   onDosageFilterChange,
-  brandFilter,
-  onBrandFilterChange,
   strengthFilter,
   onStrengthFilterChange,
   availableStrengths,
@@ -43,13 +38,11 @@ export const ResultsFilters = ({
 
   const activeFilterCount = [
     dosageFilter !== "all",
-    brandFilter !== "all",
     strengthFilter !== "all",
   ].filter(Boolean).length;
 
   const clearFilters = () => {
     onDosageFilterChange("all");
-    onBrandFilterChange("all");
     onStrengthFilterChange("all");
   };
 
@@ -107,7 +100,7 @@ export const ResultsFilters = ({
       {/* Expandable filter panel */}
       {showFilters && (
         <div className="p-4 bg-card rounded-lg border border-border/50 shadow-soft animate-fade-in">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Dosage Form Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Dosage Form</label>
@@ -123,21 +116,6 @@ export const ResultsFilters = ({
                   <SelectItem value="injection">Injections</SelectItem>
                   <SelectItem value="cream">Creams/Ointments</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Brand vs Generic Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Brand/Generic</label>
-              <Select value={brandFilter} onValueChange={(value: BrandFilter) => onBrandFilterChange(value)}>
-                <SelectTrigger className="w-full bg-background">
-                  <SelectValue placeholder="All types" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border border-border shadow-lg z-50">
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="generic">Generic Only</SelectItem>
-                  <SelectItem value="brand">Brand Only</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -174,16 +152,6 @@ export const ResultsFilters = ({
               onClick={() => onDosageFilterChange("all")}
             >
               {dosageFilter.charAt(0).toUpperCase() + dosageFilter.slice(1)}
-              <X className="h-3 w-3 ml-1" />
-            </Badge>
-          )}
-          {brandFilter !== "all" && (
-            <Badge 
-              variant="secondary" 
-              className="cursor-pointer hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => onBrandFilterChange("all")}
-            >
-              {brandFilter.charAt(0).toUpperCase() + brandFilter.slice(1)}
               <X className="h-3 w-3 ml-1" />
             </Badge>
           )}
