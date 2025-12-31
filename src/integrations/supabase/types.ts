@@ -85,6 +85,7 @@ export type Database = {
           new_price: number
           old_price: number
           price_change_percent: number
+          read_at: string | null
           saved_drug_id: string | null
           sent_at: string
           user_id: string
@@ -96,6 +97,7 @@ export type Database = {
           new_price: number
           old_price: number
           price_change_percent: number
+          read_at?: string | null
           saved_drug_id?: string | null
           sent_at?: string
           user_id: string
@@ -107,6 +109,7 @@ export type Database = {
           new_price?: number
           old_price?: number
           price_change_percent?: number
+          read_at?: string | null
           saved_drug_id?: string | null
           sent_at?: string
           user_id?: string
