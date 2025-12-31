@@ -136,7 +136,7 @@ export const Header = () => {
                       <Crown className="h-3.5 w-3.5" />
                       <span>Pro</span>
                       <Badge variant="secondary" className="ml-0.5 bg-amber-300/30 text-amber-950 border-0 text-[10px] px-1.5 py-0">
-                        $25/mo
+                        $29/mo
                       </Badge>
                     </Button>
                   )}
