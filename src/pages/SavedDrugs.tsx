@@ -21,6 +21,7 @@ interface SavedDrug {
   drug_name: string;
   notes: string | null;
   alerts_enabled: boolean;
+  calculator_qty: number | null;
   created_at: string;
 }
 
@@ -75,7 +76,7 @@ export default function SavedDrugs() {
     try {
       const { data, error } = await supabase
         .from("saved_drugs")
-        .select("id, ndc, drug_name, notes, alerts_enabled, created_at")
+        .select("id, ndc, drug_name, notes, alerts_enabled, calculator_qty, created_at")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -243,6 +244,24 @@ export default function SavedDrugs() {
     } catch (error) {
       console.error("Error toggling alerts:", error);
       toast.error("Failed to update alert settings");
+    }
+  };
+
+  // Update quantity
+  const handleUpdateQuantity = async (drugId: string, qty: number | null) => {
+    try {
+      const { error } = await supabase
+        .from("saved_drugs")
+        .update({ calculator_qty: qty })
+        .eq("id", drugId);
+
+      if (error) throw error;
+
+      setSavedDrugs((prev) =>
+        prev.map((d) => (d.id === drugId ? { ...d, calculator_qty: qty } : d))
+      );
+    } catch (error) {
+      console.error("Error updating quantity:", error);
     }
   };
 
@@ -511,6 +530,7 @@ export default function SavedDrugs() {
                   onUpdateNotes={handleUpdateNotes}
                   onToggleCategory={handleToggleCategory}
                   onToggleAlerts={handleToggleAlerts}
+                  onUpdateQuantity={handleUpdateQuantity}
                 />
               ))}
             </div>

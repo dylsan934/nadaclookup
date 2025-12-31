@@ -184,6 +184,7 @@ export type Database = {
       saved_drugs: {
         Row: {
           alerts_enabled: boolean
+          calculator_qty: number | null
           created_at: string
           drug_name: string
           id: string
@@ -195,6 +196,7 @@ export type Database = {
         }
         Insert: {
           alerts_enabled?: boolean
+          calculator_qty?: number | null
           created_at?: string
           drug_name: string
           id?: string
@@ -206,6 +208,7 @@ export type Database = {
         }
         Update: {
           alerts_enabled?: boolean
+          calculator_qty?: number | null
           created_at?: string
           drug_name?: string
           id?: string
