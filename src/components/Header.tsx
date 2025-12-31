@@ -1,25 +1,16 @@
+import { useState } from "react";
 import { Pill, LogIn, LogOut, User, BookmarkCheck, Crown, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 export const Header = () => {
   const { user, isSubscribed, signOut } = useAuth();
-
-  const handleSubscribe = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout');
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-    } catch (error) {
-      console.error('Error creating checkout:', error);
-      toast.error('Failed to start checkout');
-    }
-  };
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const handleManageSubscription = async () => {
     try {
@@ -84,11 +75,14 @@ export const Header = () => {
                   ) : (
                     <Button 
                       size="sm"
-                      onClick={handleSubscribe}
-                      className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-sm"
+                      onClick={() => setShowUpgradeModal(true)}
+                      className="bg-amber-500 hover:bg-amber-400 text-amber-950 shadow-sm gap-1.5"
                     >
-                      <Crown className="h-4 w-4" />
-                      <span className="ml-1">Upgrade</span>
+                      <Crown className="h-3.5 w-3.5" />
+                      <span>Pro</span>
+                      <Badge variant="secondary" className="ml-0.5 bg-amber-300/30 text-amber-950 border-0 text-[10px] px-1.5 py-0">
+                        $25/mo
+                      </Badge>
                     </Button>
                   )}
                   <div className="hidden md:flex items-center gap-2 px-2 text-primary-foreground/70 text-sm">
@@ -106,15 +100,27 @@ export const Header = () => {
                   </Button>
                 </>
               ) : (
-                <Link to="/auth">
+                <>
+                  {/* Upgrade CTA for non-logged-in users */}
                   <Button 
                     size="sm"
-                    className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-sm"
+                    variant="ghost"
+                    onClick={() => setShowUpgradeModal(true)}
+                    className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10 gap-1.5"
                   >
-                    <LogIn className="h-4 w-4" />
-                    <span className="ml-1">Sign In</span>
+                    <Crown className="h-3.5 w-3.5 text-amber-400" />
+                    <span className="hidden sm:inline">Pro</span>
                   </Button>
-                </Link>
+                  <Link to="/auth">
+                    <Button 
+                      size="sm"
+                      className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-sm"
+                    >
+                      <LogIn className="h-4 w-4" />
+                      <span className="ml-1">Sign In</span>
+                    </Button>
+                  </Link>
+                </>
               )}
             </div>
           </div>
@@ -136,6 +142,8 @@ export const Header = () => {
           </p>
         </div>
       </div>
+
+      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
     </header>
   );
 };
