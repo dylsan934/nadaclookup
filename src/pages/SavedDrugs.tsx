@@ -54,15 +54,14 @@ export default function SavedDrugs() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
-    // Allow access for subscribed users - non-subscribed will see the paywall
-    if (user) {
+    // Only fetch data for subscribed users
+    if (user && isSubscribed) {
       fetchAllData();
+    } else {
+      // Non-subscribers and non-logged-in users see the preview immediately
+      setIsLoading(false);
     }
-  }, [user, navigate]);
+  }, [user, isSubscribed]);
 
   const fetchAllData = async () => {
     await Promise.all([
