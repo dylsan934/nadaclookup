@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, RefreshCw, Crown, Loader2, ArrowUpDown, Bell, ArrowLeft } from "lucide-react";
+import { Trash2, RefreshCw, Crown, Loader2, ArrowUpDown, Bell, ArrowLeft, BookmarkCheck } from "lucide-react";
 import { toast } from "sonner";
 
 interface SavedDrug {
@@ -165,7 +165,10 @@ export default function SavedDrugs() {
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Loading saved drugs...</p>
+          </div>
         </main>
         <Footer />
       </div>
@@ -175,32 +178,39 @@ export default function SavedDrugs() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
+      <main className="flex-1 container mx-auto px-4 py-6 md:py-8">
+        <div className="max-w-3xl mx-auto space-y-6">
+          {/* Back button */}
           <Button
-            variant="outline"
+            variant="ghost"
+            size="sm"
             onClick={() => navigate("/")}
-            className="mb-6"
+            className="text-muted-foreground hover:text-foreground -ml-2"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4 mr-1.5" />
             Back to Search
           </Button>
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          {/* Page header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-foreground">Saved Drugs</h1>
-              <Badge className="bg-primary/10 text-primary">
-                <Crown className="h-3 w-3 mr-1" />
-                Pro
-              </Badge>
+              <div className="p-2 rounded-lg bg-primary/10">
+                <BookmarkCheck className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-foreground">Saved Drugs</h1>
+                <p className="text-sm text-muted-foreground">
+                  {savedDrugs.length} drug{savedDrugs.length !== 1 ? 's' : ''} saved
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
-                <SelectTrigger className="w-[180px]">
-                  <ArrowUpDown className="h-4 w-4 mr-2" />
+                <SelectTrigger className="w-[160px] h-9 bg-card">
+                  <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover border border-border shadow-lg">
                   <SelectItem value="name-asc">Name (A-Z)</SelectItem>
                   <SelectItem value="name-desc">Name (Z-A)</SelectItem>
                   <SelectItem value="ndc-asc">NDC (Ascending)</SelectItem>
@@ -214,16 +224,20 @@ export default function SavedDrugs() {
                 size="sm" 
                 onClick={handleRefresh}
                 disabled={isRefreshing}
+                className="h-9"
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isRefreshing ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
             </div>
           </div>
 
-          <Card className="p-4 mb-6 bg-primary/5 border-primary/20">
+          {/* Alerts info */}
+          <Card className="p-4 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200/50 dark:border-emerald-800/30">
             <div className="flex items-center gap-3">
-              <Bell className="h-5 w-5 text-primary" />
+              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+                <Bell className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-foreground">Price Change Alerts Active</p>
                 <p className="text-xs text-muted-foreground">
@@ -233,50 +247,61 @@ export default function SavedDrugs() {
             </div>
           </Card>
 
+          {/* Drug list */}
           {savedDrugs.length === 0 ? (
             <Card className="p-8 text-center">
-              <p className="text-muted-foreground">No saved drugs yet.</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Search for drugs and save them to monitor their NADAC prices.
-              </p>
-              <Button 
-                className="mt-4" 
-                onClick={() => navigate("/")}
-              >
-                Search Drugs
-              </Button>
+              <div className="flex flex-col items-center gap-4">
+                <div className="p-4 rounded-full bg-muted">
+                  <BookmarkCheck className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">No saved drugs yet</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Search for drugs and save them to monitor their NADAC prices.
+                  </p>
+                </div>
+                <Button onClick={() => navigate("/")}>
+                  Search Drugs
+                </Button>
+              </div>
             </Card>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {sortedDrugs.map((drug) => {
                 const price = drugPrices[drug.ndc];
                 return (
-                  <Card key={drug.id} className="p-4 flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-foreground">{drug.drug_name}</h3>
-                      <p className="text-sm text-muted-foreground">NDC: {drug.ndc}</p>
-                      {price && (
-                        <div className="mt-2 flex flex-wrap items-center gap-4">
-                          <span className="text-lg font-bold text-primary">
-                            {formatPrice(price.nadac_per_unit)}
-                          </span>
-                          <Badge variant="secondary" className="text-xs">
-                            {price.pricing_unit}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            as of {formatDate(price.effective_date)}
-                          </span>
-                        </div>
-                      )}
+                  <Card key={drug.id} className="p-4 hover:shadow-md hover:border-border transition-all duration-200">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm sm:text-base text-foreground leading-snug">
+                          {drug.drug_name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          NDC: <span className="font-mono">{drug.ndc}</span>
+                        </p>
+                        {price && (
+                          <div className="mt-3 flex flex-wrap items-center gap-3">
+                            <span className="text-lg font-bold text-primary tabular-nums">
+                              {formatPrice(price.nadac_per_unit)}
+                            </span>
+                            <Badge variant="secondary" className="text-xs font-normal">
+                              {price.pricing_unit}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(price.effective_date)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemove(drug.id)}
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemove(drug.id)}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                   </Card>
                 );
               })}

@@ -1,4 +1,4 @@
-import { RefreshCw, Database, Calendar, AlertCircle } from "lucide-react";
+import { RefreshCw, Database, Calendar, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -24,7 +24,7 @@ export const DataStatus = ({
     try {
       return new Date(dateStr).toLocaleDateString('en-US', {
         year: 'numeric',
-        month: 'long',
+        month: 'short',
         day: 'numeric',
       });
     } catch {
@@ -34,10 +34,10 @@ export const DataStatus = ({
 
   if (isLoading) {
     return (
-      <Card className="p-4 bg-muted/50 border-border/50">
-        <div className="flex items-center gap-2 text-muted-foreground">
+      <Card className="p-4 bg-muted/30 border-border/40">
+        <div className="flex items-center gap-2.5 text-muted-foreground">
           <RefreshCw className="h-4 w-4 animate-spin" />
-          <span>Checking data status...</span>
+          <span className="text-sm">Checking data status...</span>
         </div>
       </Card>
     );
@@ -45,13 +45,15 @@ export const DataStatus = ({
 
   if (!hasData) {
     return (
-      <Card className="p-6 bg-accent/30 border-accent">
+      <Card className="p-5 bg-amber-50 dark:bg-amber-950/20 border-amber-200/50 dark:border-amber-800/30">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-accent-foreground mt-0.5" />
+            <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+              <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            </div>
             <div>
-              <h3 className="font-medium text-foreground">No Data Available</h3>
-              <p className="text-sm text-muted-foreground mt-1">
+              <h3 className="font-medium text-foreground text-sm">No Data Available</h3>
+              <p className="text-sm text-muted-foreground mt-0.5">
                 Sync the NADAC database to enable drug pricing searches.
               </p>
             </div>
@@ -59,17 +61,17 @@ export const DataStatus = ({
           <Button 
             onClick={onSync} 
             disabled={isSyncing}
-            variant="default"
+            size="sm"
             className="shrink-0"
           >
             {isSyncing ? (
               <>
-                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
                 Syncing...
               </>
             ) : (
               <>
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
                 Sync Now
               </>
             )}
@@ -80,19 +82,20 @@ export const DataStatus = ({
   }
 
   return (
-    <Card className="p-4 bg-card border-border/50">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex flex-col xs:flex-row items-start xs:items-center gap-3 sm:gap-6 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Database className="h-4 w-4 shrink-0" />
-            <span>
+    <Card className="p-4 bg-muted/30 border-border/40">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 className="h-4 w-4" />
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Database className="h-3.5 w-3.5" />
               <span className="font-medium text-foreground">{totalRecords.toLocaleString()}</span> drugs
             </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 shrink-0" />
-            <span className="break-words">
-              Updated: <span className="font-medium text-foreground">{formatDate(lastUpdate)}</span>
+            <span className="flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5" />
+              Updated <span className="font-medium text-foreground">{formatDate(lastUpdate)}</span>
             </span>
           </div>
         </div>
@@ -101,17 +104,17 @@ export const DataStatus = ({
           disabled={isSyncing}
           variant="ghost"
           size="sm"
-          className="w-full sm:w-auto"
+          className="text-muted-foreground hover:text-foreground"
         >
           {isSyncing ? (
             <>
-              <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+              <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
               Syncing...
             </>
           ) : (
             <>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh Data
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+              Refresh
             </>
           )}
         </Button>

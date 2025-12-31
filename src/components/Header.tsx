@@ -2,7 +2,6 @@ import { Pill, LogIn, LogOut, User, BookmarkCheck, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -36,81 +35,99 @@ export const Header = () => {
   };
 
   return (
-    <header className="gradient-hero text-primary-foreground py-16 md:py-24 relative">
-      {/* Auth buttons */}
-      <div className="absolute top-4 right-4 flex items-center gap-2">
-        {user ? (
-          <div className="flex items-center gap-3">
-            {isSubscribed ? (
-              <>
-                <Link to="/saved-drugs">
+    <header className="gradient-hero text-primary-foreground relative overflow-hidden">
+      {/* Subtle pattern overlay */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjAzIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-50" />
+      
+      {/* Navigation bar */}
+      <nav className="relative z-10 border-b border-primary-foreground/10">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-14">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 text-primary-foreground hover:opacity-90 transition-opacity">
+              <div className="w-8 h-8 rounded-lg bg-primary-foreground/15 backdrop-blur-sm flex items-center justify-center">
+                <Pill className="h-4 w-4" />
+              </div>
+              <span className="font-semibold hidden sm:inline">NADAC Pricing</span>
+            </Link>
+
+            {/* Auth actions */}
+            <div className="flex items-center gap-2">
+              {user ? (
+                <>
+                  {isSubscribed ? (
+                    <>
+                      <Link to="/saved-drugs">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
+                        >
+                          <BookmarkCheck className="h-4 w-4" />
+                          <span className="hidden sm:inline ml-1">Saved</span>
+                        </Button>
+                      </Link>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={handleManageSubscription}
+                        className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
+                      >
+                        <Crown className="h-4 w-4" />
+                        <span className="hidden sm:inline ml-1">Plan</span>
+                      </Button>
+                    </>
+                  ) : (
+                    <Button 
+                      size="sm"
+                      onClick={handleSubscribe}
+                      className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-sm"
+                    >
+                      <Crown className="h-4 w-4" />
+                      <span className="ml-1">Upgrade</span>
+                    </Button>
+                  )}
+                  <div className="hidden md:flex items-center gap-2 px-2 text-primary-foreground/70 text-sm">
+                    <User className="h-3.5 w-3.5" />
+                    <span className="max-w-[120px] truncate">{user.email}</span>
+                  </div>
                   <Button 
                     variant="ghost" 
-                    size="sm"
-                    className="text-primary-foreground hover:bg-primary-foreground/10"
+                    size="sm" 
+                    onClick={signOut}
+                    className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
                   >
-                    <BookmarkCheck className="h-4 w-4 mr-1" />
-                    Saved Drugs
+                    <LogOut className="h-4 w-4" />
+                    <span className="hidden sm:inline ml-1">Sign Out</span>
+                  </Button>
+                </>
+              ) : (
+                <Link to="/auth">
+                  <Button 
+                    size="sm"
+                    className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-sm"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    <span className="ml-1">Sign In</span>
                   </Button>
                 </Link>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={handleManageSubscription}
-                  className="text-primary-foreground hover:bg-primary-foreground/10"
-                >
-                  <Crown className="h-4 w-4 mr-1" />
-                  Manage Plan
-                </Button>
-              </>
-            ) : (
-              <Button 
-                variant="secondary" 
-                size="sm"
-                onClick={handleSubscribe}
-                className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
-              >
-                <Crown className="h-4 w-4 mr-1" />
-                Upgrade to Pro
-              </Button>
-            )}
-            <span className="text-sm text-primary-foreground/80 hidden sm:inline">
-              <User className="h-4 w-4 inline mr-1" />
-              {user.email}
-            </span>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={signOut}
-              className="text-primary-foreground hover:bg-primary-foreground/10"
-            >
-              <LogOut className="h-4 w-4 mr-1" />
-              Sign Out
-            </Button>
+              )}
+            </div>
           </div>
-        ) : (
-          <Link to="/auth">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="text-primary-foreground hover:bg-primary-foreground/10"
-            >
-              <LogIn className="h-4 w-4 mr-1" />
-              Sign In
-            </Button>
-          </Link>
-        )}
-      </div>
+        </div>
+      </nav>
 
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col items-center text-center animate-fade-in">
-          <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center mb-6 shadow-glow">
-            <Pill className="h-8 w-8 md:h-10 md:w-10" />
+      {/* Hero content */}
+      <div className="relative z-10 container mx-auto px-4 py-12 md:py-16">
+        <div className="max-w-2xl mx-auto text-center animate-fade-in">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/10 text-sm text-primary-foreground/90 mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Updated weekly with official CMS data
           </div>
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-            NADAC Drug Pricing
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 text-balance">
+            NADAC Drug Pricing Database
           </h1>
-          <p className="text-lg md:text-xl text-primary-foreground/90 max-w-2xl">
+          <p className="text-base md:text-lg text-primary-foreground/85 max-w-xl mx-auto leading-relaxed">
             Search the National Average Drug Acquisition Cost database for current pharmaceutical pricing information.
           </p>
         </div>

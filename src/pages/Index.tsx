@@ -148,9 +148,9 @@ const Index = () => {
       
       {/* Sticky Search Bar */}
       <div 
-        className={`sticky top-0 z-50 bg-background/95 backdrop-blur-md transition-all duration-300 ${
+        className={`sticky top-0 z-50 bg-background/98 backdrop-blur-lg transition-all duration-200 ${
           isScrolled 
-            ? 'shadow-md border-b border-border/50' 
+            ? 'shadow-sm border-b border-border/60' 
             : ''
         }`}
       >
@@ -167,26 +167,24 @@ const Index = () => {
       </div>
       
       <main className="flex-1 container mx-auto px-4 py-6 md:py-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-3xl mx-auto space-y-6">
           {/* Search hint */}
-          <p className="text-center text-sm text-muted-foreground mb-6">
+          <p className="text-center text-sm text-muted-foreground">
             Search by drug name (e.g., "Metformin") or NDC code (e.g., "00093-7212-01")
           </p>
 
           {/* Data Status */}
-          <section className="mb-8">
-            <DataStatus
-              hasData={dataStatus.hasData}
-              lastUpdate={dataStatus.lastUpdate}
-              totalRecords={dataStatus.totalRecords}
-              isLoading={isCheckingStatus}
-              isSyncing={isSyncing}
-              onSync={handleSync}
-            />
-          </section>
+          <DataStatus
+            hasData={dataStatus.hasData}
+            lastUpdate={dataStatus.lastUpdate}
+            totalRecords={dataStatus.totalRecords}
+            isLoading={isCheckingStatus}
+            isSyncing={isSyncing}
+            onSync={handleSync}
+          />
 
           {/* Results Section */}
-          <section>
+          <section className="pt-2">
             <DrugResults
               drugs={results}
               isLoading={isLoading}
