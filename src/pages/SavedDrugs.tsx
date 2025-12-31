@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { RefreshCw, Loader2, ArrowUpDown, Bell, ArrowLeft, BookmarkCheck, Tag, Search, Crown, Lock, Settings } from "lucide-react";
+import { RefreshCw, Loader2, ArrowUpDown, Bell, ArrowLeft, BookmarkCheck, Tag, Search, Crown, Lock, Settings, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { CategoryManager, Category, getCategoryColors } from "@/components/CategoryManager";
 import { SavedDrugCard } from "@/components/SavedDrugCard";
@@ -659,58 +660,70 @@ export default function SavedDrugs() {
             />
           </div>
 
-          {/* Notification Settings */}
-          <Card className="p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Settings className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">Alert Settings</span>
-            </div>
-            
-            <div className="space-y-5">
-              {/* Toggle all saved drugs */}
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-0.5">
-                  <Label htmlFor="notify-all" className="text-sm font-medium">
-                    Enable alerts for all saved drugs
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    Get notified in-app when prices change for your saved drugs
-                  </p>
+          {/* Notification Settings - Collapsible */}
+          <Collapsible>
+            <Card className="overflow-hidden">
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
+                <div className="flex items-center gap-2">
+                  <Settings className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-foreground">Alert Settings</span>
+                  {notifyAllDrugs && (
+                    <Badge variant="secondary" className="text-xs ml-2">
+                      {alertThreshold}% threshold
+                    </Badge>
+                  )}
                 </div>
-                <Switch
-                  id="notify-all"
-                  checked={notifyAllDrugs}
-                  onCheckedChange={updateNotifyAllDrugs}
-                  disabled={isLoadingPrefs}
-                />
-              </div>
-              
-              {/* Threshold slider */}
-              <div className={`space-y-3 ${!notifyAllDrugs ? 'opacity-50 pointer-events-none' : ''}`}>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">
-                    Alert threshold
-                  </Label>
-                  <span className="text-sm font-semibold text-primary tabular-nums">
-                    {alertThreshold}%
-                  </span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="px-4 pb-4 pt-0 space-y-5 border-t border-border">
+                  <div className="pt-4" />
+                  {/* Toggle all saved drugs */}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="notify-all" className="text-sm font-medium">
+                        Enable alerts for all saved drugs
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Get notified in-app when prices change for your saved drugs
+                      </p>
+                    </div>
+                    <Switch
+                      id="notify-all"
+                      checked={notifyAllDrugs}
+                      onCheckedChange={updateNotifyAllDrugs}
+                      disabled={isLoadingPrefs}
+                    />
+                  </div>
+                  
+                  {/* Threshold slider */}
+                  <div className={`space-y-3 ${!notifyAllDrugs ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">
+                        Alert threshold
+                      </Label>
+                      <span className="text-sm font-semibold text-primary tabular-nums">
+                        {alertThreshold}%
+                      </span>
+                    </div>
+                    <Slider
+                      value={[alertThreshold]}
+                      onValueChange={([value]) => setAlertThreshold(value)}
+                      onValueCommit={([value]) => updateAlertThreshold(value)}
+                      min={1}
+                      max={20}
+                      step={1}
+                      className="w-full"
+                      disabled={!notifyAllDrugs}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Only notify when price changes by {alertThreshold}% or more
+                    </p>
+                  </div>
                 </div>
-                <Slider
-                  value={[alertThreshold]}
-                  onValueChange={([value]) => setAlertThreshold(value)}
-                  onValueCommit={([value]) => updateAlertThreshold(value)}
-                  min={1}
-                  max={20}
-                  step={1}
-                  className="w-full"
-                  disabled={!notifyAllDrugs}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Only notify when price changes by {alertThreshold}% or more
-                </p>
-              </div>
-            </div>
-          </Card>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
 
           {/* Categories section */}
           <Card className="p-4">
