@@ -279,27 +279,6 @@ export default function SavedDrugs() {
     );
     toast.success("Notes saved");
   };
-
-  // Toggle alerts
-  const handleToggleAlerts = async (drugId: string, enabled: boolean) => {
-    try {
-      const { error } = await supabase
-        .from("saved_drugs")
-        .update({ alerts_enabled: enabled })
-        .eq("id", drugId);
-
-      if (error) throw error;
-
-      setSavedDrugs((prev) =>
-        prev.map((d) => (d.id === drugId ? { ...d, alerts_enabled: enabled } : d))
-      );
-      toast.success(enabled ? "Price alerts enabled" : "Price alerts disabled");
-    } catch (error) {
-      console.error("Error toggling alerts:", error);
-      toast.error("Failed to update alert settings");
-    }
-  };
-
   // Update quantity
   const handleUpdateQuantity = async (drugId: string, qty: number | null) => {
     try {
@@ -805,7 +784,6 @@ export default function SavedDrugs() {
                   onRemove={handleRemove}
                   onUpdateNotes={handleUpdateNotes}
                   onToggleCategory={handleToggleCategory}
-                  onToggleAlerts={handleToggleAlerts}
                   onUpdateQuantity={handleUpdateQuantity}
                 />
               ))}
