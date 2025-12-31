@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ interface SavedDrug {
   drug_name: string;
   notes: string | null;
   alerts_enabled: boolean;
+  calculator_qty: number | null;
   created_at: string;
 }
 
@@ -39,6 +40,7 @@ interface SavedDrugCardProps {
   onUpdateNotes: (id: string, notes: string) => Promise<void>;
   onToggleCategory: (drugId: string, categoryId: string, isAdding: boolean) => Promise<void>;
   onToggleAlerts: (id: string, enabled: boolean) => Promise<void>;
+  onUpdateQuantity: (id: string, qty: number | null) => Promise<void>;
 }
 
 export const SavedDrugCard = ({
@@ -51,12 +53,18 @@ export const SavedDrugCard = ({
   onUpdateNotes,
   onToggleCategory,
   onToggleAlerts,
+  onUpdateQuantity,
 }: SavedDrugCardProps) => {
-  const [quantity, setQuantity] = useState("");
+  const [quantity, setQuantity] = useState(drug.calculator_qty?.toString() || "");
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notes, setNotes] = useState(drug.notes || "");
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [isTogglingAlerts, setIsTogglingAlerts] = useState(false);
+  const debounceRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    setQuantity(drug.calculator_qty?.toString() || "");
+  }, [drug.calculator_qty]);
 
   useEffect(() => {
     setNotes(drug.notes || "");
@@ -216,7 +224,18 @@ export const SavedDrugCard = ({
                   type="number"
                   placeholder="Qty"
                   value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setQuantity(val);
+                    // Debounce the save
+                    if (debounceRef.current) {
+                      clearTimeout(debounceRef.current);
+                    }
+                    debounceRef.current = setTimeout(() => {
+                      const numVal = parseFloat(val);
+                      onUpdateQuantity(drug.id, isNaN(numVal) ? null : numVal);
+                    }, 500);
+                  }}
                   className="w-20 h-8 text-sm"
                   min="0"
                   step="any"
