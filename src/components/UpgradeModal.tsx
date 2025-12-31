@@ -13,10 +13,10 @@ interface UpgradeModalProps {
 }
 
 const features = [
-  { icon: BookmarkCheck, label: "Save unlimited drugs to your list" },
-  { icon: Calculator, label: "Calculate costs for any quantity" },
-  { icon: Bell, label: "Get email alerts when prices change" },
-  { icon: Tag, label: "Organize with categories & notes" },
+  { icon: Calculator, label: "Calculate true acquisition cost for any quantity instantly" },
+  { icon: Bell, label: "Avoid surprise cost increases with automatic price alerts" },
+  { icon: BookmarkCheck, label: "Build a personalized formulary of your most-used drugs" },
+  { icon: Tag, label: "Stay organized with custom categories and notes" },
 ];
 
 export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeModalProps) => {
