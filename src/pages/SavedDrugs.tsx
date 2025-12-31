@@ -7,9 +7,10 @@ import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RefreshCw, Loader2, ArrowUpDown, Bell, ArrowLeft, BookmarkCheck, Tag } from "lucide-react";
+import { RefreshCw, Loader2, ArrowUpDown, Bell, ArrowLeft, BookmarkCheck, Tag, Search } from "lucide-react";
 import { toast } from "sonner";
 import { CategoryManager, Category, getCategoryColors } from "@/components/CategoryManager";
 import { SavedDrugCard } from "@/components/SavedDrugCard";
@@ -43,6 +44,7 @@ export default function SavedDrugs() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [drugCategoryLinks, setDrugCategoryLinks] = useState<DrugCategoryLink[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("name-asc");
@@ -261,6 +263,16 @@ export default function SavedDrugs() {
   const filteredAndSortedDrugs = useMemo(() => {
     let result = [...savedDrugs];
 
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (d) =>
+          d.drug_name.toLowerCase().includes(query) ||
+          d.ndc.toLowerCase().includes(query)
+      );
+    }
+
     // Filter by category
     if (selectedCategory !== "all") {
       const drugIdsInCategory = drugCategoryLinks
@@ -296,7 +308,7 @@ export default function SavedDrugs() {
     });
 
     return result;
-  }, [savedDrugs, drugPrices, sortBy, selectedCategory, drugCategoryLinks]);
+  }, [savedDrugs, drugPrices, sortBy, selectedCategory, drugCategoryLinks, searchQuery]);
 
   if (isLoading) {
     return (
@@ -368,6 +380,18 @@ export default function SavedDrugs() {
                 Refresh
               </Button>
             </div>
+          </div>
+
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search saved drugs by name or NDC..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-card"
+            />
           </div>
 
           {/* Alerts info */}
@@ -446,7 +470,11 @@ export default function SavedDrugs() {
             </Card>
           ) : filteredAndSortedDrugs.length === 0 ? (
             <Card className="p-8 text-center">
-              <p className="text-muted-foreground">No drugs in this category.</p>
+              <p className="text-muted-foreground">
+                {searchQuery.trim()
+                  ? "No drugs match your search."
+                  : "No drugs in this category."}
+              </p>
             </Card>
           ) : (
             <div className="space-y-3">
