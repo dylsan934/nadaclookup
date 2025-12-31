@@ -14,6 +14,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [lastSearchTerm, setLastSearchTerm] = useState("");
+  const [isScrolled, setIsScrolled] = useState(false);
   
   const [dataStatus, setDataStatus] = useState({
     hasData: false,
@@ -24,6 +25,15 @@ const Index = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   
   const { toast } = useToast();
+
+  // Track scroll for sticky shadow effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Check data status on mount
   useEffect(() => {
@@ -136,22 +146,32 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-8 md:py-12">
+      {/* Sticky Search Bar */}
+      <div 
+        className={`sticky top-0 z-50 bg-background/95 backdrop-blur-md transition-all duration-300 ${
+          isScrolled 
+            ? 'shadow-md border-b border-border/50' 
+            : ''
+        }`}
+      >
+        <div className="container mx-auto px-4 py-4">
+          <div className="max-w-2xl mx-auto">
+            <SearchBar
+              value={searchTerm}
+              onChange={setSearchTerm}
+              onSearch={handleSearch}
+              isLoading={isLoading}
+            />
+          </div>
+        </div>
+      </div>
+      
+      <main className="flex-1 container mx-auto px-4 py-6 md:py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Search Section */}
-          <section className="-mt-20 md:-mt-24 relative z-10 mb-8">
-            <div className="bg-card rounded-2xl p-6 md:p-8 shadow-card border border-border/50">
-              <SearchBar
-                value={searchTerm}
-                onChange={setSearchTerm}
-                onSearch={handleSearch}
-                isLoading={isLoading}
-              />
-              <p className="text-center text-sm text-muted-foreground mt-4">
-                Search by drug name (e.g., "Metformin") or NDC code (e.g., "00093-7212-01")
-              </p>
-            </div>
-          </section>
+          {/* Search hint */}
+          <p className="text-center text-sm text-muted-foreground mb-6">
+            Search by drug name (e.g., "Metformin") or NDC code (e.g., "00093-7212-01")
+          </p>
 
           {/* Data Status */}
           <section className="mb-8">
