@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
 import { LockedNotificationDropdown } from "@/components/LockedNotificationDropdown";
+import { NotificationSettings } from "@/components/NotificationSettings";
 
 export const Header = () => {
   const { user, isSubscribed, signOut } = useAuth();
@@ -90,13 +91,16 @@ export const Header = () => {
               <TooltipProvider>
               {user ? (
                 <>
-                  {/* Notification bell for premium users */}
+                  {/* Notification bell and settings for premium users */}
                   {isSubscribed ? (
-                    <NotificationDropdown 
-                      userId={user.id}
-                      unreadCount={unreadCount}
-                      onUnreadCountChange={setUnreadCount}
-                    />
+                    <div className="flex items-center">
+                      <NotificationDropdown 
+                        userId={user.id}
+                        unreadCount={unreadCount}
+                        onUnreadCountChange={setUnreadCount}
+                      />
+                      <NotificationSettings userId={user.id} />
+                    </div>
                   ) : (
                     <LockedNotificationDropdown onUpgradeClick={() => setShowUpgradeModal(true)} />
                   )}
