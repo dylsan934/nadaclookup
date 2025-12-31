@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { NotificationDropdown } from "@/components/NotificationDropdown";
 
 export const Header = () => {
   const { user, isSubscribed, signOut } = useAuth();
@@ -90,20 +91,11 @@ export const Header = () => {
                 <>
                   {/* Notification bell for premium users */}
                   {isSubscribed ? (
-                    <Link to="/saved-drugs">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10 relative"
-                      >
-                        <Bell className="h-4 w-4" />
-                        {unreadCount > 0 && (
-                          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-semibold text-amber-950 px-1">
-                            {unreadCount > 99 ? '99+' : unreadCount}
-                          </span>
-                        )}
-                      </Button>
-                    </Link>
+                    <NotificationDropdown 
+                      userId={user.id}
+                      unreadCount={unreadCount}
+                      onUnreadCountChange={setUnreadCount}
+                    />
                   ) : (
                     <Tooltip>
                       <TooltipTrigger asChild>
