@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, RefreshCw, Crown, Loader2, ArrowUpDown, Bell } from "lucide-react";
+import { Trash2, RefreshCw, Crown, Loader2, ArrowUpDown, Bell, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 interface SavedDrug {
@@ -177,6 +177,15 @@ export default function SavedDrugs() {
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
+          <Button
+            variant="outline"
+            onClick={() => navigate("/")}
+            className="mb-6"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Search
+          </Button>
+
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-foreground">Saved Drugs</h1>
