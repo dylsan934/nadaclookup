@@ -107,10 +107,27 @@ const Auth = () => {
       } else {
         const { error } = await signUp(email, password);
         if (error) {
-          if (error.message.includes("already registered")) {
+          // Handle various signup error cases
+          const errorMessage = error.message.toLowerCase();
+          if (errorMessage.includes("already registered") || 
+              errorMessage.includes("user already registered") ||
+              errorMessage.includes("already exists")) {
             toast({
               title: "Account exists",
-              description: "This email is already registered. Please log in instead.",
+              description: "This email is already registered. Please sign in instead.",
+              variant: "destructive",
+            });
+            setIsLogin(true); // Switch to login view
+          } else if (errorMessage.includes("invalid email")) {
+            toast({
+              title: "Invalid email",
+              description: "Please enter a valid email address.",
+              variant: "destructive",
+            });
+          } else if (errorMessage.includes("password")) {
+            toast({
+              title: "Password issue",
+              description: "Password must be at least 6 characters long.",
               variant: "destructive",
             });
           } else {
@@ -123,7 +140,7 @@ const Auth = () => {
         } else {
           toast({
             title: "Account created!",
-            description: "You can now access premium features.",
+            description: "Welcome! You can now access all features.",
           });
           navigate("/");
         }
