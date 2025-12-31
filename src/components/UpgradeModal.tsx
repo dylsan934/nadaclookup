@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Crown, BookmarkCheck, Bell, Tag, Calculator, Check } from "lucide-react";
+import { TrendingUp, Calculator, Bookmark, Bell, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -13,10 +13,10 @@ interface UpgradeModalProps {
 }
 
 const features = [
-  { icon: Calculator, label: "Calculate true acquisition cost for any quantity instantly" },
-  { icon: Bell, label: "Avoid surprise cost increases with automatic price alerts" },
-  { icon: BookmarkCheck, label: "Build a personalized formulary of your most-used drugs" },
-  { icon: Tag, label: "Stay organized with custom categories and notes" },
+  { icon: Calculator, label: "Quantity-based pricing calculations" },
+  { icon: Bookmark, label: "Save and organize frequently used drugs" },
+  { icon: Bell, label: "In-app alerts for NADAC price changes" },
+  { icon: TrendingUp, label: "Track pricing trends over time" },
 ];
 
 export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeModalProps) => {
@@ -24,7 +24,6 @@ export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeMo
 
   const handleUpgrade = async () => {
     if (!user) {
-      // Close modal - they'll be redirected to sign in
       onOpenChange(false);
       return;
     }
@@ -45,64 +44,96 @@ export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeMo
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <div className="flex justify-center mb-2">
-            <div className="p-3 rounded-full bg-amber-100 dark:bg-amber-900/30">
-              <Crown className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+        <DialogHeader className="space-y-3 pb-2">
+          <div className="flex justify-center">
+            <div className="p-3 rounded-full bg-primary/10">
+              <TrendingUp className="h-7 w-7 text-primary" />
             </div>
           </div>
-          <DialogTitle className="text-center text-xl">Upgrade to Pro</DialogTitle>
+          <div className="text-center space-y-2">
+            <DialogTitle className="text-xl font-semibold">
+              Know Your True Drug Costs
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Track pricing changes, calculate acquisition cost, and avoid margin surprises
+            </p>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-5 py-4">
           {featureHighlight && (
-            <p className="text-center text-sm text-muted-foreground">
-              {featureHighlight}
-            </p>
+            <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+              <p className="text-center text-sm text-primary font-medium">
+                {featureHighlight}
+              </p>
+            </div>
           )}
 
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {features.map((feature, idx) => (
               <div 
                 key={idx} 
                 className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50"
               >
-                <div className="p-1.5 rounded-md bg-primary/10">
-                  <feature.icon className="h-4 w-4 text-primary" />
+                <div className="p-1.5 rounded-md bg-emerald-500/10">
+                  <feature.icon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <span className="text-sm text-foreground">{feature.label}</span>
-                <Check className="h-4 w-4 text-emerald-500 ml-auto" />
+                <span className="text-sm text-foreground flex-1">{feature.label}</span>
+                <Check className="h-4 w-4 text-emerald-500" />
               </div>
             ))}
           </div>
 
-          <div className="text-center pt-2">
+          <div className="text-center pt-2 pb-1">
             <p className="text-3xl font-bold text-foreground">
-              $25<span className="text-base font-normal text-muted-foreground">/month</span>
+              $29<span className="text-base font-normal text-muted-foreground">/month</span>
             </p>
-            <p className="text-xs text-muted-foreground mt-1">Cancel anytime</p>
+            <p className="text-xs text-muted-foreground mt-1.5">
+              Less than the cost of one mispriced prescription
+            </p>
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3 pt-2">
           {user ? (
-            <Button size="lg" onClick={handleUpgrade} className="w-full">
-              <Crown className="h-4 w-4 mr-2" />
-              Upgrade Now
-            </Button>
+            <>
+              <Button size="lg" onClick={handleUpgrade} className="w-full font-semibold">
+                Upgrade to Premium
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => onOpenChange(false)} 
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Continue with free search
+              </Button>
+            </>
           ) : (
             <>
-              <Link to="/auth" className="w-full">
-                <Button size="lg" className="w-full">
-                  Sign Up to Get Pro
+              <Link to="/auth" className="w-full" onClick={() => onOpenChange(false)}>
+                <Button size="lg" className="w-full font-semibold">
+                  Get Started with Premium
                 </Button>
               </Link>
-              <p className="text-xs text-center text-muted-foreground">
-                Already have an account?{" "}
-                <Link to="/auth" className="text-primary hover:underline">
+              <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                <span>Already have an account?</span>
+                <Link 
+                  to="/auth" 
+                  onClick={() => onOpenChange(false)}
+                  className="text-primary hover:underline font-medium"
+                >
                   Sign in
                 </Link>
-              </p>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => onOpenChange(false)} 
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Continue with free search
+              </Button>
             </>
           )}
         </div>
