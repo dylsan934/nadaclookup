@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      drug_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       nadac_drugs: {
         Row: {
           created_at: string
@@ -121,6 +145,42 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_drug_categories: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          saved_drug_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          saved_drug_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          saved_drug_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_drug_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "drug_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_drug_categories_saved_drug_id_fkey"
+            columns: ["saved_drug_id"]
+            isOneToOne: false
+            referencedRelation: "saved_drugs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_drugs: {
         Row: {
           created_at: string
@@ -129,6 +189,7 @@ export type Database = {
           last_notified_at: string | null
           last_notified_price: number | null
           ndc: string
+          notes: string | null
           user_id: string
         }
         Insert: {
@@ -138,6 +199,7 @@ export type Database = {
           last_notified_at?: string | null
           last_notified_price?: number | null
           ndc: string
+          notes?: string | null
           user_id: string
         }
         Update: {
@@ -147,6 +209,7 @@ export type Database = {
           last_notified_at?: string | null
           last_notified_price?: number | null
           ndc?: string
+          notes?: string | null
           user_id?: string
         }
         Relationships: []
