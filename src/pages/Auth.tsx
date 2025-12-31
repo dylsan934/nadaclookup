@@ -9,69 +9,24 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Search, Bookmark, Calculator, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Check if this is a password recovery session immediately (before any render)
-const checkIsRecoveryMode = () => {
-  // Check URL hash for recovery token
-  const hashParams = new URLSearchParams(window.location.hash.substring(1));
-  if (hashParams.get("type") === "recovery") {
-    return true;
-  }
-  // Also check query params (some Supabase versions use this)
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get("type") === "recovery") {
-    return true;
-  }
-  return false;
-};
-
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-  // Initialize recovery mode immediately from URL
-  const [isResettingPassword, setIsResettingPassword] = useState(checkIsRecoveryMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [recoveryChecked, setRecoveryChecked] = useState(false);
   
-  const { user, isLoading, signIn, signUp } = useAuth();
+  const { user, isLoading, signIn, signUp, isPasswordRecovery, clearPasswordRecovery } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Listen for PASSWORD_RECOVERY event to show the reset form
+  // Only redirect if not in password reset mode
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth event:", event);
-      if (event === "PASSWORD_RECOVERY") {
-        console.log("Password recovery detected!");
-        setIsResettingPassword(true);
-      }
-      setRecoveryChecked(true);
-    });
-
-    // Also check immediately if we're in recovery mode from URL
-    if (checkIsRecoveryMode()) {
-      setIsResettingPassword(true);
-    }
-    
-    // Set recovery checked after a short delay to ensure we've processed the auth event
-    const timeout = setTimeout(() => {
-      setRecoveryChecked(true);
-    }, 500);
-
-    return () => {
-      subscription.unsubscribe();
-      clearTimeout(timeout);
-    };
-  }, []);
-
-  // Only redirect if not in password reset mode AND we've checked for recovery
-  useEffect(() => {
-    if (user && !isLoading && !isResettingPassword && recoveryChecked) {
+    if (user && !isLoading && !isPasswordRecovery) {
       navigate("/");
     }
-  }, [user, isLoading, navigate, isResettingPassword, recoveryChecked]);
+  }, [user, isLoading, navigate, isPasswordRecovery]);
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,7 +111,7 @@ const Auth = () => {
           title: "Password updated!",
           description: "Your password has been successfully reset.",
         });
-        setIsResettingPassword(false);
+        clearPasswordRecovery();
         setPassword("");
         setConfirmPassword("");
         navigate("/");
@@ -253,8 +208,7 @@ const Auth = () => {
     }
   };
 
-  // Show loading while checking auth state or recovery mode
-  if (isLoading || !recoveryChecked) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -263,7 +217,7 @@ const Auth = () => {
   }
 
   // Password Reset View (after clicking email link)
-  if (isResettingPassword) {
+  if (isPasswordRecovery) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <Card className="w-full max-w-md">
