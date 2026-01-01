@@ -27,9 +27,16 @@ export const SearchBar = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
+  const justSelectedRef = useRef(false);
 
   // Fetch suggestions with debounce
   const fetchSuggestions = useCallback(async (term: string) => {
+    // Skip if we just selected a suggestion
+    if (justSelectedRef.current) {
+      justSelectedRef.current = false;
+      return;
+    }
+    
     if (term.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -108,8 +115,10 @@ export const SearchBar = ({
   };
 
   const selectSuggestion = (suggestion: string) => {
+    justSelectedRef.current = true;
     onChange(suggestion);
     setShowSuggestions(false);
+    setSuggestions([]);
     setSelectedIndex(-1);
     // Pass the suggestion directly to avoid state timing issues
     onSearch(suggestion);
