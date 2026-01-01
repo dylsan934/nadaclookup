@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
-  onSearch: () => void;
+  onSearch: (searchTerm?: string) => void;
   placeholder?: string;
   isLoading?: boolean;
 }
@@ -111,8 +111,8 @@ export const SearchBar = ({
     onChange(suggestion);
     setShowSuggestions(false);
     setSelectedIndex(-1);
-    // Trigger search after a short delay to allow state update
-    setTimeout(() => onSearch(), 50);
+    // Pass the suggestion directly to avoid state timing issues
+    onSearch(suggestion);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

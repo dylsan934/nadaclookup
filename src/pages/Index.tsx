@@ -87,8 +87,10 @@ const Index = () => {
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) {
+  const handleSearch = async (overrideSearchTerm?: string) => {
+    const termToSearch = overrideSearchTerm ?? searchTerm;
+    
+    if (!termToSearch.trim()) {
       toast({
         title: "Search term required",
         description: "Please enter a drug name or NDC code to search.",
@@ -108,10 +110,15 @@ const Index = () => {
 
     setIsLoading(true);
     setHasSearched(true);
-    setLastSearchTerm(searchTerm);
+    setLastSearchTerm(termToSearch);
+    
+    // Update the input field if using override term
+    if (overrideSearchTerm) {
+      setSearchTerm(overrideSearchTerm);
+    }
 
     try {
-      const response = await nadacApi.search(searchTerm);
+      const response = await nadacApi.search(termToSearch);
       
       if (response.success && response.data) {
         setResults(response.data);
