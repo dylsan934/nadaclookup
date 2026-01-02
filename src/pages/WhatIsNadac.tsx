@@ -173,7 +173,7 @@ const WhatIsNadac = () => {
                   <li>Current NADAC price per unit</li>
                   <li>Effective date of pricing</li>
                   <li>Pricing unit information</li>
-                  <li>Historical price tracking (with free account)</li>
+                  <li>Saved drugs with price change alerts</li>
                 </ul>
                 <p className="text-muted-foreground leading-relaxed">
                   Whether you're a pharmacist checking acquisition costs, a healthcare administrator analyzing drug spending, or a researcher studying pharmaceutical pricing, our tool provides quick access to the data you need.
