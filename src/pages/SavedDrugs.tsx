@@ -44,7 +44,7 @@ interface DrugCategoryLink {
 type SortOption = "name-asc" | "name-desc" | "ndc-asc" | "ndc-desc" | "price-asc" | "price-desc";
 
 export default function SavedDrugs() {
-  const { user, isSubscribed } = useAuth();
+  const { user, isSubscribed, lifetimeSavesCount, freeSaveLimit, canSaveDrug } = useAuth();
   const navigate = useNavigate();
   const [savedDrugs, setSavedDrugs] = useState<SavedDrug[]>([]);
   const [drugPrices, setDrugPrices] = useState<Record<string, DrugPrice>>({});
@@ -61,15 +61,15 @@ export default function SavedDrugs() {
   const [isLoadingPrefs, setIsLoadingPrefs] = useState(false);
 
   useEffect(() => {
-    // Only fetch data for subscribed users
-    if (user && isSubscribed) {
+    // Fetch data for logged in users (both free and paid)
+    if (user) {
       fetchAllData();
       fetchNotificationPrefs();
     } else {
-      // Non-subscribers and non-logged-in users see the preview immediately
+      // Non-logged-in users see the preview immediately
       setIsLoading(false);
     }
-  }, [user, isSubscribed]);
+  }, [user]);
 
   const fetchNotificationPrefs = async () => {
     if (!user) return;
@@ -410,8 +410,8 @@ export default function SavedDrugs() {
     );
   }
 
-  // Show preview for non-subscribers with placeholder cards
-  if (!isSubscribed) {
+  // Show preview for non-logged in users
+  if (!user) {
     const placeholderDrugs = [
       { name: "Metformin HCL 500mg Tablet", ndc: "00093-7212-01", price: 0.0234 },
       { name: "Lisinopril 10mg Tablet", ndc: "00378-0839-01", price: 0.0156 },
@@ -445,21 +445,20 @@ export default function SavedDrugs() {
               </div>
             </div>
 
-            {/* Premium CTA Card */}
-            <Card className="p-6 border-amber-200/50 dark:border-amber-800/30 bg-gradient-to-r from-amber-50/80 to-orange-50/50 dark:from-amber-950/30 dark:to-orange-950/20">
+            {/* Sign in CTA Card */}
+            <Card className="p-6 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="p-3 rounded-full bg-amber-100 dark:bg-amber-900/50 shrink-0">
-                  <Crown className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                <div className="p-3 rounded-full bg-primary/10 shrink-0">
+                  <Lock className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="font-semibold text-foreground">Build your personalized drug formulary</h2>
+                  <h2 className="font-semibold text-foreground">Sign in to save drugs</h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Track your most-used medications, get notified before prices spike, and calculate costs for any quantity—all in one place.
+                    Create a free account to save up to 3 drugs with price change alerts. Upgrade anytime for unlimited saves.
                   </p>
                 </div>
-                <Button onClick={() => setShowUpgradeModal(true)} className="shrink-0">
-                  <Crown className="h-4 w-4 mr-1.5" />
-                  Upgrade to Pro
+                <Button onClick={() => navigate("/auth")} className="shrink-0">
+                  Sign In
                 </Button>
               </div>
             </Card>
@@ -470,7 +469,6 @@ export default function SavedDrugs() {
                 <Card 
                   key={idx} 
                   className="p-4 opacity-60 pointer-events-none select-none"
-                  onClick={() => setShowUpgradeModal(true)}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
@@ -499,20 +497,6 @@ export default function SavedDrugs() {
                   </div>
                 </Card>
               ))}
-
-              {/* Overlay prompting upgrade */}
-              <div 
-                className="absolute inset-0 flex items-center justify-center cursor-pointer"
-                onClick={() => setShowUpgradeModal(true)}
-              >
-                <div className="flex items-center gap-2 px-5 py-3 bg-background/95 backdrop-blur-sm rounded-xl border border-amber-200 dark:border-amber-800 shadow-lg hover:border-amber-300 dark:hover:border-amber-700 transition-colors">
-                  <Lock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                  <span className="text-sm font-medium text-foreground">
-                    Track your most-used drugs and spot price changes early
-                  </span>
-                  <Crown className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                </div>
-              </div>
             </div>
 
             {/* Feature highlights */}
@@ -523,8 +507,8 @@ export default function SavedDrugs() {
                     <Bell className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">Avoid Surprise Cost Increases</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Get in-app alerts when drug prices change significantly</p>
+                    <p className="text-sm font-medium text-foreground">Price Change Alerts</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Get notified when drug prices change</p>
                   </div>
                 </div>
               </Card>
@@ -534,30 +518,8 @@ export default function SavedDrugs() {
                     <Tag className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">Keep Your Formulary Organized</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Group drugs by therapeutic class or custom tags</p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="p-4 bg-muted/30">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <ArrowUpDown className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Know Your True Costs</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Calculate acquisition cost for any quantity instantly</p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="p-4 bg-muted/30">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <BookmarkCheck className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Build Your Personal Watchlist</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Save unlimited drugs and access them anytime</p>
+                    <p className="text-sm font-medium text-foreground">Custom Tags</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Organize drugs by category</p>
                   </div>
                 </div>
               </Card>
@@ -565,7 +527,6 @@ export default function SavedDrugs() {
           </div>
         </main>
         <Footer />
-        <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
       </div>
     );
   }
@@ -593,10 +554,28 @@ export default function SavedDrugs() {
                 <BookmarkCheck className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-foreground">Saved Drugs</h1>
-                <p className="text-sm text-muted-foreground">
-                  {savedDrugs.length} drug{savedDrugs.length !== 1 ? "s" : ""} saved
-                </p>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-semibold text-foreground">Saved Drugs</h1>
+                  {isSubscribed ? (
+                    <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-xs">
+                      <Crown className="h-3 w-3 mr-1" />
+                      Pro
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="text-xs">
+                      Free Plan
+                    </Badge>
+                  )}
+                </div>
+                {isSubscribed ? (
+                  <p className="text-sm text-muted-foreground">
+                    {savedDrugs.length} drug{savedDrugs.length !== 1 ? "s" : ""} saved
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Saved drugs: <span className="font-medium text-foreground">{lifetimeSavesCount} of {freeSaveLimit}</span> used
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -626,6 +605,27 @@ export default function SavedDrugs() {
               </Button>
             </div>
           </div>
+
+          {/* Upgrade banner for free users at limit */}
+          {!isSubscribed && lifetimeSavesCount >= freeSaveLimit && (
+            <Card className="p-4 border-amber-200/50 dark:border-amber-800/30 bg-gradient-to-r from-amber-50/80 to-orange-50/50 dark:from-amber-950/30 dark:to-orange-950/20">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/50 shrink-0">
+                  <Crown className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-foreground">You've reached the free limit of {freeSaveLimit} saved drugs</p>
+                  <p className="text-sm text-muted-foreground">
+                    Upgrade to Pro for unlimited saves and the pricing calculator.
+                  </p>
+                </div>
+                <Button size="sm" onClick={() => setShowUpgradeModal(true)} className="shrink-0">
+                  <Crown className="h-4 w-4 mr-1.5" />
+                  Upgrade
+                </Button>
+              </div>
+            </Card>
+          )}
 
           {/* Search bar */}
           <div className="relative">
@@ -785,6 +785,7 @@ export default function SavedDrugs() {
                   onUpdateNotes={handleUpdateNotes}
                   onToggleCategory={handleToggleCategory}
                   onUpdateQuantity={handleUpdateQuantity}
+                  onUpgrade={() => setShowUpgradeModal(true)}
                 />
               ))}
             </div>
@@ -792,6 +793,7 @@ export default function SavedDrugs() {
         </div>
       </main>
       <Footer />
+      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
     </div>
   );
 }

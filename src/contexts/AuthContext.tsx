@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+const FREE_SAVE_LIMIT = 3;
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -10,8 +12,12 @@ interface AuthContextType {
   isAdmin: boolean;
   subscriptionEnd: string | null;
   isPasswordRecovery: boolean;
+  lifetimeSavesCount: number;
+  freeSaveLimit: number;
+  canSaveDrug: boolean;
   clearPasswordRecovery: () => void;
   checkSubscription: () => Promise<void>;
+  refreshSavesCount: () => Promise<void>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -27,6 +33,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
+  const [lifetimeSavesCount, setLifetimeSavesCount] = useState(0);
+
+  const canSaveDrug = isSubscribed || lifetimeSavesCount < FREE_SAVE_LIMIT;
+
+  const refreshSavesCount = async () => {
+    if (!user) {
+      setLifetimeSavesCount(0);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("lifetime_saves_count")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!error && data) {
+        setLifetimeSavesCount(data.lifetime_saves_count ?? 0);
+      }
+    } catch (error) {
+      console.error("Error fetching lifetime saves count:", error);
+    }
+  };
 
   const clearPasswordRecovery = () => {
     setIsPasswordRecovery(false);
@@ -111,14 +140,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Check subscription when session changes
+  // Check subscription and saves count when session changes
   useEffect(() => {
     if (session && user) {
       checkSubscription();
+      refreshSavesCount();
     } else {
       setIsSubscribed(false);
       setIsAdmin(false);
       setSubscriptionEnd(null);
+      setLifetimeSavesCount(0);
     }
   }, [session, user]);
 
@@ -167,8 +198,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isAdmin,
       subscriptionEnd,
       isPasswordRecovery,
+      lifetimeSavesCount,
+      freeSaveLimit: FREE_SAVE_LIMIT,
+      canSaveDrug,
       clearPasswordRecovery,
       checkSubscription,
+      refreshSavesCount,
       signUp, 
       signIn, 
       signOut 

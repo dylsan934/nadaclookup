@@ -31,13 +31,20 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
   const [isSaving, setIsSaving] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeFeatureHighlight, setUpgradeFeatureHighlight] = useState<string>();
-  const { user, isSubscribed } = useAuth();
+  const { user, isSubscribed, canSaveDrug, lifetimeSavesCount, freeSaveLimit, refreshSavesCount } = useAuth();
+
+  // Check if user is logged in (can save with limits)
+  const isLoggedIn = !!user;
+  // Subscribers get full access, free users can save up to limit
+  const canAccessSaveFeature = isLoggedIn && (isSubscribed || canSaveDrug);
+  // Calculator is premium-only
+  const canAccessCalculator = user && isSubscribed;
 
   useEffect(() => {
-    if (user && isSubscribed) {
+    if (user) {
       checkIfSaved();
     }
-  }, [user, isSubscribed, drug.ndc]);
+  }, [user, drug.ndc]);
 
   const checkIfSaved = async () => {
     try {
@@ -57,15 +64,29 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
 
   const handleSave = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!user || !isSubscribed) return;
+    if (!user) {
+      // Not logged in - show sign in prompt
+      setUpgradeFeatureHighlight("Sign in to save drugs and track price changes");
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    // If trying to save (not unsave) and limit reached
+    if (!isSaved && !isSubscribed && !canSaveDrug) {
+      setUpgradeFeatureHighlight(`You've reached the free limit of ${freeSaveLimit} saved drugs. Upgrade to save unlimited drugs.`);
+      setShowUpgradeModal(true);
+      return;
+    }
 
     setIsSaving(true);
     try {
       if (isSaved) {
+        // Allow unsaving - but don't reduce counter
         const { error } = await supabase
           .from("saved_drugs")
           .delete()
-          .eq("ndc", drug.ndc);
+          .eq("ndc", drug.ndc)
+          .eq("user_id", user.id);
 
         if (error) throw error;
         setIsSaved(false);
@@ -81,6 +102,8 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
 
         if (error) throw error;
         setIsSaved(true);
+        // Refresh the saves count in context
+        await refreshSavesCount();
         toast.success("Drug saved to your list");
       }
     } catch (error) {
@@ -130,9 +153,6 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
   const parsedQuantity = parseFloat(quantity) || 0;
   const totalPrice = parsedQuantity * drug.nadacPerUnit;
 
-  // Premium features are locked for non-subscribers
-  const canAccessPremium = user && isSubscribed;
-
   // Example preview values for blurred state
   const previewQuantity = 90;
   const previewTotal = previewQuantity * drug.nadacPerUnit;
@@ -156,14 +176,15 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
               </p>
             </div>
             <div className="shrink-0 flex items-center gap-1.5">
-              {/* Save button - only for premium users */}
-              {canAccessPremium && (
+              {/* Save button - for logged in users */}
+              {isLoggedIn && (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={handleSave}
-                  disabled={isSaving}
-                  className={`h-8 w-8 ${isSaved ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                  disabled={isSaving || (!isSaved && !isSubscribed && !canSaveDrug)}
+                  className={`h-8 w-8 ${isSaved ? "text-primary" : "text-muted-foreground hover:text-foreground"} ${!isSaved && !isSubscribed && !canSaveDrug ? "opacity-50" : ""}`}
+                  title={!isSaved && !isSubscribed && !canSaveDrug ? "Save limit reached - upgrade to save more" : isSaved ? "Remove from saved" : "Save drug"}
                 >
                   {isSaved ? (
                     <BookmarkCheck className="h-4 w-4" />
@@ -172,12 +193,12 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
                   )}
                 </Button>
               )}
-              {/* Locked save button for non-subscribers - clickable */}
-              {!canAccessPremium && (
+              {/* Locked save button for non-logged in users */}
+              {!isLoggedIn && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={(e) => handleLockedClick(e, "Never miss a price change—get alerts when costs shift")}
+                  onClick={(e) => handleLockedClick(e, "Sign in to save drugs and track price changes")}
                   className="h-8 w-8 text-muted-foreground/50 hover:text-muted-foreground"
                 >
                   <div className="relative">
@@ -230,7 +251,7 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Premium user - full calculator access */}
-            {canAccessPremium && (
+            {canAccessCalculator && (
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 rounded-md bg-primary/10">
@@ -262,7 +283,7 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
             )}
 
             {/* Non-subscriber preview - blurred calculator with sample data */}
-            {!canAccessPremium && (
+            {!canAccessCalculator && (
               <div 
                 className="relative cursor-pointer group"
                 onClick={(e) => handleLockedClick(e, "Upgrade to calculate costs for any quantity")}
