@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Calculator, Bookmark, Bell, Check } from "lucide-react";
+import { Calculator, Bookmark, Bell, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -16,7 +16,6 @@ const features = [
   { icon: Calculator, label: "Quantity-based pricing calculations" },
   { icon: Bookmark, label: "Save and organize frequently used drugs" },
   { icon: Bell, label: "In-app alerts for NADAC price changes" },
-  { icon: TrendingUp, label: "Track pricing trends over time" },
 ];
 
 export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeModalProps) => {
@@ -47,7 +46,7 @@ export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeMo
         <DialogHeader className="space-y-3 pb-2">
           <div className="flex justify-center">
             <div className="p-3 rounded-full bg-primary/10">
-              <TrendingUp className="h-7 w-7 text-primary" />
+              <Calculator className="h-7 w-7 text-primary" />
             </div>
           </div>
           <div className="text-center space-y-2">
