@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Pill, LogIn, LogOut, User, BookmarkCheck, Crown, Lock, Bell } from "lucide-react";
+import { Pill, LogIn, LogOut, User, BookmarkCheck, Crown, Heart, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -111,7 +111,7 @@ export const Header = () => {
                       {isSubscribed ? (
                         <BookmarkCheck className="h-4 w-4" />
                       ) : (
-                        <Lock className="h-4 w-4" />
+                        <Heart className="h-4 w-4" />
                       )}
                       <span className="hidden sm:inline ml-1">Saved</span>
                     </Button>
@@ -166,7 +166,7 @@ export const Header = () => {
                       size="sm"
                       className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
                     >
-                      <Lock className="h-4 w-4" />
+                      <Heart className="h-4 w-4" />
                       <span className="hidden sm:inline ml-1">Saved</span>
                     </Button>
                   </Link>
