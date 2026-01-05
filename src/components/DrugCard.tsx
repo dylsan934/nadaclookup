@@ -3,11 +3,12 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Calculator, ChevronDown, ChevronUp, Lock, Bookmark, BookmarkCheck, Crown } from "lucide-react";
+import { Calculator, ChevronDown, ChevronUp, Lock, Heart, HeartOff, Crown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { FreeAccountModal } from "@/components/FreeAccountModal";
 
 export interface DrugData {
   ndc: string;
@@ -30,6 +31,7 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showFreeAccountModal, setShowFreeAccountModal] = useState(false);
   const [upgradeFeatureHighlight, setUpgradeFeatureHighlight] = useState<string>();
   const { user, isSubscribed, canSaveDrug, lifetimeSavesCount, freeSaveLimit, refreshSavesCount } = useAuth();
 
@@ -65,9 +67,8 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
   const handleSave = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) {
-      // Not logged in - show sign in prompt
-      setUpgradeFeatureHighlight("Sign in to save drugs and track price changes");
-      setShowUpgradeModal(true);
+      // Not logged in - show free account modal
+      setShowFreeAccountModal(true);
       return;
     }
 
@@ -183,13 +184,13 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
                   size="icon"
                   onClick={handleSave}
                   disabled={isSaving || (!isSaved && !isSubscribed && !canSaveDrug)}
-                  className={`h-8 w-8 ${isSaved ? "text-primary" : "text-muted-foreground hover:text-foreground"} ${!isSaved && !isSubscribed && !canSaveDrug ? "opacity-50" : ""}`}
+                  className={`h-8 w-8 ${isSaved ? "text-rose-500" : "text-muted-foreground hover:text-rose-500"} ${!isSaved && !isSubscribed && !canSaveDrug ? "opacity-50" : ""}`}
                   title={!isSaved && !isSubscribed && !canSaveDrug ? "Save limit reached - upgrade to save more" : isSaved ? "Remove from saved" : "Save drug"}
                 >
                   {isSaved ? (
-                    <BookmarkCheck className="h-4 w-4" />
+                    <Heart className="h-4 w-4 fill-current" />
                   ) : (
-                    <Bookmark className="h-4 w-4" />
+                    <Heart className="h-4 w-4" />
                   )}
                 </Button>
               )}
@@ -198,11 +199,12 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={(e) => handleLockedClick(e, "Sign in to save drugs and track price changes")}
-                  className="h-8 w-8 text-muted-foreground/50 hover:text-muted-foreground"
+                  onClick={handleSave}
+                  className="h-8 w-8 text-muted-foreground/50 hover:text-rose-400"
+                  title="Create account to save drugs"
                 >
                   <div className="relative">
-                    <Bookmark className="h-4 w-4" />
+                    <Heart className="h-4 w-4" />
                     <Lock className="h-2.5 w-2.5 absolute -bottom-0.5 -right-0.5 text-muted-foreground" />
                   </div>
                 </Button>
@@ -332,6 +334,11 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
         open={showUpgradeModal} 
         onOpenChange={setShowUpgradeModal}
         featureHighlight={upgradeFeatureHighlight}
+      />
+
+      <FreeAccountModal
+        open={showFreeAccountModal}
+        onOpenChange={setShowFreeAccountModal}
       />
     </>
   );
