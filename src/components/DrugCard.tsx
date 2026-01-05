@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Calculator, ChevronDown, ChevronUp, Lock, Heart, HeartOff, Crown } from "lucide-react";
+import { Calculator, ChevronDown, ChevronUp, Lock, Heart, Crown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -194,19 +194,16 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
                   )}
                 </Button>
               )}
-              {/* Locked save button for non-logged in users */}
+              {/* Save button for non-logged in users */}
               {!isLoggedIn && (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={handleSave}
-                  className="h-8 w-8 text-muted-foreground/50 hover:text-rose-400"
+                  className="h-8 w-8 text-muted-foreground hover:text-rose-400"
                   title="Create account to save drugs"
                 >
-                  <div className="relative">
-                    <Heart className="h-4 w-4" />
-                    <Lock className="h-2.5 w-2.5 absolute -bottom-0.5 -right-0.5 text-muted-foreground" />
-                  </div>
+                  <Heart className="h-4 w-4" />
                 </Button>
               )}
               <div className="p-1.5 rounded-md hover:bg-muted transition-colors">
