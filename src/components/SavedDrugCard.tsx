@@ -9,8 +9,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Trash2, Calculator, Tag, StickyNote, Check, X, Plus } from "lucide-react";
+import { Trash2, Calculator, Tag, StickyNote, Check, X, Plus, Lock, Crown } from "lucide-react";
 import { Category, getCategoryColors } from "./CategoryManager";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DrugPrice {
   nadac_per_unit: number;
@@ -38,6 +39,7 @@ interface SavedDrugCardProps {
   onUpdateNotes: (id: string, notes: string) => Promise<void>;
   onToggleCategory: (drugId: string, categoryId: string, isAdding: boolean) => Promise<void>;
   onUpdateQuantity: (id: string, qty: number | null) => Promise<void>;
+  onUpgrade?: () => void;
 }
 
 export const SavedDrugCard = ({
@@ -50,7 +52,9 @@ export const SavedDrugCard = ({
   onUpdateNotes,
   onToggleCategory,
   onUpdateQuantity,
+  onUpgrade,
 }: SavedDrugCardProps) => {
+  const { isSubscribed } = useAuth();
   const [quantity, setQuantity] = useState(drug.calculator_qty?.toString() || "");
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notes, setNotes] = useState(drug.notes || "");
@@ -199,44 +203,62 @@ export const SavedDrugCard = ({
               </div>
             </div>
 
-            {/* Calculator */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 bg-muted/30 rounded-lg">
-              <div className="flex items-center gap-2">
-                <Calculator className="h-4 w-4 text-primary shrink-0" />
-                <span className="text-xs font-medium text-foreground">Calculate:</span>
-              </div>
-              <div className="flex items-center gap-2 flex-1">
-                <Input
-                  type="number"
-                  placeholder="Qty"
-                  value={quantity}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setQuantity(val);
-                    // Debounce the save
-                    if (debounceRef.current) {
-                      clearTimeout(debounceRef.current);
-                    }
-                    debounceRef.current = setTimeout(() => {
-                      const numVal = parseFloat(val);
-                      onUpdateQuantity(drug.id, isNaN(numVal) ? null : numVal);
-                    }, 500);
-                  }}
-                  className="w-20 h-8 text-sm"
-                  min="0"
-                  step="any"
-                />
-                <span className="text-xs text-muted-foreground">{price.pricing_unit}s</span>
-              </div>
-              {parsedQuantity > 0 && (
-                <div className="text-right sm:pl-4 sm:border-l border-border/50">
-                  <span className="text-xs text-muted-foreground mr-2">Total:</span>
-                  <span className="text-base font-bold text-primary tabular-nums">
-                    {formatTotalPrice(totalPrice)}
-                  </span>
+            {/* Calculator - Premium Only */}
+            {isSubscribed ? (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Calculator className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-xs font-medium text-foreground">Calculate:</span>
                 </div>
-              )}
-            </div>
+                <div className="flex items-center gap-2 flex-1">
+                  <Input
+                    type="number"
+                    placeholder="Qty"
+                    value={quantity}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setQuantity(val);
+                      // Debounce the save
+                      if (debounceRef.current) {
+                        clearTimeout(debounceRef.current);
+                      }
+                      debounceRef.current = setTimeout(() => {
+                        const numVal = parseFloat(val);
+                        onUpdateQuantity(drug.id, isNaN(numVal) ? null : numVal);
+                      }, 500);
+                    }}
+                    className="w-20 h-8 text-sm"
+                    min="0"
+                    step="any"
+                  />
+                  <span className="text-xs text-muted-foreground">{price.pricing_unit}s</span>
+                </div>
+                {parsedQuantity > 0 && (
+                  <div className="text-right sm:pl-4 sm:border-l border-border/50">
+                    <span className="text-xs text-muted-foreground mr-2">Total:</span>
+                    <span className="text-base font-bold text-primary tabular-nums">
+                      {formatTotalPrice(totalPrice)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={onUpgrade}
+                className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors w-full group"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="p-1 rounded bg-amber-100 dark:bg-amber-900/50">
+                    <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <span className="text-xs text-muted-foreground">Pricing calculator is a Pro feature</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                  <Crown className="h-3.5 w-3.5" />
+                  <span className="text-xs font-medium">Upgrade</span>
+                </div>
+              </button>
+            )}
           </div>
         )}
         {/* Notes */}
