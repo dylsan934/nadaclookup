@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 // NADAC dataset ID from data.medicaid.gov
-const NADAC_DATASET_ID = 'f38d0706-1239-442c-a3cc-40ef1b686ac0';
+const NADAC_DATASET_ID = 'fbb83258-11c7-47f5-8b18-5f8e79f7e704';
 
 interface NADACRecord {
   ndc_description: string;
@@ -124,12 +124,12 @@ Deno.serve(async (req) => {
     const today = new Date();
     const datesToTry: string[] = [];
     
-    // Helper to format date as MM/DD/YYYY (required by Medicaid API)
+    // Helper to format date as YYYY-MM-DD (required by Medicaid API)
     const formatDateForApi = (d: Date): string => {
       const month = String(d.getMonth() + 1).padStart(2, '0');
       const day = String(d.getDate()).padStart(2, '0');
       const year = d.getFullYear();
-      return `${month}/${day}/${year}`;
+      return `${year}-${month}-${day}`;
     };
     
     // Try the last 14 days (NADAC updates weekly on Wednesdays)
