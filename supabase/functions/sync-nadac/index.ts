@@ -124,11 +124,19 @@ Deno.serve(async (req) => {
     const today = new Date();
     const datesToTry: string[] = [];
     
+    // Helper to format date as MM/DD/YYYY (required by Medicaid API)
+    const formatDateForApi = (d: Date): string => {
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${month}/${day}/${year}`;
+    };
+    
     // Try the last 14 days (NADAC updates weekly on Wednesdays)
     for (let i = 0; i < 14; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      datesToTry.push(date.toISOString().split('T')[0]);
+      datesToTry.push(formatDateForApi(date));
     }
 
     console.log('Dates to try:', datesToTry.slice(0, 5), '...');
