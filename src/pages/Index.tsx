@@ -22,7 +22,6 @@ const Index = () => {
     totalRecords: 0,
   });
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
-  const [isSyncing, setIsSyncing] = useState(false);
   
   const { toast } = useToast();
 
@@ -49,41 +48,6 @@ const Index = () => {
       console.error('Failed to check data status:', error);
     } finally {
       setIsCheckingStatus(false);
-    }
-  };
-
-  const handleSync = async () => {
-    setIsSyncing(true);
-    try {
-      toast({
-        title: "Syncing NADAC Data",
-        description: "This may take a minute. Please wait...",
-      });
-
-      const result = await nadacApi.syncData();
-      
-      if (result.success) {
-        toast({
-          title: "Sync Complete",
-          description: result.message || `Successfully synced ${result.totalRecords} records.`,
-        });
-        await checkDataStatus();
-      } else {
-        toast({
-          title: "Sync Failed",
-          description: result.error || "Failed to sync NADAC data.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Sync error:', error);
-      toast({
-        title: "Sync Failed",
-        description: "An error occurred while syncing data.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSyncing(false);
     }
   };
 
@@ -186,8 +150,6 @@ const Index = () => {
             lastUpdate={dataStatus.lastUpdate}
             totalRecords={dataStatus.totalRecords}
             isLoading={isCheckingStatus}
-            isSyncing={isSyncing}
-            onSync={handleSync}
           />
 
           {/* Results Section */}
