@@ -103,17 +103,15 @@ serve(async (req) => {
           changePercent: priceChangePercent.toFixed(2)
         });
 
-        // Get user email
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("email")
-          .eq("user_id", drug.user_id)
-          .single();
+        // Get user email from auth.users (using service role key for secure access)
+        const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(drug.user_id);
 
-        if (profileError || !profile?.email) {
+        if (authError || !authUser?.user?.email) {
           logStep("Could not find user email", { userId: drug.user_id });
           continue;
         }
+
+        const userEmail = authUser.user.email;
 
         const direction = priceChangePercent > 0 ? "increased" : "decreased";
         const formattedOldPrice = lastPrice.toFixed(4);
@@ -124,7 +122,7 @@ serve(async (req) => {
         try {
           await resend.emails.send({
             from: "NADAC Alerts <onboarding@resend.dev>",
-            to: [profile.email],
+            to: [userEmail],
             subject: `Price Alert: ${drug.drug_name} ${direction} by ${formattedChange}%`,
             html: `
               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
@@ -145,7 +143,7 @@ serve(async (req) => {
           });
 
           alertsSent++;
-          logStep("Alert sent", { email: profile.email, drug: drug.drug_name });
+          logStep("Alert sent", { email: userEmail, drug: drug.drug_name });
 
           // Update last notified price and log the alert
           await supabase

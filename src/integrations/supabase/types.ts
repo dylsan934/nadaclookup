@@ -127,7 +127,6 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
-          email: string | null
           id: string
           large_change_threshold: number
           lifetime_saves_count: number
@@ -138,7 +137,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          email?: string | null
           id?: string
           large_change_threshold?: number
           lifetime_saves_count?: number
@@ -149,7 +147,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          email?: string | null
           id?: string
           large_change_threshold?: number
           lifetime_saves_count?: number
