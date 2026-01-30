@@ -9,9 +9,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Trash2, Calculator, Tag, StickyNote, Check, X, Plus, Lock, Crown } from "lucide-react";
+import { Trash2, Calculator, Tag, StickyNote, Check, X, Plus, Lock, Crown, History } from "lucide-react";
 import { Category, getCategoryColors } from "./CategoryManager";
 import { useAuth } from "@/contexts/AuthContext";
+import { PriceHistoryModal } from "@/components/PriceHistoryModal";
 
 interface DrugPrice {
   nadac_per_unit: number;
@@ -59,6 +60,7 @@ export const SavedDrugCard = ({
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notes, setNotes] = useState(drug.notes || "");
   const [isSavingNotes, setIsSavingNotes] = useState(false);
+  const [showPriceHistory, setShowPriceHistory] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
@@ -203,6 +205,17 @@ export const SavedDrugCard = ({
               </div>
             </div>
 
+            {/* Price History Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPriceHistory(true)}
+              className="w-full justify-center gap-2"
+            >
+              <History className="h-4 w-4" />
+              View Price History
+            </Button>
+
             {/* Calculator - Premium Only */}
             {isSubscribed ? (
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 bg-muted/30 rounded-lg">
@@ -314,6 +327,13 @@ export const SavedDrugCard = ({
           )}
         </div>
       </div>
+
+      <PriceHistoryModal
+        open={showPriceHistory}
+        onOpenChange={setShowPriceHistory}
+        ndc={drug.ndc}
+        drugName={drug.drug_name}
+      />
     </Card>
   );
 };

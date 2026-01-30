@@ -15,6 +15,28 @@ export interface SyncResponse {
   error?: string;
 }
 
+export interface PriceHistoryPoint {
+  date: string;
+  price: number;
+  pricingUnit: string;
+}
+
+export interface PriceHistoryStats {
+  currentPrice: number;
+  highestPrice: number;
+  lowestPrice: number;
+  percentChange: number;
+  dataPoints: number;
+}
+
+export interface PriceHistoryResponse {
+  success: boolean;
+  ndc?: string;
+  history: PriceHistoryPoint[];
+  stats: PriceHistoryStats;
+  error?: string;
+}
+
 export const nadacApi = {
   async search(searchTerm: string, limit = 50): Promise<SearchResponse> {
     const { data, error } = await supabase.functions.invoke('search-nadac', {
@@ -118,5 +140,29 @@ export const nadacApi = {
       })
       .slice(0, limit)
       .map(([name]) => name);
+  },
+
+  async getPriceHistory(ndc: string, years: number = 2): Promise<PriceHistoryResponse> {
+    const { data, error } = await supabase.functions.invoke('get-price-history', {
+      body: { ndc, years },
+    });
+
+    if (error) {
+      console.error('Price history error:', error);
+      return { 
+        success: false, 
+        error: error.message,
+        history: [],
+        stats: { currentPrice: 0, highestPrice: 0, lowestPrice: 0, percentChange: 0, dataPoints: 0 }
+      };
+    }
+
+    return {
+      success: data?.success ?? false,
+      ndc: data?.ndc,
+      history: data?.history || [],
+      stats: data?.stats || { currentPrice: 0, highestPrice: 0, lowestPrice: 0, percentChange: 0, dataPoints: 0 },
+      error: data?.error,
+    };
   },
 };

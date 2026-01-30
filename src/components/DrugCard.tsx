@@ -3,12 +3,13 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Calculator, ChevronDown, ChevronUp, Lock, Heart, Crown } from "lucide-react";
+import { Calculator, ChevronDown, ChevronUp, Lock, Heart, Crown, History } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { FreeAccountModal } from "@/components/FreeAccountModal";
+import { PriceHistoryModal } from "@/components/PriceHistoryModal";
 
 export interface DrugData {
   ndc: string;
@@ -32,6 +33,7 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
   const [isSaving, setIsSaving] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showFreeAccountModal, setShowFreeAccountModal] = useState(false);
+  const [showPriceHistory, setShowPriceHistory] = useState(false);
   const [upgradeFeatureHighlight, setUpgradeFeatureHighlight] = useState<string>();
   const { user, isSubscribed, canSaveDrug, lifetimeSavesCount, freeSaveLimit, refreshSavesCount } = useAuth();
 
@@ -246,9 +248,20 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
 
         {isExpanded && (
           <div 
-            className="mt-4 pt-4 border-t border-border/50"
+            className="mt-4 pt-4 border-t border-border/50 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Price History Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPriceHistory(true)}
+              className="w-full justify-center gap-2"
+            >
+              <History className="h-4 w-4" />
+              View Price History
+            </Button>
+
             {/* Premium user - full calculator access */}
             {canAccessCalculator && (
               <div className="flex flex-col gap-4">
@@ -336,6 +349,13 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
       <FreeAccountModal
         open={showFreeAccountModal}
         onOpenChange={setShowFreeAccountModal}
+      />
+
+      <PriceHistoryModal
+        open={showPriceHistory}
+        onOpenChange={setShowPriceHistory}
+        ndc={drug.ndc}
+        drugName={drug.drugName}
       />
     </>
   );
