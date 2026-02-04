@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import SavedDrugs from "./pages/SavedDrugs";
 import WhatIsNadac from "./pages/WhatIsNadac";
 import NadacUpdateFrequency from "./pages/NadacUpdateFrequency";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
               <Route path="/saved-drugs" element={<SavedDrugs />} />
               <Route path="/what-is-nadac" element={<WhatIsNadac />} />
               <Route path="/how-often-does-nadac-update" element={<NadacUpdateFrequency />} />
+              <Route path="/admin" element={<Admin />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
