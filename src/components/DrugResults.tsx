@@ -1,9 +1,7 @@
 import { useState, useMemo } from "react";
 import { DrugCard, DrugData } from "./DrugCard";
-import { DrugComparisonTable } from "./DrugComparisonTable";
 import { ResultsFilters, SortOption, DosageFilter } from "./ResultsFilters";
-import { FileSearch, Loader2, LayoutList, Table2 } from "lucide-react";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { FileSearch, Loader2 } from "lucide-react";
 
 interface DrugResultsProps {
   drugs: DrugData[];
@@ -33,7 +31,6 @@ export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugR
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
   const [dosageFilter, setDosageFilter] = useState<DosageFilter>("all");
   const [strengthFilter, setStrengthFilter] = useState<string>("all");
-  const [displayMode, setDisplayMode] = useState<"list" | "comparison">("list");
 
   // Extract available strengths from current results
   const availableStrengths = useMemo(() => {
@@ -128,8 +125,8 @@ export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugR
 
   return (
     <div className="space-y-4">
-      {/* Results header with count and display mode toggle */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      {/* Results header with count */}
+      <div className="flex items-center justify-between">
         <p className="text-muted-foreground">
           Found <span className="font-semibold text-foreground">{drugs.length}</span> result{drugs.length !== 1 ? 's' : ''} for "{searchTerm}"
           {filteredAndSortedDrugs.length !== drugs.length && (
@@ -138,23 +135,6 @@ export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugR
             </span>
           )}
         </p>
-        
-        {/* Display Mode Toggle */}
-        <ToggleGroup
-          type="single"
-          value={displayMode}
-          onValueChange={(value) => value && setDisplayMode(value as "list" | "comparison")}
-          className="bg-muted rounded-lg p-1"
-        >
-          <ToggleGroupItem value="list" aria-label="List view" className="gap-2 data-[state=on]:bg-background">
-            <LayoutList className="h-4 w-4" />
-            <span className="hidden sm:inline">List</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="comparison" aria-label="Comparison table" className="gap-2 data-[state=on]:bg-background">
-            <Table2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Compare</span>
-          </ToggleGroupItem>
-        </ToggleGroup>
       </div>
 
       {/* Filter and sort controls */}
@@ -169,20 +149,18 @@ export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugR
         totalResults={filteredAndSortedDrugs.length}
       />
 
-      {/* Results - List or Comparison */}
+      {/* Results list */}
       {filteredAndSortedDrugs.length === 0 ? (
         <div className="py-8 text-center">
           <p className="text-muted-foreground">No results match your filters.</p>
           <p className="text-sm text-muted-foreground mt-1">Try adjusting your filter criteria.</p>
         </div>
-      ) : displayMode === "list" ? (
+      ) : (
         <div className="space-y-3">
           {filteredAndSortedDrugs.map((drug, index) => (
             <DrugCard key={`${drug.ndc}-${index}`} drug={drug} index={index} />
           ))}
         </div>
-      ) : (
-        <DrugComparisonTable drugs={filteredAndSortedDrugs} />
       )}
     </div>
   );
