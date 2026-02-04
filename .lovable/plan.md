@@ -1,122 +1,196 @@
 
-# Free Trial Management Implementation Plan
+# Drug Comparison View Implementation Plan
 
 ## Overview
-Add the ability for admins to grant users a 1-month free Pro trial directly from the admin dashboard. The trial will automatically expire after 30 days, reverting the user to a free account unless they purchase a Pro subscription.
+Add a comparison view feature that allows users to select multiple drugs from search results and view them side-by-side in a table format. This enables easy comparison of prices, dosage forms, and other attributes across different drug options.
 
 ## Architecture
 
 ```text
 +-------------------+       +----------------------+       +------------------+
-|   Admin Page      |  -->  |  admin-dashboard     |  -->  |  profiles table  |
-|   Toggle Button   |       |  (grant-trial)       |       |  trial_ends_at   |
+|   DrugResults     |  -->  |  Comparison State    |  -->  |  ComparisonView  |
+|   (checkboxes)    |       |  (selected drugs)    |       |  (side-by-side)  |
 +-------------------+       +----------------------+       +------------------+
-                                                                    |
-                                                                    v
-+-------------------+       +----------------------+       +------------------+
-|   User Login      |  -->  |  check-subscription  |  <--  |  Check if trial  |
-|   & App Usage     |       |  (modified)          |       |  is still active |
-+-------------------+       +----------------------+       +------------------+
+        |                            |                            |
+        v                            v                            v
+  Select up to 4             "Compare (N)" button          Table/card layout
+  drugs to compare           appears when N >= 2           with key metrics
 ```
+
+## User Experience Flow
+
+1. User searches for a drug (e.g., "Metformin")
+2. Results appear with a checkbox on each drug card
+3. User selects 2-4 drugs they want to compare
+4. A floating "Compare (N)" button appears at the bottom
+5. Clicking "Compare" opens a modal/drawer with side-by-side comparison
+6. User can see prices, dosage forms, pricing units, and effective dates aligned
+7. User can remove drugs from comparison or add more from results
 
 ## Implementation Steps
 
-### 1. Database Changes
-Add two new columns to the `profiles` table:
-- `trial_ends_at` (timestamp, nullable) - When the trial expires
-- `trial_granted_by` (uuid, nullable) - Which admin granted the trial (audit trail)
+### 1. Create Comparison Context/State
+Track selected drugs for comparison in the `DrugResults` component:
+- `selectedForComparison: DrugData[]` - array of selected drugs (max 4)
+- Functions to add/remove drugs from comparison
 
-### 2. Update Backend Function: `admin-dashboard`
-Add a new action `grant-trial` that:
-- Accepts a `user_id` and `action` (grant/revoke)
-- Sets `trial_ends_at` to 30 days from now when granting
-- Clears `trial_ends_at` when revoking
-- Records which admin granted the trial
+### 2. Create DrugComparisonView Component
+A new component that displays drugs side-by-side:
+- **Header row**: Drug names
+- **NDC row**: NDC codes
+- **Price row**: NADAC per unit (highlighted for lowest)
+- **Dosage Form row**: Tablet, Capsule, etc.
+- **Pricing Unit row**: EA, ML, GM, etc.
+- **Effective Date row**: When price was set
+- **Calculator row**: Enter quantity, see total for each
 
-### 3. Update Backend Function: `check-subscription`
-Modify to check for active trial:
-- After checking Stripe subscription, also check `profiles.trial_ends_at`
-- If `trial_ends_at` is in the future, treat user as subscribed
-- Return `trial_ends_at` in response so frontend can show trial status
+### 3. Update DrugCard Component
+Add a checkbox/select button for comparison mode:
+- Checkbox appears on the left side of each card
+- Visual indicator when drug is selected
+- Disable selection when 4 drugs are already selected
 
-### 4. Update AuthContext
-Add trial state tracking:
-- `isTrialActive` - Whether user has an active trial
-- `trialEndsAt` - When the trial expires
-- Update `checkSubscription` to handle trial response
+### 4. Add Floating Compare Button
+A sticky/floating button that appears when 2+ drugs are selected:
+- Shows count of selected drugs
+- Opens comparison modal when clicked
+- Option to clear selection
 
-### 5. Update Admin Page UI
-Add a new column to the users table:
-- Show current trial status (Active until date / None)
-- Add a toggle/button to grant or revoke trial
-- Visual indicator for users with active trials
+### 5. Create Comparison Modal
+A dialog/sheet that shows the comparison table:
+- Responsive design (horizontal scroll on mobile)
+- Highlight best price in green
+- Action buttons: Clear, Close
+- Option to save comparison (future enhancement)
 
-## Security Measures
-1. Only admins can grant/revoke trials (server-side check)
-2. Trial data stored in secure `profiles` table with RLS
-3. Trial expiration checked server-side in `check-subscription`
+## Component Structure
+
+```text
+src/components/
+├── DrugResults.tsx          # Add comparison state
+├── DrugCard.tsx             # Add checkbox for selection
+├── CompareButton.tsx        # NEW: Floating compare button
+├── DrugComparisonView.tsx   # NEW: Side-by-side comparison
+└── DrugComparisonModal.tsx  # NEW: Modal wrapper
+```
+
+## UI Mockup
+
+```text
++------------+------------+------------+
+| METFORMIN  | METFORMIN  | METFORMIN  |
+| 500MG TAB  | 850MG TAB  | 1000MG TAB |
++------------+------------+------------+
+| NDC        |            |            |
+| 00093...   | 00093...   | 00093...   |
++------------+------------+------------+
+| Price/Unit |            |            |
+| $0.0234*   | $0.0312    | $0.0289    |
++------------+------------+------------+
+| Form       |            |            |
+| Tablet     | Tablet     | Tablet     |
++------------+------------+------------+
+| Unit       |            |            |
+| EA         | EA         | EA         |
++------------+------------+------------+
+| Quantity   |            |            |
+| [  90  ]   | [  90  ]   | [  90  ]   |
++------------+------------+------------+
+| Total      |            |            |
+| $2.11*     | $2.81      | $2.60      |
++------------+------------+------------+
+* = Lowest price (highlighted in green)
+```
 
 ---
 
 ## Technical Details
 
-### Database Migration
+### Files to Create
 
-```sql
--- Add trial columns to profiles
-ALTER TABLE public.profiles
-ADD COLUMN trial_ends_at timestamptz DEFAULT NULL,
-ADD COLUMN trial_granted_by uuid DEFAULT NULL;
+| File | Purpose |
+|------|---------|
+| `src/components/CompareButton.tsx` | Floating button showing selection count |
+| `src/components/DrugComparisonModal.tsx` | Modal containing comparison view |
+| `src/components/DrugComparisonTable.tsx` | Table layout for side-by-side comparison |
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/components/DrugResults.tsx` | Add comparison state, pass to DrugCard |
+| `src/components/DrugCard.tsx` | Add checkbox for selection |
+
+### State Management
+
+```typescript
+// In DrugResults.tsx
+const [selectedForCompare, setSelectedForCompare] = useState<DrugData[]>([]);
+const [showComparison, setShowComparison] = useState(false);
+
+const toggleDrugSelection = (drug: DrugData) => {
+  setSelectedForCompare(prev => {
+    const isSelected = prev.some(d => d.ndc === drug.ndc);
+    if (isSelected) {
+      return prev.filter(d => d.ndc !== drug.ndc);
+    }
+    if (prev.length >= 4) return prev; // Max 4 drugs
+    return [...prev, drug];
+  });
+};
 ```
 
-### Modified check-subscription Logic
+### DrugCard Checkbox Props
 
-```text
-1. Check Stripe subscription (existing)
-2. If not subscribed via Stripe:
-   a. Query profiles.trial_ends_at
-   b. If trial_ends_at > now(), user is "subscribed" via trial
-3. Return:
-   - subscribed: true/false
-   - is_trial: true/false
-   - trial_ends_at: timestamp (if applicable)
+```typescript
+interface DrugCardProps {
+  drug: DrugData;
+  index: number;
+  isSelected?: boolean;           // NEW
+  onToggleSelect?: () => void;    // NEW
+  selectionDisabled?: boolean;    // NEW: true when 4 drugs selected
+}
 ```
 
-### Admin UI Component
+### Comparison Table Structure
 
-```text
-Users Table Row:
-+----------------+----------+---------------+---------------+
-| Email          | ...      | Trial Status  | Actions       |
-+----------------+----------+---------------+---------------+
-| user@email.com | ...      | Until Mar 4   | [Revoke]      |
-| user2@test.com | ...      | None          | [Grant Trial] |
-+----------------+----------+---------------+---------------+
+```typescript
+interface ComparisonTableProps {
+  drugs: DrugData[];
+  onRemove: (ndc: string) => void;
+}
+
+// Rows to display:
+const comparisonRows = [
+  { label: "NDC", key: "ndc" },
+  { label: "Price/Unit", key: "nadacPerUnit", format: "currency" },
+  { label: "Dosage Form", key: "dosageForm", computed: true },
+  { label: "Pricing Unit", key: "pricingUnit" },
+  { label: "Effective Date", key: "effectiveDate", format: "date" },
+];
 ```
 
----
+## Responsive Design
 
-## Files to Create/Modify
+- **Desktop**: Full table with all drugs visible side-by-side
+- **Tablet**: Horizontal scroll if more than 3 drugs
+- **Mobile**: 
+  - Use Sheet (drawer from bottom) instead of Dialog
+  - Horizontal scroll for comparison table
+  - Sticky first column with row labels
 
-| File | Action | Purpose |
-|------|--------|---------|
-| Database migration | Create | Add `trial_ends_at` and `trial_granted_by` columns |
-| `supabase/functions/admin-dashboard/index.ts` | Modify | Add grant-trial action |
-| `supabase/functions/check-subscription/index.ts` | Modify | Check trial status |
-| `src/contexts/AuthContext.tsx` | Modify | Track trial state |
-| `src/pages/Admin.tsx` | Modify | Add trial toggle UI |
+## Edge Cases
 
-## User Experience Flow
+1. **Less than 2 drugs selected**: Compare button disabled/hidden
+2. **More than 4 drugs**: Selection disabled for additional drugs
+3. **Search cleared**: Clear comparison selection
+4. **Same drug twice**: Prevent duplicate selection (by NDC)
+5. **Different strengths**: Allow comparing different strengths of same drug
 
-1. **Admin grants trial**: Click "Grant Trial" button next to user
-2. **System**: Sets `trial_ends_at` to 30 days from now
-3. **User**: Logs in and sees Pro features unlocked
-4. **User**: Sees "Trial ends on [date]" messaging in UI
-5. **After 30 days**: Trial expires, user reverts to free
-6. **User**: Can then choose to purchase Pro subscription
+## Future Enhancements (not in this phase)
 
-## Edge Cases Handled
-- User already has Stripe subscription: Stripe takes precedence
-- Admin revokes trial early: Immediately reverts to free
-- Trial expires while user is logged in: Next subscription check updates status
-- Multiple trial grants: Extends/resets to 30 days from new grant
+- Save comparison for later reference
+- Share comparison via link
+- Export comparison as PDF/image
+- Price history comparison overlay
+- Add drugs from saved list to comparison
