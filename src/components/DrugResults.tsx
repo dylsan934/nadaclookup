@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
 import { DrugCard, DrugData } from "./DrugCard";
 import { ResultsFilters, SortOption, DosageFilter } from "./ResultsFilters";
+import { CompareButton } from "./CompareButton";
+import { DrugComparisonModal } from "./DrugComparisonModal";
 import { FileSearch, Loader2 } from "lucide-react";
 
 interface DrugResultsProps {
@@ -31,6 +33,29 @@ export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugR
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
   const [dosageFilter, setDosageFilter] = useState<DosageFilter>("all");
   const [strengthFilter, setStrengthFilter] = useState<string>("all");
+  const [selectedForCompare, setSelectedForCompare] = useState<DrugData[]>([]);
+  const [showComparison, setShowComparison] = useState(false);
+
+  // Toggle drug selection for comparison
+  const toggleDrugSelection = (drug: DrugData) => {
+    setSelectedForCompare(prev => {
+      const isSelected = prev.some(d => d.ndc === drug.ndc);
+      if (isSelected) {
+        return prev.filter(d => d.ndc !== drug.ndc);
+      }
+      if (prev.length >= 4) return prev; // Max 4 drugs
+      return [...prev, drug];
+    });
+  };
+
+  const removeDrugFromCompare = (ndc: string) => {
+    setSelectedForCompare(prev => prev.filter(d => d.ndc !== ndc));
+  };
+
+  const clearComparison = () => {
+    setSelectedForCompare([]);
+    setShowComparison(false);
+  };
 
   // Extract available strengths from current results
   const availableStrengths = useMemo(() => {
@@ -158,10 +183,32 @@ export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugR
       ) : (
         <div className="space-y-3">
           {filteredAndSortedDrugs.map((drug, index) => (
-            <DrugCard key={`${drug.ndc}-${index}`} drug={drug} index={index} />
+            <DrugCard 
+              key={`${drug.ndc}-${index}`} 
+              drug={drug} 
+              index={index}
+              isSelected={selectedForCompare.some(d => d.ndc === drug.ndc)}
+              onToggleSelect={() => toggleDrugSelection(drug)}
+              selectionDisabled={selectedForCompare.length >= 4 && !selectedForCompare.some(d => d.ndc === drug.ndc)}
+            />
           ))}
         </div>
       )}
+
+      {/* Compare button and modal */}
+      <CompareButton
+        count={selectedForCompare.length}
+        onCompare={() => setShowComparison(true)}
+        onClear={clearComparison}
+      />
+      
+      <DrugComparisonModal
+        open={showComparison}
+        onOpenChange={setShowComparison}
+        drugs={selectedForCompare}
+        onRemove={removeDrugFromCompare}
+        onClearAll={clearComparison}
+      />
     </div>
   );
 };
