@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { format, subYears } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,9 +20,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { LineChart, TableIcon, AlertCircle, RefreshCw } from "lucide-react";
 import { nadacApi, PriceHistoryResponse } from "@/lib/nadac-api";
-import { PriceHistoryChart, PriceHistoryPoint, PriceHistoryStats } from "./PriceHistoryChart";
+import { PriceHistoryChart } from "./PriceHistoryChart";
+import { cn } from "@/lib/utils";
 
 interface PriceHistoryModalProps {
   open: boolean;
@@ -38,6 +47,8 @@ interface CachedData {
   timestamp: number;
 }
 
+type RangeMode = "preset" | "custom";
+
 export const PriceHistoryModal = ({
   open,
   onOpenChange,
@@ -47,8 +58,11 @@ export const PriceHistoryModal = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [historyData, setHistoryData] = useState<PriceHistoryResponse | null>(null);
-  const [years, setYears] = useState<number>(2);
+  const [years, setYears] = useState<number>(1);
   const [viewMode, setViewMode] = useState<"chart" | "table">("chart");
+  const [rangeMode, setRangeMode] = useState<RangeMode>("preset");
+  const [startDate, setStartDate] = useState<Date | undefined>(subYears(new Date(), 1));
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
 
   const getCacheKey = (ndc: string, years: number) => `${CACHE_PREFIX}${ndc}_${years}`;
 
@@ -60,7 +74,6 @@ export const PriceHistoryModal = ({
         if (Date.now() - parsed.timestamp < CACHE_EXPIRY_MS) {
           return parsed.data;
         }
-        // Cache expired, remove it
         sessionStorage.removeItem(getCacheKey(ndc, years));
       }
     } catch (e) {
@@ -81,9 +94,12 @@ export const PriceHistoryModal = ({
   const fetchHistory = async (forceRefresh = false) => {
     if (!open || !ndc) return;
 
+    // For custom mode, we fetch max years and filter client-side
+    const fetchYears = rangeMode === "custom" ? 5 : years;
+
     // Check cache first (unless forcing refresh)
-    if (!forceRefresh) {
-      const cached = getCachedData(ndc, years);
+    if (!forceRefresh && rangeMode === "preset") {
+      const cached = getCachedData(ndc, fetchYears);
       if (cached) {
         setHistoryData(cached);
         setError(null);
@@ -95,11 +111,37 @@ export const PriceHistoryModal = ({
     setError(null);
 
     try {
-      const response = await nadacApi.getPriceHistory(ndc, years);
+      const response = await nadacApi.getPriceHistory(ndc, fetchYears);
       
       if (response.success) {
-        setHistoryData(response);
-        setCachedData(ndc, years, response);
+        if (rangeMode === "custom" && startDate && endDate) {
+          // Filter history by custom date range
+          const filteredHistory = response.history.filter((point) => {
+            const pointDate = new Date(point.date);
+            return pointDate >= startDate && pointDate <= endDate;
+          });
+
+          // Recalculate stats for filtered data
+          const prices = filteredHistory.map((p) => p.price).filter((p) => p > 0);
+          const filteredResponse: PriceHistoryResponse = {
+            ...response,
+            history: filteredHistory,
+            stats: {
+              currentPrice: prices.length > 0 ? prices[prices.length - 1] : 0,
+              highestPrice: prices.length > 0 ? Math.max(...prices) : 0,
+              lowestPrice: prices.length > 0 ? Math.min(...prices) : 0,
+              percentChange:
+                prices.length >= 2
+                  ? ((prices[prices.length - 1] - prices[0]) / prices[0]) * 100
+                  : 0,
+              dataPoints: filteredHistory.length,
+            },
+          };
+          setHistoryData(filteredResponse);
+        } else {
+          setHistoryData(response);
+          setCachedData(ndc, fetchYears, response);
+        }
       } else {
         setError(response.error || "Failed to fetch price history");
       }
@@ -115,7 +157,23 @@ export const PriceHistoryModal = ({
     if (open) {
       fetchHistory();
     }
-  }, [open, ndc, years]);
+  }, [open, ndc, years, rangeMode]);
+
+  // Refetch when custom dates change
+  useEffect(() => {
+    if (open && rangeMode === "custom" && startDate && endDate) {
+      fetchHistory(true);
+    }
+  }, [startDate, endDate]);
+
+  const handlePresetClick = (y: number) => {
+    setRangeMode("preset");
+    setYears(y);
+  };
+
+  const handleCustomClick = () => {
+    setRangeMode("custom");
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -126,13 +184,17 @@ export const PriceHistoryModal = ({
     }).format(price);
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDateDisplay = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
   };
+
+  // Minimum date for calendar (5 years ago)
+  const minDate = subYears(new Date(), 5);
+  const maxDate = new Date();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -147,31 +209,100 @@ export const PriceHistoryModal = ({
         </DialogHeader>
 
         {/* Time range selector */}
-        <div className="flex items-center gap-2 py-2">
-          <span className="text-sm text-muted-foreground">Time range:</span>
-          <div className="flex flex-wrap gap-1">
-            {[1, 2, 3, 5].map((y) => (
+        <div className="flex flex-col gap-2 py-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-muted-foreground">Time range:</span>
+            <div className="flex flex-wrap gap-1">
+              {[1, 2, 3, 5].map((y) => (
+                <Button
+                  key={y}
+                  variant={rangeMode === "preset" && years === y ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handlePresetClick(y)}
+                  className="h-7 px-3 text-xs"
+                >
+                  {y} year{y > 1 ? "s" : ""}
+                </Button>
+              ))}
               <Button
-                key={y}
-                variant={years === y ? "default" : "outline"}
+                variant={rangeMode === "custom" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setYears(y)}
+                onClick={handleCustomClick}
                 className="h-7 px-3 text-xs"
               >
-                {y} year{y > 1 ? "s" : ""}
+                Custom
               </Button>
-            ))}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => fetchHistory(true)}
+              disabled={loading}
+              className="h-7 px-2 ml-auto"
+              title="Refresh data"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => fetchHistory(true)}
-            disabled={loading}
-            className="h-7 px-2 ml-auto"
-            title="Refresh data"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          </Button>
+
+          {/* Custom date range pickers */}
+          {rangeMode === "custom" && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-muted-foreground">From:</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-7 px-2 text-xs justify-start font-normal min-w-[120px]",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="h-3 w-3 mr-1" />
+                    {startDate ? format(startDate, "MMM d, yyyy") : "Start date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    disabled={(date) => date > (endDate || maxDate) || date < minDate}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <span className="text-xs text-muted-foreground">To:</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-7 px-2 text-xs justify-start font-normal min-w-[120px]",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="h-3 w-3 mr-1" />
+                    {endDate ? format(endDate, "MMM d, yyyy") : "End date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    disabled={(date) => date < (startDate || minDate) || date > maxDate}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -210,7 +341,8 @@ export const PriceHistoryModal = ({
               {historyData.history.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <p className="text-sm text-muted-foreground">
-                    No historical price data available for this drug.
+                    No historical price data available for this drug
+                    {rangeMode === "custom" && " in the selected date range"}.
                   </p>
                 </div>
               ) : (
@@ -248,7 +380,7 @@ export const PriceHistoryModal = ({
                           {[...historyData.history].reverse().map((point, idx) => (
                             <TableRow key={`${point.date}-${idx}`}>
                               <TableCell className="font-medium">
-                                {formatDate(point.date)}
+                                {formatDateDisplay(point.date)}
                               </TableCell>
                               <TableCell className="text-right tabular-nums">
                                 {formatPrice(point.price)}
