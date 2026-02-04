@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -265,6 +266,7 @@ async function getUsers(
 
   // Get profiles for these users (including trial info)
   const userIds = paginatedUsers.map(u => u.id);
+  const userEmails = paginatedUsers.map(u => u.email).filter(Boolean) as string[];
   
   const { data: profiles } = await adminClient
     .from('profiles')
@@ -280,6 +282,47 @@ async function getUsers(
     .from('user_roles')
     .select('user_id, role')
     .in('user_id', userIds);
+
+  // Check Stripe subscriptions for these users
+  const subscriptionMap: Record<string, { isSubscribed: boolean; subscriptionEnd: string | null }> = {};
+  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+  
+  if (stripeKey && userEmails.length > 0) {
+    try {
+      const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+      
+      // Fetch all customers and their subscriptions in batch
+      for (const email of userEmails) {
+        try {
+          const customers = await stripe.customers.list({ email, limit: 1 });
+          if (customers.data.length > 0) {
+            const customerId = customers.data[0].id;
+            const subscriptions = await stripe.subscriptions.list({
+              customer: customerId,
+              status: "active",
+              limit: 1,
+            });
+            
+            if (subscriptions.data.length > 0) {
+              const sub = subscriptions.data[0];
+              let subscriptionEnd = null;
+              if (sub.current_period_end) {
+                const endTimestamp = typeof sub.current_period_end === 'number' 
+                  ? sub.current_period_end * 1000 
+                  : new Date(sub.current_period_end).getTime();
+                subscriptionEnd = new Date(endTimestamp).toISOString();
+              }
+              subscriptionMap[email] = { isSubscribed: true, subscriptionEnd };
+            }
+          }
+        } catch (e) {
+          console.error(`Error checking subscription for ${email}:`, e);
+        }
+      }
+    } catch (e) {
+      console.error('Error initializing Stripe:', e);
+    }
+  }
 
   type SavedDrug = { user_id: string };
   type UserRole = { user_id: string; role: string };
@@ -311,18 +354,23 @@ async function getUsers(
     profilesMap[p.user_id] = p;
   });
 
-  const enrichedUsers = paginatedUsers.map(u => ({
-    id: u.id,
-    email: u.email,
-    createdAt: u.created_at,
-    lastSignInAt: u.last_sign_in_at,
-    emailConfirmedAt: u.email_confirmed_at,
-    savedDrugsCount: savedDrugsMap[u.id] || 0,
-    lifetimeSavesCount: profilesMap[u.id]?.lifetime_saves_count || 0,
-    roles: rolesMap[u.id] || [],
-    isAdmin: rolesMap[u.id]?.includes('admin') || false,
-    trialEndsAt: profilesMap[u.id]?.trial_ends_at || null,
-  }));
+  const enrichedUsers = paginatedUsers.map(u => {
+    const stripeStatus = u.email ? subscriptionMap[u.email] : null;
+    return {
+      id: u.id,
+      email: u.email,
+      createdAt: u.created_at,
+      lastSignInAt: u.last_sign_in_at,
+      emailConfirmedAt: u.email_confirmed_at,
+      savedDrugsCount: savedDrugsMap[u.id] || 0,
+      lifetimeSavesCount: profilesMap[u.id]?.lifetime_saves_count || 0,
+      roles: rolesMap[u.id] || [],
+      isAdmin: rolesMap[u.id]?.includes('admin') || false,
+      trialEndsAt: profilesMap[u.id]?.trial_ends_at || null,
+      isProMember: stripeStatus?.isSubscribed || false,
+      subscriptionEnd: stripeStatus?.subscriptionEnd || null,
+    };
+  });
 
   return {
     users: enrichedUsers,
