@@ -178,23 +178,8 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex flex-col gap-3">
-          {/* Top row: Checkbox, Drug info and expand icon */}
+          {/* Top row: Drug info and expand icon */}
           <div className="flex items-start justify-between gap-3">
-            {/* Checkbox for comparison */}
-            <div 
-              className="shrink-0 pt-0.5"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Checkbox
-                checked={isSelected}
-                onCheckedChange={() => onToggleSelect?.()}
-                disabled={selectionDisabled}
-                className={cn(
-                  selectionDisabled && "opacity-50 cursor-not-allowed"
-                )}
-              />
-            </div>
-            
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-sm sm:text-base text-foreground leading-snug">
                 {drug.drugName}
@@ -262,6 +247,33 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
                 {formatDate(drug.effectiveDate)}
               </p>
             </div>
+          </div>
+
+          {/* Bottom row: Compare checkbox */}
+          <div className="flex justify-end pt-1 border-t border-border/30">
+            <label
+              className={cn(
+                "flex items-center gap-2 px-2.5 py-1.5 rounded-md cursor-pointer transition-colors",
+                isSelected 
+                  ? "bg-primary/10 text-primary" 
+                  : "hover:bg-muted text-muted-foreground hover:text-foreground",
+                selectionDisabled && !isSelected && "opacity-50 cursor-not-allowed"
+              )}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={() => onToggleSelect?.()}
+                disabled={selectionDisabled}
+                className={cn(
+                  "data-[state=checked]:bg-primary data-[state=checked]:border-primary",
+                  selectionDisabled && !isSelected && "cursor-not-allowed"
+                )}
+              />
+              <span className="text-xs font-medium">
+                {isSelected ? "Selected for compare" : "Compare"}
+              </span>
+            </label>
           </div>
         </div>
         
