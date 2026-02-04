@@ -132,6 +132,8 @@ export type Database = {
           lifetime_saves_count: number
           notify_large_changes_only: boolean
           notify_saved_drugs: boolean
+          trial_ends_at: string | null
+          trial_granted_by: string | null
           updated_at: string
           user_id: string
         }
@@ -142,6 +144,8 @@ export type Database = {
           lifetime_saves_count?: number
           notify_large_changes_only?: boolean
           notify_saved_drugs?: boolean
+          trial_ends_at?: string | null
+          trial_granted_by?: string | null
           updated_at?: string
           user_id: string
         }
@@ -152,6 +156,8 @@ export type Database = {
           lifetime_saves_count?: number
           notify_large_changes_only?: boolean
           notify_saved_drugs?: boolean
+          trial_ends_at?: string | null
+          trial_granted_by?: string | null
           updated_at?: string
           user_id?: string
         }

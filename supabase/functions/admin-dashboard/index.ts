@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const userId = claimsData.claims.sub;
+    const adminUserId = claimsData.claims.sub;
 
     // Create service role client for admin operations
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     const { data: roleData, error: roleError } = await adminClient
       .from('user_roles')
       .select('role')
-      .eq('user_id', userId)
+      .eq('user_id', adminUserId)
       .eq('role', 'admin')
       .maybeSingle();
 
@@ -84,6 +84,32 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (action === 'grant-trial') {
+      // Handle POST request for granting/revoking trial
+      if (req.method !== 'POST') {
+        return new Response(
+          JSON.stringify({ error: 'Method not allowed' }),
+          { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const body = await req.json();
+      const { user_id, grant } = body;
+
+      if (!user_id) {
+        return new Response(
+          JSON.stringify({ error: 'user_id is required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const result = await handleTrialAction(adminClient, user_id, grant, adminUserId);
+      return new Response(
+        JSON.stringify(result),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ error: 'Invalid action' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -97,6 +123,51 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleTrialAction(
+  adminClient: SupabaseClient<any, any, any>,
+  userId: string,
+  grant: boolean,
+  grantedBy: string
+) {
+  if (grant) {
+    // Grant 30-day trial
+    const trialEndsAt = new Date();
+    trialEndsAt.setDate(trialEndsAt.getDate() + 30);
+
+    const { error } = await adminClient
+      .from('profiles')
+      .update({
+        trial_ends_at: trialEndsAt.toISOString(),
+        trial_granted_by: grantedBy,
+      })
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error granting trial:', error);
+      throw error;
+    }
+
+    return { success: true, trial_ends_at: trialEndsAt.toISOString() };
+  } else {
+    // Revoke trial
+    const { error } = await adminClient
+      .from('profiles')
+      .update({
+        trial_ends_at: null,
+        trial_granted_by: null,
+      })
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error revoking trial:', error);
+      throw error;
+    }
+
+    return { success: true, trial_ends_at: null };
+  }
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getStats(adminClient: SupabaseClient<any, any, any>) {
@@ -192,12 +263,12 @@ async function getUsers(
   const offset = (page - 1) * limit;
   const paginatedUsers = users.slice(offset, offset + limit);
 
-  // Get profiles for these users
+  // Get profiles for these users (including trial info)
   const userIds = paginatedUsers.map(u => u.id);
   
   const { data: profiles } = await adminClient
     .from('profiles')
-    .select('user_id, lifetime_saves_count, created_at, updated_at')
+    .select('user_id, lifetime_saves_count, created_at, updated_at, trial_ends_at, trial_granted_by')
     .in('user_id', userIds);
 
   const { data: savedDrugsCounts } = await adminClient
@@ -212,7 +283,14 @@ async function getUsers(
 
   type SavedDrug = { user_id: string };
   type UserRole = { user_id: string; role: string };
-  type Profile = { user_id: string; lifetime_saves_count: number; created_at: string; updated_at: string };
+  type Profile = { 
+    user_id: string; 
+    lifetime_saves_count: number; 
+    created_at: string; 
+    updated_at: string;
+    trial_ends_at: string | null;
+    trial_granted_by: string | null;
+  };
 
   // Count saved drugs per user
   const savedDrugsMap: Record<string, number> = {};
@@ -243,6 +321,7 @@ async function getUsers(
     lifetimeSavesCount: profilesMap[u.id]?.lifetime_saves_count || 0,
     roles: rolesMap[u.id] || [],
     isAdmin: rolesMap[u.id]?.includes('admin') || false,
+    trialEndsAt: profilesMap[u.id]?.trial_ends_at || null,
   }));
 
   return {
