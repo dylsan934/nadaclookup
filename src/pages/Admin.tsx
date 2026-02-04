@@ -25,7 +25,9 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  Loader2
+  Loader2,
+  Gift,
+  X
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -49,6 +51,7 @@ interface UserData {
   lifetimeSavesCount: number;
   roles: string[];
   isAdmin: boolean;
+  trialEndsAt: string | null;
 }
 
 interface UsersResponse {
@@ -69,6 +72,7 @@ const Admin = () => {
   const [page, setPage] = useState(1);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+  const [processingTrialUserId, setProcessingTrialUserId] = useState<string | null>(null);
 
   // Redirect non-admins (client-side UX guard - real protection is backend)
   useEffect(() => {
@@ -104,54 +108,90 @@ const Admin = () => {
     }
   }, [isAdmin, session]);
 
-  // Fetch users
-  useEffect(() => {
-    const fetchUsers = async () => {
-      if (!session?.access_token) return;
-      
-      setIsLoadingUsers(true);
-      try {
-        const params = new URLSearchParams({
-          action: 'users',
-          search,
-          page: page.toString(),
-          limit: '20',
-        });
+  // Fetch users function
+  const fetchUsers = async () => {
+    if (!session?.access_token) return;
+    
+    setIsLoadingUsers(true);
+    try {
+      const params = new URLSearchParams({
+        action: 'users',
+        search,
+        page: page.toString(),
+        limit: '20',
+      });
 
-        const { data, error } = await supabase.functions.invoke('admin-dashboard', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-          body: null,
-        });
-
-        // Need to call with query params via a different approach
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-dashboard?${params}`,
-          {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch users');
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-dashboard?${params}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
         }
+      );
 
-        const usersResult = await response.json();
-        setUsersData(usersResult);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-        toast.error('Failed to load users');
-      } finally {
-        setIsLoadingUsers(false);
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
       }
-    };
 
+      const usersResult = await response.json();
+      setUsersData(usersResult);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Failed to load users');
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  // Fetch users on mount and when search/page changes
+  useEffect(() => {
     if (isAdmin && session) {
       fetchUsers();
     }
   }, [isAdmin, session, search, page]);
+
+  const handleTrialAction = async (userId: string, grant: boolean) => {
+    if (!session?.access_token) return;
+    
+    setProcessingTrialUserId(userId);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-dashboard?action=grant-trial`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ user_id: userId, grant }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to update trial');
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        toast.success(grant ? 'Trial granted successfully' : 'Trial revoked');
+        // Refresh users list
+        fetchUsers();
+      }
+    } catch (error) {
+      console.error('Error updating trial:', error);
+      toast.error('Failed to update trial');
+    } finally {
+      setProcessingTrialUserId(null);
+    }
+  };
+
+  const isTrialActive = (trialEndsAt: string | null) => {
+    if (!trialEndsAt) return false;
+    return new Date(trialEndsAt) > new Date();
+  };
 
   if (authLoading) {
     return (
@@ -270,6 +310,8 @@ const Admin = () => {
                         <TableHead>Last Sign In</TableHead>
                         <TableHead>Saved Drugs</TableHead>
                         <TableHead>Role</TableHead>
+                        <TableHead>Trial Status</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -302,11 +344,47 @@ const Admin = () => {
                               <Badge variant="secondary">User</Badge>
                             )}
                           </TableCell>
+                          <TableCell>
+                            {isTrialActive(userData.trialEndsAt) ? (
+                              <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                                Until {format(new Date(userData.trialEndsAt!), 'MMM d, yyyy')}
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">None</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {!userData.isAdmin && (
+                              processingTrialUserId === userData.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : isTrialActive(userData.trialEndsAt) ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleTrialAction(userData.id, false)}
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                >
+                                  <X className="h-4 w-4 mr-1" />
+                                  Revoke
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleTrialAction(userData.id, true)}
+                                  className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
+                                >
+                                  <Gift className="h-4 w-4 mr-1" />
+                                  Grant Trial
+                                </Button>
+                              )
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))}
                       {usersData?.users?.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                             No users found
                           </TableCell>
                         </TableRow>

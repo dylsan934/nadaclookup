@@ -43,12 +43,45 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Check for active trial first
+    const { data: profileData, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('trial_ends_at')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      logStep("Error fetching profile", { error: profileError.message });
+    }
+
+    const trialEndsAt = profileData?.trial_ends_at;
+    const isTrialActive = trialEndsAt && new Date(trialEndsAt) > new Date();
+    
+    if (isTrialActive) {
+      logStep("User has active trial", { trialEndsAt });
+      return new Response(JSON.stringify({
+        subscribed: true,
+        is_trial: true,
+        trial_ends_at: trialEndsAt,
+        product_id: null,
+        subscription_end: null
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // No active trial, check Stripe subscription
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
     if (customers.data.length === 0) {
       logStep("No customer found, returning unsubscribed state");
-      return new Response(JSON.stringify({ subscribed: false }), {
+      return new Response(JSON.stringify({ 
+        subscribed: false,
+        is_trial: false,
+        trial_ends_at: null
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
@@ -91,6 +124,8 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
+      is_trial: false,
+      trial_ends_at: null,
       product_id: productId,
       subscription_end: subscriptionEnd
     }), {

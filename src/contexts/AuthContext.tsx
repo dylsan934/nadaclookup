@@ -10,6 +10,8 @@ interface AuthContextType {
   isLoading: boolean;
   isSubscribed: boolean;
   isAdmin: boolean;
+  isTrialActive: boolean;
+  trialEndsAt: string | null;
   subscriptionEnd: string | null;
   isPasswordRecovery: boolean;
   lifetimeSavesCount: number;
@@ -31,6 +33,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isTrialActive, setIsTrialActive] = useState(false);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const [lifetimeSavesCount, setLifetimeSavesCount] = useState(0);
@@ -87,6 +91,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const checkSubscription = async () => {
     if (!session?.access_token || !user) {
       setIsSubscribed(false);
+      setIsTrialActive(false);
+      setTrialEndsAt(null);
       setSubscriptionEnd(null);
       return;
     }
@@ -108,6 +114,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       setIsSubscribed(data?.subscribed ?? false);
+      setIsTrialActive(data?.is_trial ?? false);
+      setTrialEndsAt(data?.trial_ends_at ?? null);
       setSubscriptionEnd(data?.subscription_end ?? null);
     } catch (error) {
       console.error('Error checking subscription:', error);
@@ -148,6 +156,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setIsSubscribed(false);
       setIsAdmin(false);
+      setIsTrialActive(false);
+      setTrialEndsAt(null);
       setSubscriptionEnd(null);
       setLifetimeSavesCount(0);
     }
@@ -196,6 +206,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isLoading, 
       isSubscribed, 
       isAdmin,
+      isTrialActive,
+      trialEndsAt,
       subscriptionEnd,
       isPasswordRecovery,
       lifetimeSavesCount,
