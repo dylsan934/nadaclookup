@@ -149,8 +149,8 @@ export const PriceHistoryModal = ({
         {/* Time range selector */}
         <div className="flex items-center gap-2 py-2">
           <span className="text-sm text-muted-foreground">Time range:</span>
-          <div className="flex gap-1">
-            {[1, 2, 3].map((y) => (
+          <div className="flex flex-wrap gap-1">
+            {[1, 2, 3, 5].map((y) => (
               <Button
                 key={y}
                 variant={years === y ? "default" : "outline"}
