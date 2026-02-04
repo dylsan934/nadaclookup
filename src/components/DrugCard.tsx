@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Calculator, ChevronDown, ChevronUp, Lock, Heart, Crown, History } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { FreeAccountModal } from "@/components/FreeAccountModal";
 import { PriceHistoryModal } from "@/components/PriceHistoryModal";
+import { cn } from "@/lib/utils";
 
 export interface DrugData {
   ndc: string;
@@ -24,9 +26,12 @@ export interface DrugData {
 interface DrugCardProps {
   drug: DrugData;
   index: number;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
+  selectionDisabled?: boolean;
 }
 
-export const DrugCard = ({ drug, index }: DrugCardProps) => {
+export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDisabled }: DrugCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [quantity, setQuantity] = useState<string>("");
   const [isSaved, setIsSaved] = useState(false);
@@ -163,13 +168,33 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
   return (
     <>
       <Card 
-        className="p-4 sm:p-5 hover:shadow-md hover:border-border transition-all duration-200 cursor-pointer bg-card animate-slide-up"
+        className={cn(
+          "p-4 sm:p-5 hover:shadow-md transition-all duration-200 cursor-pointer bg-card animate-slide-up",
+          isSelected 
+            ? "border-primary ring-1 ring-primary/20" 
+            : "hover:border-border"
+        )}
         style={{ animationDelay: `${index * 40}ms` }}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex flex-col gap-3">
-          {/* Top row: Drug info and expand icon */}
+          {/* Top row: Checkbox, Drug info and expand icon */}
           <div className="flex items-start justify-between gap-3">
+            {/* Checkbox for comparison */}
+            <div 
+              className="shrink-0 pt-0.5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={() => onToggleSelect?.()}
+                disabled={selectionDisabled}
+                className={cn(
+                  selectionDisabled && "opacity-50 cursor-not-allowed"
+                )}
+              />
+            </div>
+            
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-sm sm:text-base text-foreground leading-snug">
                 {drug.drugName}
