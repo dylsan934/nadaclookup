@@ -34,15 +34,48 @@ interface PriceHistoryChartProps {
 
 export const PriceHistoryChart = ({ history, stats, drugName }: PriceHistoryChartProps) => {
   const chartData = useMemo(() => {
-    return history.map((point) => ({
+    return history.map((point, index) => ({
       date: point.date,
       price: point.price,
+      index,
       formattedDate: new Date(point.date).toLocaleDateString("en-US", {
         month: "short",
         year: "2-digit",
       }),
     }));
   }, [history]);
+
+  // Get first and last dates for display
+  const dateRange = useMemo(() => {
+    if (history.length === 0) return { first: "", last: "" };
+    const firstDate = new Date(history[0].date);
+    const lastDate = new Date(history[history.length - 1].date);
+    return {
+      first: firstDate.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
+      last: lastDate.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
+    };
+  }, [history]);
+
+  // Custom tick formatter to show actual dates from data
+  const formatXAxisTick = (value: string, index: number) => {
+    // Show first, last, and some middle ticks
+    const dataLength = chartData.length;
+    if (dataLength <= 5) return value; // Show all if few points
+    
+    const dataPoint = chartData.find((d) => d.formattedDate === value);
+    if (!dataPoint) return value;
+    
+    const pointIndex = dataPoint.index;
+    const isFirst = pointIndex === 0;
+    const isLast = pointIndex === dataLength - 1;
+    const step = Math.floor(dataLength / 4);
+    const isMiddleTick = pointIndex > 0 && pointIndex < dataLength - 1 && pointIndex % step === 0;
+    
+    if (isFirst || isLast || isMiddleTick) {
+      return value;
+    }
+    return "";
+  };
 
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -153,8 +186,11 @@ export const PriceHistoryChart = ({ history, stats, drugName }: PriceHistoryChar
               tickLine={false}
               axisLine={false}
               className="fill-muted-foreground"
-              interval="preserveStartEnd"
-              minTickGap={50}
+              ticks={chartData.length > 0 ? [
+                chartData[0]?.formattedDate,
+                ...(chartData.length > 4 ? [chartData[Math.floor(chartData.length / 2)]?.formattedDate] : []),
+                chartData[chartData.length - 1]?.formattedDate,
+              ].filter(Boolean) : undefined}
             />
             <YAxis
               tickFormatter={(value) => `$${value.toFixed(2)}`}
