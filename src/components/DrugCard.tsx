@@ -41,8 +41,8 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
   const isLoggedIn = !!user;
   // Subscribers get full access, free users can save up to limit
   const canAccessSaveFeature = isLoggedIn && (isSubscribed || canSaveDrug);
-  // Calculator is premium-only
-  const canAccessCalculator = user && isSubscribed;
+  // Price history is premium-only
+  const canAccessPriceHistory = user && isSubscribed;
 
   useEffect(() => {
     if (user) {
@@ -251,91 +251,64 @@ export const DrugCard = ({ drug, index }: DrugCardProps) => {
             className="mt-4 pt-4 border-t border-border/50 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Price History Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPriceHistory(true)}
-              className="w-full justify-center gap-2"
-            >
-              <History className="h-4 w-4" />
-              View Price History
-            </Button>
-
-            {/* Premium user - full calculator access */}
-            {canAccessCalculator && (
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-md bg-primary/10">
-                    <Calculator className="h-4 w-4 text-primary" />
-                  </div>
-                  <span className="text-sm font-medium text-foreground">Calculate Total</span>
-                </div>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                  <div className="flex items-center gap-3 flex-1">
-                    <Input
-                      type="number"
-                      placeholder="Quantity"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                      className="flex-1 sm:w-28 sm:flex-none h-10"
-                      min="0"
-                      step="any"
-                    />
-                    <span className="text-sm text-muted-foreground shrink-0">{drug.pricingUnit}s</span>
-                  </div>
-                  {parsedQuantity > 0 && (
-                    <div className="text-left sm:text-right pt-2 sm:pt-0 sm:pl-4 sm:border-l border-t sm:border-t-0 border-border/50">
-                      <p className="text-xs text-muted-foreground">Total</p>
-                      <p className="text-lg font-bold text-primary tabular-nums">{formatTotalPrice(totalPrice)}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Non-subscriber preview - blurred calculator with sample data */}
-            {!canAccessCalculator && (
-              <div 
-                className="relative cursor-pointer group"
-                onClick={(e) => handleLockedClick(e, "Upgrade to calculate costs for any quantity")}
+            {/* Price History Button - Premium Only */}
+            {canAccessPriceHistory ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPriceHistory(true)}
+                className="w-full justify-center gap-2"
               >
-                {/* Blurred preview content */}
-                <div className="flex flex-col gap-4 select-none pointer-events-none blur-[2px] opacity-60">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-md bg-primary/10">
-                      <Calculator className="h-4 w-4 text-primary" />
-                    </div>
-                    <span className="text-sm font-medium text-foreground">Calculate Total</span>
+                <History className="h-4 w-4" />
+                View Price History
+              </Button>
+            ) : (
+              <button
+                onClick={(e) => handleLockedClick(e, "Upgrade to view historical pricing trends")}
+                className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors w-full group"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="p-1 rounded bg-amber-100 dark:bg-amber-900/50">
+                    <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="flex-1 sm:w-28 sm:flex-none h-10 px-3 flex items-center bg-muted rounded-md border">
-                        <span className="text-sm text-muted-foreground">{previewQuantity}</span>
-                      </div>
-                      <span className="text-sm text-muted-foreground shrink-0">{drug.pricingUnit}s</span>
-                    </div>
-                    <div className="text-left sm:text-right pt-2 sm:pt-0 sm:pl-4 sm:border-l border-t sm:border-t-0 border-border/50">
-                      <p className="text-xs text-muted-foreground">Total</p>
-                      <p className="text-lg font-bold text-primary tabular-nums">{formatTotalPrice(previewTotal)}</p>
-                    </div>
-                  </div>
+                  <span className="text-xs text-muted-foreground">Price history is a Pro feature</span>
                 </div>
-
-                {/* Overlay with lock and CTA */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="flex items-center gap-2 px-4 py-2.5 bg-background/95 backdrop-blur-sm rounded-lg border border-amber-200 dark:border-amber-800 shadow-lg group-hover:border-amber-300 dark:group-hover:border-amber-700 transition-colors">
-                    <div className="p-1.5 rounded-md bg-amber-100 dark:bg-amber-900/50">
-                      <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                    </div>
-                    <span className="text-xs font-medium text-foreground">
-                      Calculate true acquisition cost instantly
-                    </span>
-                    <Crown className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                  </div>
+                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                  <Crown className="h-3.5 w-3.5" />
+                  <span className="text-xs font-medium">Upgrade</span>
                 </div>
-              </div>
+              </button>
             )}
+
+            {/* Calculator - Free for all users */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-md bg-primary/10">
+                  <Calculator className="h-4 w-4 text-primary" />
+                </div>
+                <span className="text-sm font-medium text-foreground">Calculate Total</span>
+              </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="flex items-center gap-3 flex-1">
+                  <Input
+                    type="number"
+                    placeholder="Quantity"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    className="flex-1 sm:w-28 sm:flex-none h-10"
+                    min="0"
+                    step="any"
+                  />
+                  <span className="text-sm text-muted-foreground shrink-0">{drug.pricingUnit}s</span>
+                </div>
+                {parsedQuantity > 0 && (
+                  <div className="text-left sm:text-right pt-2 sm:pt-0 sm:pl-4 sm:border-l border-t sm:border-t-0 border-border/50">
+                    <p className="text-xs text-muted-foreground">Total</p>
+                    <p className="text-lg font-bold text-primary tabular-nums">{formatTotalPrice(totalPrice)}</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </Card>

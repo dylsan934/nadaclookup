@@ -205,56 +205,17 @@ export const SavedDrugCard = ({
               </div>
             </div>
 
-            {/* Price History Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPriceHistory(true)}
-              className="w-full justify-center gap-2"
-            >
-              <History className="h-4 w-4" />
-              View Price History
-            </Button>
-
-            {/* Calculator - Premium Only */}
+            {/* Price History Button - Premium Only */}
             {isSubscribed ? (
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Calculator className="h-4 w-4 text-primary shrink-0" />
-                  <span className="text-xs font-medium text-foreground">Calculate:</span>
-                </div>
-                <div className="flex items-center gap-2 flex-1">
-                  <Input
-                    type="number"
-                    placeholder="Qty"
-                    value={quantity}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setQuantity(val);
-                      // Debounce the save
-                      if (debounceRef.current) {
-                        clearTimeout(debounceRef.current);
-                      }
-                      debounceRef.current = setTimeout(() => {
-                        const numVal = parseFloat(val);
-                        onUpdateQuantity(drug.id, isNaN(numVal) ? null : numVal);
-                      }, 500);
-                    }}
-                    className="w-20 h-8 text-sm"
-                    min="0"
-                    step="any"
-                  />
-                  <span className="text-xs text-muted-foreground">{price.pricing_unit}s</span>
-                </div>
-                {parsedQuantity > 0 && (
-                  <div className="text-right sm:pl-4 sm:border-l border-border/50">
-                    <span className="text-xs text-muted-foreground mr-2">Total:</span>
-                    <span className="text-base font-bold text-primary tabular-nums">
-                      {formatTotalPrice(totalPrice)}
-                    </span>
-                  </div>
-                )}
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPriceHistory(true)}
+                className="w-full justify-center gap-2"
+              >
+                <History className="h-4 w-4" />
+                View Price History
+              </Button>
             ) : (
               <button
                 onClick={onUpgrade}
@@ -264,7 +225,7 @@ export const SavedDrugCard = ({
                   <div className="p-1 rounded bg-amber-100 dark:bg-amber-900/50">
                     <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <span className="text-xs text-muted-foreground">Pricing calculator is a Pro feature</span>
+                  <span className="text-xs text-muted-foreground">Price history is a Pro feature</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
                   <Crown className="h-3.5 w-3.5" />
@@ -272,6 +233,45 @@ export const SavedDrugCard = ({
                 </div>
               </button>
             )}
+
+            {/* Calculator - Free for all users */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 bg-muted/30 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Calculator className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-xs font-medium text-foreground">Calculate:</span>
+              </div>
+              <div className="flex items-center gap-2 flex-1">
+                <Input
+                  type="number"
+                  placeholder="Qty"
+                  value={quantity}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setQuantity(val);
+                    // Debounce the save
+                    if (debounceRef.current) {
+                      clearTimeout(debounceRef.current);
+                    }
+                    debounceRef.current = setTimeout(() => {
+                      const numVal = parseFloat(val);
+                      onUpdateQuantity(drug.id, isNaN(numVal) ? null : numVal);
+                    }, 500);
+                  }}
+                  className="w-20 h-8 text-sm"
+                  min="0"
+                  step="any"
+                />
+                <span className="text-xs text-muted-foreground">{price.pricing_unit}s</span>
+              </div>
+              {parsedQuantity > 0 && (
+                <div className="text-right sm:pl-4 sm:border-l border-border/50">
+                  <span className="text-xs text-muted-foreground mr-2">Total:</span>
+                  <span className="text-base font-bold text-primary tabular-nums">
+                    {formatTotalPrice(totalPrice)}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         )}
         {/* Notes */}
