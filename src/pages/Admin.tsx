@@ -27,7 +27,8 @@ import {
   ChevronRight,
   Loader2,
   Gift,
-  X
+  X,
+  Crown
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -52,6 +53,8 @@ interface UserData {
   roles: string[];
   isAdmin: boolean;
   trialEndsAt: string | null;
+  isProMember: boolean;
+  subscriptionEnd: string | null;
 }
 
 interface UsersResponse {
@@ -310,6 +313,7 @@ const Admin = () => {
                         <TableHead>Last Sign In</TableHead>
                         <TableHead>Saved Drugs</TableHead>
                         <TableHead>Role</TableHead>
+                        <TableHead>Pro Status</TableHead>
                         <TableHead>Trial Status</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
@@ -342,6 +346,21 @@ const Admin = () => {
                               </Badge>
                             ) : (
                               <Badge variant="secondary">User</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {userData.isProMember ? (
+                              <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20">
+                                <Crown className="h-3 w-3 mr-1" />
+                                Pro
+                                {userData.subscriptionEnd && (
+                                  <span className="ml-1 text-xs opacity-75">
+                                    until {format(new Date(userData.subscriptionEnd), 'MMM d')}
+                                  </span>
+                                )}
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">Free</span>
                             )}
                           </TableCell>
                           <TableCell>
@@ -384,7 +403,7 @@ const Admin = () => {
                       ))}
                       {usersData?.users?.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                             No users found
                           </TableCell>
                         </TableRow>
