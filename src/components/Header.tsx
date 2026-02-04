@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Pill, LogIn, LogOut, User, BookmarkCheck, Crown, Heart, Bell } from "lucide-react";
+import { Pill, LogIn, LogOut, User, BookmarkCheck, Crown, Heart, Bell, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { NotificationDropdown } from "@/components/NotificationDropdown";
 import { LockedNotificationDropdown } from "@/components/LockedNotificationDropdown";
 
 export const Header = () => {
-  const { user, isSubscribed, signOut } = useAuth();
+  const { user, isSubscribed, isAdmin, signOut } = useAuth();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -116,6 +116,20 @@ export const Header = () => {
                       <span className="hidden sm:inline ml-1">Saved</span>
                     </Button>
                   </Link>
+                  
+                  {/* Admin link - only visible to admins */}
+                  {isAdmin && (
+                    <Link to="/admin">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
+                      >
+                        <Shield className="h-4 w-4" />
+                        <span className="hidden sm:inline ml-1">Admin</span>
+                      </Button>
+                    </Link>
+                  )}
                   
                   {isSubscribed ? (
                     <Button 
