@@ -10,13 +10,13 @@ interface FreeAccountModalProps {
 
 const freeFeatures = [
   { icon: Heart, label: "Save up to 3 drugs" },
-  { icon: Bell, label: "Get alerted when prices change" },
+  { icon: Bell, label: "In-app alerts when prices change" },
 ];
 
 const proFeatures = [
   { icon: Bookmark, label: "Unlimited saved drugs" },
-  { icon: Calculator, label: "Pricing calculator tools" },
-  { icon: Bell, label: "Unlimited price alerts" },
+  { icon: Calculator, label: "Advanced pricing tools" },
+  { icon: Bell, label: "Email + in-app price alerts weekly" },
 ];
 
 export const FreeAccountModal = ({ open, onOpenChange }: FreeAccountModalProps) => {

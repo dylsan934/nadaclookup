@@ -25,8 +25,8 @@ const proFeatures = [
   },
   { 
     icon: Bell, 
-    label: "Price Change Alerts",
-    description: "Get notified when NADAC prices change for your saved drugs"
+    label: "Email & In-App Alerts",
+    description: "Get notified via email and in-app when weekly NADAC prices change"
   },
   { 
     icon: TrendingUp, 

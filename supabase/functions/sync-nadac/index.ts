@@ -245,12 +245,38 @@ Deno.serve(async (req) => {
 
     console.log(`Sync complete. Total records processed: ${totalInserted}`);
 
+    // Trigger price alerts check after successful sync
+    let alertsResult = null;
+    try {
+      console.log('Triggering price alerts check...');
+      const alertsResponse = await fetch(
+        `${supabaseUrl}/functions/v1/check-price-alerts`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+          },
+        }
+      );
+      
+      if (alertsResponse.ok) {
+        alertsResult = await alertsResponse.json();
+        console.log('Price alerts check completed:', alertsResult);
+      } else {
+        console.error('Price alerts check failed:', alertsResponse.status);
+      }
+    } catch (alertsError) {
+      console.error('Error triggering price alerts:', alertsError);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: `Synced ${totalInserted} NADAC records for ${successfulDate}`,
         totalRecords: totalInserted,
-        asOfDate: successfulDate
+        asOfDate: successfulDate,
+        alertsTriggered: alertsResult?.alertsSent || 0
       }),
       { 
         status: 200,
