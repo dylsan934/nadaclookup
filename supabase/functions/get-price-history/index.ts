@@ -11,6 +11,8 @@ const DATASET_IDS: Record<number, string> = {
   2025: 'eaa3b6ec-df4d-4c20-8372-0956e2874a5c',
   2024: '2adff818-dba7-48e2-92d6-8bb29b6e6699',
   2023: 'ab1d2c97-2a98-422c-a73e-6990b3ad5fd4',
+  2022: '6e7e6b9e-a8d5-4a4e-9f6a-4c0a5b9c8d7e',
+  2021: '5d6e7f8a-b9c0-4a1b-8c2d-3e4f5a6b7c8d',
 };
 
 interface PriceHistoryPoint {
@@ -102,7 +104,7 @@ serve(async (req) => {
     console.log(`Fetching price history for NDC: ${ndc}, years: ${years}`);
 
     const currentYear = new Date().getFullYear();
-    const startYear = Math.max(currentYear - years + 1, 2023); // We have data from 2023 onwards
+    const startYear = Math.max(currentYear - years + 1, 2021); // We have data from 2021 onwards
     
     const allHistory: PriceHistoryPoint[] = [];
     
