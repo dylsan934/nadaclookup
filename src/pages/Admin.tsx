@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,10 +28,16 @@ import {
   Loader2,
   Gift,
   X,
-  Crown
+  Crown,
+  Database,
+  Upload,
+  RefreshCw,
+  CheckCircle,
+  AlertTriangle
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { nadacApi, FulSyncStatus } from "@/lib/nadac-api";
 
 interface Stats {
   totalUsers: number;
@@ -76,6 +82,13 @@ const Admin = () => {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [processingTrialUserId, setProcessingTrialUserId] = useState<string | null>(null);
+  
+  // FUL data management state
+  const [fulStatus, setFulStatus] = useState<FulSyncStatus | null>(null);
+  const [isLoadingFulStatus, setIsLoadingFulStatus] = useState(true);
+  const [isUploadingFul, setIsUploadingFul] = useState(false);
+  const [isSyncingFul, setIsSyncingFul] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Redirect non-admins (client-side UX guard - real protection is backend)
   useEffect(() => {
@@ -110,6 +123,25 @@ const Admin = () => {
       fetchStats();
     }
   }, [isAdmin, session]);
+
+  // Fetch FUL sync status
+  useEffect(() => {
+    const fetchFulStatus = async () => {
+      setIsLoadingFulStatus(true);
+      try {
+        const status = await nadacApi.getFulSyncStatus();
+        setFulStatus(status);
+      } catch (error) {
+        console.error('Error fetching FUL status:', error);
+      } finally {
+        setIsLoadingFulStatus(false);
+      }
+    };
+
+    if (isAdmin) {
+      fetchFulStatus();
+    }
+  }, [isAdmin]);
 
   // Fetch users function
   const fetchUsers = async () => {
@@ -154,6 +186,76 @@ const Admin = () => {
       fetchUsers();
     }
   }, [isAdmin, session, search, page]);
+
+  // Manual FUL sync trigger
+  const handleManualFulSync = async () => {
+    if (!session?.access_token) return;
+    
+    setIsSyncingFul(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-ful', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast.success(`FUL sync complete: ${data.totalRecords} records`);
+        // Refresh status
+        const status = await nadacApi.getFulSyncStatus();
+        setFulStatus(status);
+      } else {
+        throw new Error(data?.error || 'Sync failed');
+      }
+    } catch (error) {
+      console.error('FUL sync error:', error);
+      toast.error(`FUL sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsSyncingFul(false);
+    }
+  };
+
+  // Handle FUL CSV file upload
+  const handleFulFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !session?.access_token) return;
+
+    // Validate file type
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      toast.error('Please upload a CSV file');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size must be less than 5MB');
+      return;
+    }
+
+    setIsUploadingFul(true);
+    try {
+      const csvContent = await file.text();
+      const result = await nadacApi.uploadFulCsv(csvContent, undefined, session.access_token);
+
+      if (result.success) {
+        toast.success(`FUL upload complete: ${result.totalRecords} records`);
+        // Refresh status
+        const status = await nadacApi.getFulSyncStatus();
+        setFulStatus(status);
+      } else {
+        throw new Error(result.error || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('FUL upload error:', error);
+      toast.error(`FUL upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsUploadingFul(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const handleTrialAction = async (userId: string, grant: boolean) => {
     if (!session?.access_token) return;
@@ -277,6 +379,118 @@ const Admin = () => {
             </Card>
           ))}
         </div>
+
+        {/* FUL Data Management Section */}
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Database className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle>FUL Price Data</CardTitle>
+                <CardDescription>Federal Upper Limit pricing data for Louisiana Medicaid reimbursement</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoadingFulStatus ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Status Display */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground mb-1">Status</p>
+                    <div className="flex items-center gap-2">
+                      {fulStatus?.status === 'active' ? (
+                        <>
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                          <span className="font-medium text-emerald-600">Active</span>
+                        </>
+                      ) : fulStatus?.status === 'stale' ? (
+                        <>
+                          <AlertTriangle className="h-4 w-4 text-amber-500" />
+                          <span className="font-medium text-amber-600">Stale</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertTriangle className="h-4 w-4 text-destructive" />
+                          <span className="font-medium text-destructive">Empty</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground mb-1">Records</p>
+                    <p className="text-xl font-bold">{fulStatus?.recordCount?.toLocaleString() || 0}</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground mb-1">Last Sync</p>
+                    <p className="font-medium">
+                      {fulStatus?.lastSync 
+                        ? format(new Date(fulStatus.lastSync), 'MMM d, yyyy h:mm a')
+                        : 'Never'}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground mb-1">Source File Date</p>
+                    <p className="font-medium">
+                      {fulStatus?.sourceFileDate 
+                        ? format(new Date(fulStatus.sourceFileDate), 'MMM d, yyyy')
+                        : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
+                  <Button
+                    variant="outline"
+                    onClick={handleManualFulSync}
+                    disabled={isSyncingFul}
+                    className="flex items-center gap-2"
+                  >
+                    {isSyncingFul ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                    {isSyncingFul ? 'Syncing...' : 'Sync from CMS'}
+                  </Button>
+                  
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept=".csv"
+                      onChange={handleFulFileUpload}
+                      className="hidden"
+                      id="ful-csv-upload"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingFul}
+                      className="flex items-center gap-2"
+                    >
+                      {isUploadingFul ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                      {isUploadingFul ? 'Uploading...' : 'Upload CSV'}
+                    </Button>
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Expected CSV format: ndc, ful_unit_price, package_size (optional), effective_date (optional). Max 5MB.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Users Table */}
         <Card>
