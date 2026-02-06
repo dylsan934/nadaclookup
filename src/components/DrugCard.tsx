@@ -11,17 +11,11 @@ import { toast } from "sonner";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { FreeAccountModal } from "@/components/FreeAccountModal";
 import { PriceHistoryModal } from "@/components/PriceHistoryModal";
+import { LAMedicaidPanel } from "@/components/LAMedicaidPanel";
 import { cn } from "@/lib/utils";
+import { DrugData } from "@/lib/nadac-api";
 
-export interface DrugData {
-  ndc: string;
-  drugName: string;
-  nadacPerUnit: number;
-  effectiveDate: string;
-  pricingUnit: string;
-  pharmacyType: string;
-  explanation?: string;
-}
+export type { DrugData } from "@/lib/nadac-api";
 
 interface DrugCardProps {
   drug: DrugData;
@@ -316,6 +310,26 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
                 </div>
               </button>
             )}
+
+            {/* Louisiana Medicaid Reimbursement Panel */}
+            <LAMedicaidPanel
+              nadacPerUnit={drug.nadacPerUnit}
+              fulPriceUnit={drug.fulPriceUnit}
+              fulEffectiveDate={drug.fulEffectiveDate}
+              drugType={drug.drugType}
+              estimatedWac={drug.estimatedWac}
+              ingredientCost={drug.ingredientCost}
+              ingredientCostSource={drug.ingredientCostSource}
+              dispensingFee={drug.dispensingFee}
+              laReimbursement={drug.laReimbursement}
+              estimatedMargin={drug.estimatedMargin}
+              marginPercent={drug.marginPercent}
+              isPro={isSubscribed}
+              onUpgradeClick={() => {
+                setUpgradeFeatureHighlight("Upgrade to see Louisiana Medicaid reimbursement estimates and pharmacy margins");
+                setShowUpgradeModal(true);
+              }}
+            />
 
             {/* Calculator - Free for all users */}
             <div className="flex flex-col gap-4">
