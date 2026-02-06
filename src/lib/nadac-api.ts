@@ -1,25 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-
-export interface DrugData {
-  ndc: string;
-  drugName: string;
-  nadacPerUnit: number;
-  effectiveDate: string;
-  pricingUnit: string;
-  pharmacyType: string;
-  explanation?: string;
-  // FUL and reimbursement fields
-  fulPriceUnit?: number;
-  fulEffectiveDate?: string;
-  drugType?: 'brand' | 'generic' | 'unknown';
-  estimatedWac?: number;
-  ingredientCost?: number;
-  ingredientCostSource?: 'NADAC' | 'FUL' | 'WAC';
-  dispensingFee?: number;
-  laReimbursement?: number;
-  estimatedMargin?: number;
-  marginPercent?: number;
-}
+import { DrugData } from "@/components/DrugCard";
 
 export interface SearchResponse {
   success: boolean;
@@ -57,13 +37,6 @@ export interface PriceHistoryResponse {
   error?: string;
 }
 
-export interface FulSyncStatus {
-  lastSync: string | null;
-  recordCount: number;
-  sourceFileDate: string | null;
-  status: 'active' | 'stale' | 'empty';
-}
-
 export const nadacApi = {
   async search(searchTerm: string, limit = 50): Promise<SearchResponse> {
     const { data, error } = await supabase.functions.invoke('search-nadac', {
@@ -84,17 +57,6 @@ export const nadacApi = {
       pricingUnit: drug.pricing_unit,
       pharmacyType: drug.pharmacy_type,
       explanation: drug.explanation,
-      // FUL and reimbursement fields
-      fulPriceUnit: drug.ful_price_unit ?? undefined,
-      fulEffectiveDate: drug.ful_effective_date ?? undefined,
-      drugType: drug.drug_type ?? undefined,
-      estimatedWac: drug.estimated_wac ?? undefined,
-      ingredientCost: drug.ingredient_cost ?? undefined,
-      ingredientCostSource: drug.ingredient_cost_source ?? undefined,
-      dispensingFee: drug.dispensing_fee ?? undefined,
-      laReimbursement: drug.la_reimbursement ?? undefined,
-      estimatedMargin: drug.estimated_margin ?? undefined,
-      marginPercent: drug.margin_percent ?? undefined,
     }));
 
     return {
@@ -202,49 +164,5 @@ export const nadacApi = {
       stats: data?.stats || { currentPrice: 0, highestPrice: 0, lowestPrice: 0, percentChange: 0, dataPoints: 0 },
       error: data?.error,
     };
-  },
-
-  async getFulSyncStatus(): Promise<FulSyncStatus> {
-    // Get the most recent FUL record to determine sync status
-    const { data, error, count } = await supabase
-      .from('ful_prices')
-      .select('updated_at, source_file_date', { count: 'exact' })
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error || !data) {
-      return {
-        lastSync: null,
-        recordCount: 0,
-        sourceFileDate: null,
-        status: 'empty',
-      };
-    }
-
-    // Check if data is stale (older than 10 days)
-    const lastSync = new Date(data.updated_at);
-    const daysSinceSync = (Date.now() - lastSync.getTime()) / (1000 * 60 * 60 * 24);
-    
-    return {
-      lastSync: data.updated_at,
-      recordCount: count || 0,
-      sourceFileDate: data.source_file_date,
-      status: daysSinceSync > 10 ? 'stale' : 'active',
-    };
-  },
-
-  async uploadFulCsv(csvContent: string, effectiveDate?: string, accessToken?: string): Promise<SyncResponse> {
-    const { data, error } = await supabase.functions.invoke('upload-ful', {
-      body: { csvContent, effectiveDate },
-      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
-    });
-
-    if (error) {
-      console.error('FUL upload error:', error);
-      return { success: false, error: error.message };
-    }
-
-    return data as SyncResponse;
   },
 };

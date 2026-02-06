@@ -23,9 +23,3 @@ verify_jwt = false
 
 [functions.admin-dashboard]
 verify_jwt = false
-
-[functions.sync-ful]
-verify_jwt = false
-
-[functions.upload-ful]
-verify_jwt = false
