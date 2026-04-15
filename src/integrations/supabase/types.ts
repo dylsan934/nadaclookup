@@ -38,6 +38,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ful_prices: {
+        Row: {
+          created_at: string | null
+          effective_date: string
+          ful_unit_price: number
+          id: string
+          ndc_11: string
+          package_size: number | null
+          source_file_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          effective_date: string
+          ful_unit_price: number
+          id?: string
+          ndc_11: string
+          package_size?: number | null
+          source_file_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          effective_date?: string
+          ful_unit_price?: number
+          id?: string
+          ndc_11?: string
+          package_size?: number | null
+          source_file_date?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       nadac_drugs: {
         Row: {
           created_at: string
