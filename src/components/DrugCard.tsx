@@ -81,7 +81,7 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
 
     // If trying to save (not unsave) and limit reached
     if (!isSaved && !isSubscribed && !canSaveDrug) {
-      setUpgradeFeatureHighlight(`You've reached the free limit of ${freeSaveLimit} saved drugs. Upgrade to save unlimited drugs.`);
+      setUpgradeFeatureHighlight(`You've used all ${freeSaveLimit} free saves. Unlock unlimited saves and full price history with Pro — start your 14-day free trial.`);
       setShowUpgradeModal(true);
       return;
     }
@@ -308,12 +308,9 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
                   <div className="p-1 rounded bg-amber-100 dark:bg-amber-900/50">
                     <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <span className="text-xs text-muted-foreground">Price history is a Pro feature</span>
+                  <span className="text-xs text-muted-foreground">Unlock price history with Pro — 14-day free trial</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
-                  <Crown className="h-3.5 w-3.5" />
-                  <span className="text-xs font-medium">Upgrade</span>
-                </div>
+                <span className="text-xs font-medium text-primary">Start free trial →</span>
               </button>
             )}
 

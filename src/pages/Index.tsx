@@ -7,6 +7,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { DrugResults } from "@/components/DrugResults";
 import { DataStatus } from "@/components/DataStatus";
 import { HomeSEOContent } from "@/components/HomeSEOContent";
+import { HomePricing } from "@/components/HomePricing";
 import { DrugData } from "@/components/DrugCard";
 import { nadacApi } from "@/lib/nadac-api";
 import { useToast } from "@/hooks/use-toast";
@@ -130,6 +131,9 @@ const Index = () => {
           <section className="pt-2">
             <DrugResults drugs={results} isLoading={isLoading} hasSearched={hasSearched} searchTerm={lastSearchTerm} />
           </section>
+
+          {/* Pricing section */}
+          <HomePricing />
 
           {/* SEO content below search results */}
           {!hasSearched && <HomeSEOContent />}
