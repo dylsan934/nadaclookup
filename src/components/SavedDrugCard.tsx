@@ -61,7 +61,7 @@ export const SavedDrugCard = ({
   const [notes, setNotes] = useState(drug.notes || "");
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [showPriceHistory, setShowPriceHistory] = useState(false);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     setQuantity(drug.calculator_qty?.toString() || "");
