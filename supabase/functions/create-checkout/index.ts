@@ -43,6 +43,18 @@ serve(async (req) => {
       logStep("Existing customer found", { customerId });
     }
 
+    // Check if user already has an active subscription
+    if (customerId) {
+      const existingSubs = await stripe.subscriptions.list({
+        customer: customerId,
+        status: "active",
+        limit: 1,
+      });
+      if (existingSubs.data.length > 0) {
+        throw new Error("You already have an active subscription");
+      }
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -53,6 +65,10 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
+      subscription_data: {
+        trial_period_days: 14,
+      },
+      payment_method_collection: "if_required",
       success_url: `${req.headers.get("origin")}/?subscription=success`,
       cancel_url: `${req.headers.get("origin")}/?subscription=cancelled`,
     });

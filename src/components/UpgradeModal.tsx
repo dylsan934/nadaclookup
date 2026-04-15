@@ -153,7 +153,7 @@ export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeMo
                 className="w-full font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md"
               >
                 <Crown className="h-4 w-4 mr-2" />
-                Upgrade to Pro
+                Start 14-Day Free Trial
               </Button>
               <Button 
                 variant="ghost" 
@@ -172,7 +172,7 @@ export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeMo
                   className="w-full font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md"
                 >
                   <Crown className="h-4 w-4 mr-2" />
-                  Get Started with Pro
+                  Start 14-Day Free Trial
                 </Button>
               </Link>
               <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
