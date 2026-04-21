@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { SiteAnalytics } from "@/components/admin/SiteAnalytics";
 
 interface Stats {
   totalUsers: number;
@@ -256,6 +257,9 @@ const Admin = () => {
           <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
           <p className="text-muted-foreground">Manage users and view platform statistics</p>
         </div>
+
+        {/* Site Analytics */}
+        <SiteAnalytics />
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
