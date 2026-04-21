@@ -1,196 +1,69 @@
 
-# Drug Comparison View Implementation Plan
+# Add Site Analytics to Admin Page
 
 ## Overview
-Add a comparison view feature that allows users to select multiple drugs from search results and view them side-by-side in a table format. This enables easy comparison of prices, dosage forms, and other attributes across different drug options.
+Add a new "Site Analytics" section to the admin dashboard showing pageviews, unique visitors, and traffic trends using Lovable's built-in production analytics (no third-party setup needed).
 
-## Architecture
+## Approach
+Use the built-in `analytics--read_project_analytics` data source via a new edge function action. The admin page already calls `admin-dashboard` for stats — we'll add an `analytics` action that returns time-series traffic data, then render it in a new section on the Admin page.
 
-```text
-+-------------------+       +----------------------+       +------------------+
-|   DrugResults     |  -->  |  Comparison State    |  -->  |  ComparisonView  |
-|   (checkboxes)    |       |  (selected drugs)    |       |  (side-by-side)  |
-+-------------------+       +----------------------+       +------------------+
-        |                            |                            |
-        v                            v                            v
-  Select up to 4             "Compare (N)" button          Table/card layout
-  drugs to compare           appears when N >= 2           with key metrics
-```
+## What Will Be Added
 
-## User Experience Flow
+### 1. Backend — extend `admin-dashboard` edge function
+Add a new `action=analytics` handler that:
+- Accepts `range` param (`7d`, `30d`, `90d`)
+- Accepts `granularity` param (`hourly` or `daily`)
+- Calls the Lovable analytics API (server-side) and returns:
+  - Total pageviews
+  - Total unique visitors
+  - Daily/hourly time series (date, pageviews, visitors)
+  - Top pages (path + view count)
 
-1. User searches for a drug (e.g., "Metformin")
-2. Results appear with a checkbox on each drug card
-3. User selects 2-4 drugs they want to compare
-4. A floating "Compare (N)" button appears at the bottom
-5. Clicking "Compare" opens a modal/drawer with side-by-side comparison
-6. User can see prices, dosage forms, pricing units, and effective dates aligned
-7. User can remove drugs from comparison or add more from results
+### 2. Frontend — new Analytics section on `/admin`
+Add a new card section above or beside the existing "Stats" cards:
 
-## Implementation Steps
+- **Top summary tiles**: Total Pageviews, Unique Visitors, Avg. Daily Views (with % change vs previous period)
+- **Range selector**: Last 7 days / 30 days / 90 days (Tabs)
+- **Line chart**: Pageviews over time (using existing `recharts` from `ui/chart.tsx`)
+- **Top pages table**: Path, Views, % of total
 
-### 1. Create Comparison Context/State
-Track selected drugs for comparison in the `DrugResults` component:
-- `selectedForComparison: DrugData[]` - array of selected drugs (max 4)
-- Functions to add/remove drugs from comparison
+### 3. Files
 
-### 2. Create DrugComparisonView Component
-A new component that displays drugs side-by-side:
-- **Header row**: Drug names
-- **NDC row**: NDC codes
-- **Price row**: NADAC per unit (highlighted for lowest)
-- **Dosage Form row**: Tablet, Capsule, etc.
-- **Pricing Unit row**: EA, ML, GM, etc.
-- **Effective Date row**: When price was set
-- **Calculator row**: Enter quantity, see total for each
-
-### 3. Update DrugCard Component
-Add a checkbox/select button for comparison mode:
-- Checkbox appears on the left side of each card
-- Visual indicator when drug is selected
-- Disable selection when 4 drugs are already selected
-
-### 4. Add Floating Compare Button
-A sticky/floating button that appears when 2+ drugs are selected:
-- Shows count of selected drugs
-- Opens comparison modal when clicked
-- Option to clear selection
-
-### 5. Create Comparison Modal
-A dialog/sheet that shows the comparison table:
-- Responsive design (horizontal scroll on mobile)
-- Highlight best price in green
-- Action buttons: Clear, Close
-- Option to save comparison (future enhancement)
-
-## Component Structure
-
-```text
-src/components/
-├── DrugResults.tsx          # Add comparison state
-├── DrugCard.tsx             # Add checkbox for selection
-├── CompareButton.tsx        # NEW: Floating compare button
-├── DrugComparisonView.tsx   # NEW: Side-by-side comparison
-└── DrugComparisonModal.tsx  # NEW: Modal wrapper
-```
-
-## UI Mockup
-
-```text
-+------------+------------+------------+
-| METFORMIN  | METFORMIN  | METFORMIN  |
-| 500MG TAB  | 850MG TAB  | 1000MG TAB |
-+------------+------------+------------+
-| NDC        |            |            |
-| 00093...   | 00093...   | 00093...   |
-+------------+------------+------------+
-| Price/Unit |            |            |
-| $0.0234*   | $0.0312    | $0.0289    |
-+------------+------------+------------+
-| Form       |            |            |
-| Tablet     | Tablet     | Tablet     |
-+------------+------------+------------+
-| Unit       |            |            |
-| EA         | EA         | EA         |
-+------------+------------+------------+
-| Quantity   |            |            |
-| [  90  ]   | [  90  ]   | [  90  ]   |
-+------------+------------+------------+
-| Total      |            |            |
-| $2.11*     | $2.81      | $2.60      |
-+------------+------------+------------+
-* = Lowest price (highlighted in green)
-```
-
----
+| File | Action |
+|------|--------|
+| `supabase/functions/admin-dashboard/index.ts` | Add `analytics` action handler |
+| `src/pages/Admin.tsx` | Add Analytics section + range state + data fetch |
+| `src/components/admin/SiteAnalytics.tsx` | NEW — chart + tiles + top pages table |
 
 ## Technical Details
 
-### Files to Create
-
-| File | Purpose |
-|------|---------|
-| `src/components/CompareButton.tsx` | Floating button showing selection count |
-| `src/components/DrugComparisonModal.tsx` | Modal containing comparison view |
-| `src/components/DrugComparisonTable.tsx` | Table layout for side-by-side comparison |
-
-### Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/components/DrugResults.tsx` | Add comparison state, pass to DrugCard |
-| `src/components/DrugCard.tsx` | Add checkbox for selection |
-
-### State Management
-
+### Edge function snippet
 ```typescript
-// In DrugResults.tsx
-const [selectedForCompare, setSelectedForCompare] = useState<DrugData[]>([]);
-const [showComparison, setShowComparison] = useState(false);
-
-const toggleDrugSelection = (drug: DrugData) => {
-  setSelectedForCompare(prev => {
-    const isSelected = prev.some(d => d.ndc === drug.ndc);
-    if (isSelected) {
-      return prev.filter(d => d.ndc !== drug.ndc);
-    }
-    if (prev.length >= 4) return prev; // Max 4 drugs
-    return [...prev, drug];
-  });
-};
-```
-
-### DrugCard Checkbox Props
-
-```typescript
-interface DrugCardProps {
-  drug: DrugData;
-  index: number;
-  isSelected?: boolean;           // NEW
-  onToggleSelect?: () => void;    // NEW
-  selectionDisabled?: boolean;    // NEW: true when 4 drugs selected
+if (action === 'analytics') {
+  const range = url.searchParams.get('range') || '30d';
+  const days = range === '7d' ? 7 : range === '90d' ? 90 : 30;
+  const endDate = new Date().toISOString().slice(0, 10);
+  const startDate = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+  
+  // Fetch from Lovable analytics endpoint using project ID
+  const data = await fetchLovableAnalytics(startDate, endDate, days <= 7 ? 'hourly' : 'daily');
+  return new Response(JSON.stringify(data), { headers: ... });
 }
 ```
 
-### Comparison Table Structure
+### Chart component
+Uses existing `recharts` (already in `ui/chart.tsx`) — `LineChart` with `pageviews` and `uniqueVisitors` series, `XAxis` formatted as date, tooltip with formatted numbers.
 
-```typescript
-interface ComparisonTableProps {
-  drugs: DrugData[];
-  onRemove: (ndc: string) => void;
-}
+### Auth
+Reuses the existing admin-role check at the top of the function — no new auth code needed.
 
-// Rows to display:
-const comparisonRows = [
-  { label: "NDC", key: "ndc" },
-  { label: "Price/Unit", key: "nadacPerUnit", format: "currency" },
-  { label: "Dosage Form", key: "dosageForm", computed: true },
-  { label: "Pricing Unit", key: "pricingUnit" },
-  { label: "Effective Date", key: "effectiveDate", format: "date" },
-];
-```
+## Notes & Limitations
+- Lovable production analytics only reflects the **published** site (`nadaclookup.com` / `nadaclookup.lovable.app`), not preview traffic.
+- Data may have a short delay (typically <1 hour).
+- No PII is collected — only aggregate pageview/visitor counts by path.
 
-## Responsive Design
-
-- **Desktop**: Full table with all drugs visible side-by-side
-- **Tablet**: Horizontal scroll if more than 3 drugs
-- **Mobile**: 
-  - Use Sheet (drawer from bottom) instead of Dialog
-  - Horizontal scroll for comparison table
-  - Sticky first column with row labels
-
-## Edge Cases
-
-1. **Less than 2 drugs selected**: Compare button disabled/hidden
-2. **More than 4 drugs**: Selection disabled for additional drugs
-3. **Search cleared**: Clear comparison selection
-4. **Same drug twice**: Prevent duplicate selection (by NDC)
-5. **Different strengths**: Allow comparing different strengths of same drug
-
-## Future Enhancements (not in this phase)
-
-- Save comparison for later reference
-- Share comparison via link
-- Export comparison as PDF/image
-- Price history comparison overlay
-- Add drugs from saved list to comparison
+## Out of Scope (future)
+- Referrer breakdown
+- Country/device breakdown
+- Conversion funnels (search → signup → upgrade)
+- Real-time visitor count
