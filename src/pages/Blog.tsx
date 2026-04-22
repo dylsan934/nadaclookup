@@ -6,6 +6,12 @@ import { ArrowRight } from "lucide-react";
 
 const articles = [
   {
+    slug: "calculate-reimbursement-from-nadac",
+    title: "How to Calculate Reimbursement from NADAC",
+    excerpt: "How Medicaid and select payers reimburse pharmacies using the NADAC plus a professional dispensing fee — with a worked example and tips for spotting underwater claims.",
+    date: "2026-04-22",
+  },
+  {
     slug: "improve-pharmacy-margins",
     title: "How to Use NADAC Trends to Improve Pharmacy Margins",
     excerpt: "Learn how independent pharmacies use weekly NADAC data to identify cost-saving opportunities, negotiate better wholesaler rates, and protect against underwater claims.",
