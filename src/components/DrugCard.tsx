@@ -13,28 +13,6 @@ import { FreeAccountModal } from "@/components/FreeAccountModal";
 import { PriceHistoryModal } from "@/components/PriceHistoryModal";
 import { cn } from "@/lib/utils";
 
-// CMS NADAC explanation/footnote codes
-const NADAC_EXPLANATION_CODES: Record<string, string> = {
-  "1": "Survey-based pricing",
-  "2": "Pricing based on previous NADAC",
-  "3": "Pricing based on similar package size",
-  "4": "Pricing based on weighted average of all package sizes",
-  "5": "Rate adjustment applied",
-  "6": "Methodology change",
-  "7": "Pricing based on RED BOOK markup",
-  "8": "No change from previous NADAC",
-};
-
-const formatExplanation = (raw: string): string => {
-  if (!raw) return "";
-  const codes = raw.split(/[,\s]+/).map(c => c.trim()).filter(Boolean);
-  const labels = codes.map(c => NADAC_EXPLANATION_CODES[c]).filter(Boolean);
-  if (labels.length === 0) {
-    // Not a code list — show raw text only if it looks like prose
-    return /[a-zA-Z]{4,}/.test(raw) ? raw : "";
-  }
-  return labels.join(" · ");
-};
 
 export interface DrugData {
   ndc: string;
@@ -271,11 +249,6 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
             </div>
           </div>
 
-          {drug.explanation && formatExplanation(drug.explanation) && (
-            <p className="text-xs text-muted-foreground border-t border-border/50 pt-2.5 leading-relaxed">
-              {formatExplanation(drug.explanation)}
-            </p>
-          )}
 
           {/* Always-visible: Price History + Calculator */}
           <div className="pt-3 border-t border-border/50 flex flex-col sm:flex-row gap-3 sm:items-start">
