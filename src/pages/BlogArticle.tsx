@@ -6,6 +6,77 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 
 const articles: Record<string, { title: string; description: string; content: JSX.Element }> = {
+  "calculate-reimbursement-from-nadac": {
+    title: "How to Calculate Reimbursement from NADAC | NADAC Lookup",
+    description: "Learn how Medicaid and other payers calculate pharmacy reimbursement using NADAC plus a professional dispensing fee. Includes the formula, examples, and tips for spotting underwater claims.",
+    content: (
+      <>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          For independent pharmacies, knowing exactly how a payer calculates your reimbursement is just as important as knowing your acquisition cost. A growing number of payers — led by state Medicaid programs — now reimburse pharmacies using a transparent formula built around NADAC plus a professional dispensing fee.
+        </p>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">The NADAC Reimbursement Formula</h2>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          At its simplest, the formula looks like this:
+        </p>
+        <div className="bg-muted/50 border border-border rounded-lg p-4 mb-4">
+          <code className="text-foreground text-sm">Reimbursement = (NADAC per unit × Quantity Dispensed) + Professional Dispensing Fee</code>
+        </div>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          The ingredient cost portion is meant to cover what you actually paid for the drug, while the dispensing fee is meant to cover the cost of professional services — counseling, labeling, verification, and overhead. This structure is endorsed by CMS as the most accurate way to reimburse pharmacies.
+        </p>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Who Pays Pharmacies Using NADAC?</h2>
+        <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
+          <li><strong className="text-foreground">State Medicaid fee-for-service (FFS) programs</strong> — the majority of states now use NADAC as the primary ingredient cost benchmark for FFS claims.</li>
+          <li><strong className="text-foreground">Medicaid managed care plans</strong> — many MCOs are required (or choose) to follow the same FFS methodology, including NADAC + dispensing fee.</li>
+          <li><strong className="text-foreground">Select commercial PBM contracts</strong> — a small but growing number of transparent PBM arrangements use NADAC-based reimbursement instead of MAC or AWP discounts.</li>
+        </ul>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          For a deeper comparison of pricing benchmarks, see our breakdown of <Link to="/blog/nadac-vs-wac-explained" className="text-primary hover:underline">NADAC vs WAC</Link>.
+        </p>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Understanding the Professional Dispensing Fee</h2>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          Professional dispensing fees are set by each state Medicaid agency, typically informed by a cost-of-dispensing (COD) survey of in-state pharmacies. As of recent CMS-approved state plan amendments, dispensing fees generally fall in the <strong className="text-foreground">$9 to $13 per prescription</strong> range. A few examples:
+        </p>
+        <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
+          <li>Many states pay around <strong className="text-foreground">$10.00–$10.50</strong> per prescription for most pharmacies.</li>
+          <li>Some states use a tiered fee, paying higher rates to pharmacies that serve rural or low-volume areas.</li>
+          <li>Specialty and 340B claims may use different dispensing fees.</li>
+        </ul>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          Always check your state Medicaid provider manual for the exact dispensing fee that applies to your pharmacy.
+        </p>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Worked Example</h2>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          Suppose you dispense 90 tablets of Metformin 500 mg with a NADAC of <strong className="text-foreground">$0.0234 per unit</strong>, and your state Medicaid pays a <strong className="text-foreground">$10.50</strong> dispensing fee.
+        </p>
+        <div className="bg-muted/50 border border-border rounded-lg p-4 mb-4 text-sm">
+          <div className="text-muted-foreground">Ingredient cost: 90 × $0.0234 = <strong className="text-foreground">$2.11</strong></div>
+          <div className="text-muted-foreground">Dispensing fee: <strong className="text-foreground">$10.50</strong></div>
+          <div className="text-muted-foreground mt-2 pt-2 border-t border-border">Total reimbursement: <strong className="text-foreground">$12.61</strong></div>
+        </div>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          If your actual acquisition cost is at or below NADAC, the dispensing fee is what produces your margin on this claim.
+        </p>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Why This Matters for Independent Pharmacies</h2>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          Many commercial PBM contracts reimburse below NADAC — sometimes far below — and pair that with a dispensing fee of $0 to $1. When you compare those payments to the transparent NADAC + dispensing fee model used by Medicaid, it becomes obvious which contracts are leaving you underwater.
+        </p>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          Tracking reimbursement against NADAC weekly is one of the strongest data points you can bring to <Link to="/blog/nadac-for-pbm-negotiations" className="text-primary hover:underline">PBM contract negotiations</Link>.
+        </p>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">How to Use NADAC Lookup to Verify Reimbursement</h2>
+        <ol className="list-decimal list-inside text-muted-foreground space-y-2 mb-4">
+          <li>Search the drug or NDC on <Link to="/" className="text-primary hover:underline">NADAC Lookup</Link> to get the current per-unit NADAC.</li>
+          <li>Multiply by the quantity dispensed to get the expected ingredient cost.</li>
+          <li>Add your state Medicaid (or contracted) dispensing fee.</li>
+          <li>Compare the total to what the payer actually paid — any shortfall is a flag for appeal or contract review.</li>
+        </ol>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          With <Link to="/pricing" className="text-primary hover:underline">NADAC Lookup Pro ($29/mo)</Link>, you can save your most-dispensed drugs, see full price history, and get alerts when NADAC changes — so your reimbursement math always uses the latest data.
+        </p>
+      </>
+    ),
+  },
   "improve-pharmacy-margins": {
     title: "How to Use NADAC Trends to Improve Pharmacy Margins | NADAC Lookup",
     description: "Learn how independent pharmacies leverage weekly NADAC data to optimize drug acquisition costs and improve dispensing margins.",
