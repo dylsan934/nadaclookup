@@ -1,16 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://nadaclookup.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://nadaclookup.com/features</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://nadaclookup.com/pricing</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://nadaclookup.com/about</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://nadaclookup.com/blog</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://nadaclookup.com/blog/calculate-reimbursement-from-nadac</loc><lastmod>2026-04-22</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://nadaclookup.com/blog/improve-pharmacy-margins</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://nadaclookup.com/blog/latest-nadac-price-changes</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://nadaclookup.com/blog/nadac-vs-wac-explained</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://nadaclookup.com/blog/nadac-for-pbm-negotiations</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://nadaclookup.com/blog/nadac-lookup-by-ndc</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://nadaclookup.com/what-is-nadac</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://nadaclookup.com/how-often-does-nadac-update</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-</urlset>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>https://nadaclookup.com/sitemap-static.xml</loc></sitemap>
+  <sitemap><loc>https://wcbzqrskgfszkwgrzogo.supabase.co/functions/v1/sitemap-drugs?page=1</loc></sitemap>
+  <sitemap><loc>https://wcbzqrskgfszkwgrzogo.supabase.co/functions/v1/sitemap-drugs?page=2</loc></sitemap>
+</sitemapindex>
