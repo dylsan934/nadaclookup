@@ -4,7 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calculator, Lock, Heart, Crown, History } from "lucide-react";
+import { Calculator, Lock, Heart, Crown, History, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
+import { drugNameToSlug } from "@/lib/drug-slug";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -186,6 +188,12 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
               <p className="text-muted-foreground text-xs mt-1">
                 NDC: <span className="font-mono">{drug.ndc}</span>
               </p>
+              <Link
+                to={`/drug/${drugNameToSlug(drug.drugName)}`}
+                className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1.5"
+              >
+                View full NADAC page <ExternalLink className="h-3 w-3" />
+              </Link>
             </div>
             <div className="shrink-0 flex items-center gap-1.5">
               <label
