@@ -8,6 +8,7 @@ import { DrugResults } from "@/components/DrugResults";
 import { DataStatus } from "@/components/DataStatus";
 import { HomeSEOContent } from "@/components/HomeSEOContent";
 import { HomePricing } from "@/components/HomePricing";
+import { PopularDrugLinks } from "@/components/PopularDrugLinks";
 import { DrugData } from "@/components/DrugCard";
 import { nadacApi } from "@/lib/nadac-api";
 import { useToast } from "@/hooks/use-toast";
@@ -137,6 +138,9 @@ const Index = () => {
 
           {/* SEO content below search results */}
           {!hasSearched && <HomeSEOContent />}
+
+          {/* Popular drug pages — internal linking for programmatic SEO */}
+          {!hasSearched && <PopularDrugLinks />}
         </div>
       </main>
 

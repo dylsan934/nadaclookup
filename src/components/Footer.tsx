@@ -1,5 +1,15 @@
 import { ExternalLink, Mail, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
+import { drugNameToSlug } from "@/lib/drug-slug";
+
+const FOOTER_POPULAR_DRUGS = [
+  "Amoxicillin 500 MG Capsule",
+  "Lisinopril 10 MG Tablet",
+  "Metformin HCL 500 MG Tablet",
+  "Atorvastatin 20 MG Tablet",
+  "Levothyroxine Sodium 50 MCG Tablet",
+  "Gabapentin 300 MG Capsule",
+];
 
 export const Footer = () => {
   return (
@@ -16,6 +26,23 @@ export const Footer = () => {
             <Link to="/how-often-does-nadac-update" className="hover:text-foreground transition-colors">Update Schedule</Link>
             <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
           </nav>
+
+          {/* Popular drug pages */}
+          <div className="text-center">
+            <p className="text-xs font-medium text-foreground/80 mb-2">Popular Drug Prices</p>
+            <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs">
+              {FOOTER_POPULAR_DRUGS.map((name) => (
+                <li key={name}>
+                  <Link
+                    to={`/drug/${drugNameToSlug(name)}`}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    {name.split(" ").slice(0, 2).join(" ")} NADAC
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {/* Main footer row */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
