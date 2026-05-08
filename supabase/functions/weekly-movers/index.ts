@@ -15,47 +15,61 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Find the two most recent "full" effective dates (>1000 records each)
-    const { data: dates, error: datesErr } = await supabase.rpc('get_recent_bulk_dates');
+    // Find the two most recent bulk effective dates using raw SQL via postgrest
+    // We need to use the service role key to query directly
+    const dbUrl = Deno.env.get('SUPABASE_DB_URL')!;
+    
+    // Use fetch against the REST API with an RPC-like approach
+    // First, get distinct dates with counts > 1000
+    const dateRes = await fetch(`${supabaseUrl}/rest/v1/rpc/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+      },
+    }).catch(() => null);
 
-    // Fallback: query directly if RPC doesn't exist
-    let currentDate: string;
-    let previousDate: string;
+    // Use a simpler approach: query distinct effective_dates ordered desc
+    // and check counts by fetching with head:true for each
+    const { data: distinctDates, error: ddErr } = await supabase
+      .from('nadac_drugs')
+      .select('effective_date')
+      .order('effective_date', { ascending: false })
+      .limit(1000);
 
-    if (datesErr || !dates || dates.length < 2) {
-      // Direct query fallback
-      const { data: rawDates, error: rawErr } = await supabase
-        .from('nadac_drugs')
-        .select('effective_date')
-        .order('effective_date', { ascending: false });
+    if (ddErr || !distinctDates) throw new Error('Could not fetch dates');
 
-      if (rawErr || !rawDates) {
-        throw new Error('Could not fetch effective dates');
-      }
-
-      // Count per date to find bulk dates
-      const dateCounts = new Map<string, number>();
-      for (const r of rawDates) {
-        dateCounts.set(r.effective_date, (dateCounts.get(r.effective_date) || 0) + 1);
-      }
-
-      const bulkDates = Array.from(dateCounts.entries())
-        .filter(([_, count]) => count > 1000)
-        .sort((a, b) => b[0].localeCompare(a[0]))
-        .map(([date]) => date);
-
-      if (bulkDates.length < 2) {
-        return new Response(JSON.stringify({ success: false, error: 'Not enough weekly data to compare' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      currentDate = bulkDates[0];
-      previousDate = bulkDates[1];
-    } else {
-      currentDate = dates[0].effective_date;
-      previousDate = dates[1].effective_date;
+    // Count occurrences
+    const dateCounts = new Map<string, number>();
+    for (const r of distinctDates) {
+      dateCounts.set(r.effective_date, (dateCounts.get(r.effective_date) || 0) + 1);
     }
+
+    // The limit of 1000 means we can't count properly. Instead, get unique dates and check counts via head requests
+    const uniqueDates = [...new Set(distinctDates.map(r => r.effective_date))].sort().reverse();
+    
+    const bulkDates: string[] = [];
+    for (const date of uniqueDates) {
+      if (bulkDates.length >= 2) break;
+      const { count, error: cErr } = await supabase
+        .from('nadac_drugs')
+        .select('*', { count: 'exact', head: true })
+        .eq('effective_date', date);
+      
+      if (!cErr && count && count > 1000) {
+        bulkDates.push(date);
+      }
+    }
+
+    if (bulkDates.length < 2) {
+      return new Response(JSON.stringify({ success: false, error: 'Not enough weekly data to compare' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const currentDate = bulkDates[0];
+    const previousDate = bulkDates[1];
 
     console.log(`Comparing ${currentDate} vs ${previousDate}`);
 
