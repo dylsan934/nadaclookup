@@ -15,51 +15,35 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Find the two most recent bulk effective dates using raw SQL via postgrest
-    // We need to use the service role key to query directly
-    const dbUrl = Deno.env.get('SUPABASE_DB_URL')!;
-    
-    // Use fetch against the REST API with an RPC-like approach
-    // First, get distinct dates with counts > 1000
-    const dateRes = await fetch(`${supabaseUrl}/rest/v1/rpc/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`,
-      },
-    }).catch(() => null);
-
-    // Use a simpler approach: query distinct effective_dates ordered desc
-    // and check counts by fetching with head:true for each
-    const { data: distinctDates, error: ddErr } = await supabase
-      .from('nadac_drugs')
-      .select('effective_date')
-      .order('effective_date', { ascending: false })
-      .limit(1000);
-
-    if (ddErr || !distinctDates) throw new Error('Could not fetch dates');
-
-    // Count occurrences
-    const dateCounts = new Map<string, number>();
-    for (const r of distinctDates) {
-      dateCounts.set(r.effective_date, (dateCounts.get(r.effective_date) || 0) + 1);
-    }
-
-    // The limit of 1000 means we can't count properly. Instead, get unique dates and check counts via head requests
-    const uniqueDates = [...new Set(distinctDates.map(r => r.effective_date))].sort().reverse();
-    
+    // Find the two most recent bulk effective dates
+    // Strategy: get latest date, check count, then walk backwards
     const bulkDates: string[] = [];
-    for (const date of uniqueDates) {
-      if (bulkDates.length >= 2) break;
-      const { count, error: cErr } = await supabase
+    let searchBefore: string | null = null;
+
+    for (let attempt = 0; attempt < 20 && bulkDates.length < 2; attempt++) {
+      let query = supabase
+        .from('nadac_drugs')
+        .select('effective_date')
+        .order('effective_date', { ascending: false })
+        .limit(1);
+
+      if (searchBefore) {
+        query = query.lt('effective_date', searchBefore);
+      }
+
+      const { data: row } = await query.single();
+      if (!row) break;
+
+      const { count } = await supabase
         .from('nadac_drugs')
         .select('*', { count: 'exact', head: true })
-        .eq('effective_date', date);
-      
-      if (!cErr && count && count > 1000) {
-        bulkDates.push(date);
+        .eq('effective_date', row.effective_date);
+
+      if (count && count > 1000) {
+        bulkDates.push(row.effective_date);
       }
+
+      searchBefore = row.effective_date;
     }
 
     if (bulkDates.length < 2) {
@@ -93,10 +77,8 @@ Deno.serve(async (req) => {
       return allRows;
     }
 
-    // Fetch current week prices
+    // Fetch current and previous week prices
     const currentData = await fetchAllForDate(currentDate, 'ndc, drug_name, nadac_per_unit, pricing_unit');
-
-    // Fetch previous week prices
     const prevData = await fetchAllForDate(previousDate, 'ndc, nadac_per_unit');
 
     // Build lookup map for previous prices
@@ -136,7 +118,7 @@ Deno.serve(async (req) => {
     // Sort for top increases and decreases
     const sorted = [...movers].sort((a, b) => b.pctChange - a.pctChange);
     const topIncreases = sorted.slice(0, 10);
-    const topDecreases = sorted.reverse().slice(0, 10);
+    const topDecreases = [...movers].sort((a, b) => a.pctChange - b.pctChange).slice(0, 10);
 
     return new Response(JSON.stringify({
       success: true,
