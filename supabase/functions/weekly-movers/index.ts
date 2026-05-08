@@ -15,32 +15,56 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get the two most recent distinct effective dates
-    const { data: dates, error: datesErr } = await supabase
-      .from('nadac_drugs')
-      .select('effective_date')
-      .order('effective_date', { ascending: false });
+    // Find the two most recent effective dates that have meaningful data (50+ records)
+    // These represent actual CMS weekly releases
+    const { data: dateCounts, error: dcErr } = await supabase
+      .rpc('get_effective_date_counts');
 
-    if (datesErr) throw new Error(`Dates error: ${datesErr.message}`);
+    // Fallback: just query distinct dates with counts manually
+    // Since we can't use rpc, paginate through dates
+    const significantDates: string[] = [];
+    let searchBefore: string | null = null;
 
-    // Deduplicate dates
-    const uniqueDates = [...new Set((dates || []).map(d => d.effective_date))];
+    for (let attempt = 0; attempt < 30 && significantDates.length < 2; attempt++) {
+      let query = supabase
+        .from('nadac_drugs')
+        .select('effective_date')
+        .order('effective_date', { ascending: false })
+        .limit(1);
 
-    if (uniqueDates.length < 2) {
+      if (searchBefore) {
+        query = query.lt('effective_date', searchBefore);
+      }
+
+      const { data: row } = await query.single();
+      if (!row) break;
+
+      const { count } = await supabase
+        .from('nadac_drugs')
+        .select('*', { count: 'exact', head: true })
+        .eq('effective_date', row.effective_date);
+
+      if (count && count >= 50) {
+        significantDates.push(row.effective_date);
+      }
+
+      searchBefore = row.effective_date;
+    }
+
+    if (significantDates.length < 2) {
       return new Response(JSON.stringify({ success: false, error: 'Not enough weekly data to compare' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const currentDate = uniqueDates[0];
-    const previousDate = uniqueDates[1];
+    const currentDate = significantDates[0];
+    const previousDate = significantDates[1];
 
     console.log(`Comparing ${currentDate} vs ${previousDate}`);
 
-    // For each date, get the latest price per NDC as of that date.
-    // We need the most recent record per NDC where effective_date <= target date.
-    // Use a DB function approach: fetch all records up to each date, keep latest per NDC.
-
+    // Fetch the latest price per NDC as of a given date
+    // We paginate through all records with effective_date <= asOfDate,
+    // ordered by effective_date desc, keeping only the first (newest) per NDC
     async function fetchLatestPricesAsOf(asOfDate: string) {
       const priceMap = new Map<string, { drugName: string; price: number; pricingUnit: string }>();
       let from = 0;
@@ -55,7 +79,6 @@ Deno.serve(async (req) => {
         if (error) throw new Error(`Fetch error: ${error.message}`);
         if (!data || data.length === 0) break;
         for (const row of data) {
-          // Keep only the first (most recent) entry per NDC
           if (!priceMap.has(row.ndc)) {
             priceMap.set(row.ndc, {
               drugName: row.drug_name,
@@ -128,7 +151,7 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to save movers: ${upsertError.message}`);
     }
 
-    console.log(`Saved movers for ${currentDate}: ${topIncreases.length} increases, ${topDecreases.length} decreases, ${movers.length} total changed`);
+    console.log(`Saved movers for ${currentDate}: ${topIncreases.length} up, ${topDecreases.length} down, ${movers.length} total`);
 
     return new Response(JSON.stringify({
       success: true,
