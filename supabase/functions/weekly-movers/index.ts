@@ -15,7 +15,8 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Find the two most recent bulk effective dates
+    // Find the two most recent bulk snapshot dates (1000+ records).
+    // These represent the full weekly CMS NADAC releases.
     const bulkDates: string[] = [];
     let searchBefore: string | null = null;
 
@@ -54,9 +55,9 @@ Deno.serve(async (req) => {
     const currentDate = bulkDates[0];
     const previousDate = bulkDates[1];
 
-    console.log(`Comparing ${currentDate} vs ${previousDate}`);
+    console.log(`Comparing bulk snapshots: ${currentDate} vs ${previousDate}`);
 
-    // Helper to fetch all rows for a date (paginated past 1000 limit)
+    // Paginated fetch for a given date
     async function fetchAllForDate(date: string, columns: string) {
       const allRows: any[] = [];
       let from = 0;
@@ -100,7 +101,6 @@ Deno.serve(async (req) => {
       if (oldPrice === undefined || oldPrice === 0 || oldPrice === drug.nadac_per_unit) continue;
 
       const pctChange = ((drug.nadac_per_unit - oldPrice) / oldPrice) * 100;
-
       movers.push({
         ndc: drug.ndc,
         drugName: drug.drug_name,
@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Deduplicate by drug_name
+    // Deduplicate by drug name (keep largest absolute change)
     const deduped = new Map<string, Mover>();
     for (const m of movers) {
       const existing = deduped.get(m.drugName);
@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to save movers: ${upsertError.message}`);
     }
 
-    console.log(`Saved movers for ${currentDate}: ${topIncreases.length} increases, ${topDecreases.length} decreases`);
+    console.log(`Saved movers for ${currentDate}: ${topIncreases.length} up, ${topDecreases.length} down, ${movers.length} total`);
 
     return new Response(JSON.stringify({
       success: true,
