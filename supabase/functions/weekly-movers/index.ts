@@ -115,10 +115,19 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Deduplicate by drug_name (keep the NDC with the largest absolute % change per name)
+    const deduped = new Map<string, Mover>();
+    for (const m of movers) {
+      const existing = deduped.get(m.drugName);
+      if (!existing || Math.abs(m.pctChange) > Math.abs(existing.pctChange)) {
+        deduped.set(m.drugName, m);
+      }
+    }
+    const uniqueMovers = Array.from(deduped.values());
+
     // Sort for top increases and decreases
-    const sorted = [...movers].sort((a, b) => b.pctChange - a.pctChange);
-    const topIncreases = sorted.slice(0, 10);
-    const topDecreases = [...movers].sort((a, b) => a.pctChange - b.pctChange).slice(0, 10);
+    const topIncreases = [...uniqueMovers].sort((a, b) => b.pctChange - a.pctChange).slice(0, 10);
+    const topDecreases = [...uniqueMovers].sort((a, b) => a.pctChange - b.pctChange).slice(0, 10);
 
     return new Response(JSON.stringify({
       success: true,
