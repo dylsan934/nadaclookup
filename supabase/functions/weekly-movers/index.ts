@@ -16,7 +16,6 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Find the two most recent bulk effective dates
-    // Strategy: get latest date, check count, then walk backwards
     const bulkDates: string[] = [];
     let searchBefore: string | null = null;
 
@@ -77,17 +76,14 @@ Deno.serve(async (req) => {
       return allRows;
     }
 
-    // Fetch current and previous week prices
     const currentData = await fetchAllForDate(currentDate, 'ndc, drug_name, nadac_per_unit, pricing_unit');
     const prevData = await fetchAllForDate(previousDate, 'ndc, nadac_per_unit');
 
-    // Build lookup map for previous prices
     const prevMap = new Map<string, number>();
     for (const d of prevData) {
       prevMap.set(d.ndc, d.nadac_per_unit);
     }
 
-    // Calculate changes
     interface Mover {
       ndc: string;
       drugName: string;
@@ -115,7 +111,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Deduplicate by drug_name (keep the NDC with the largest absolute % change per name)
+    // Deduplicate by drug_name
     const deduped = new Map<string, Mover>();
     for (const m of movers) {
       const existing = deduped.get(m.drugName);
@@ -125,9 +121,26 @@ Deno.serve(async (req) => {
     }
     const uniqueMovers = Array.from(deduped.values());
 
-    // Sort for top increases and decreases
     const topIncreases = [...uniqueMovers].sort((a, b) => b.pctChange - a.pctChange).slice(0, 5);
     const topDecreases = [...uniqueMovers].sort((a, b) => a.pctChange - b.pctChange).slice(0, 5);
+
+    // Upsert into weekly_movers table
+    const { error: upsertError } = await supabase
+      .from('weekly_movers')
+      .upsert({
+        effective_date: currentDate,
+        previous_date: previousDate,
+        top_increases: topIncreases,
+        top_decreases: topDecreases,
+        total_changed: movers.length,
+      }, { onConflict: 'effective_date' });
+
+    if (upsertError) {
+      console.error('Upsert error:', upsertError);
+      throw new Error(`Failed to save movers: ${upsertError.message}`);
+    }
+
+    console.log(`Saved movers for ${currentDate}: ${topIncreases.length} increases, ${topDecreases.length} decreases`);
 
     return new Response(JSON.stringify({
       success: true,
