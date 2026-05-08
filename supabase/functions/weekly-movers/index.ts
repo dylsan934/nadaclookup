@@ -15,17 +15,12 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Find the two most recent effective dates that have meaningful data (50+ records)
-    // These represent actual CMS weekly releases
-    const { data: dateCounts, error: dcErr } = await supabase
-      .rpc('get_effective_date_counts');
-
-    // Fallback: just query distinct dates with counts manually
-    // Since we can't use rpc, paginate through dates
-    const significantDates: string[] = [];
+    // Find the two most recent bulk snapshot dates (1000+ records).
+    // These represent the full weekly CMS NADAC releases.
+    const bulkDates: string[] = [];
     let searchBefore: string | null = null;
 
-    for (let attempt = 0; attempt < 30 && significantDates.length < 2; attempt++) {
+    for (let attempt = 0; attempt < 20 && bulkDates.length < 2; attempt++) {
       let query = supabase
         .from('nadac_drugs')
         .select('effective_date')
@@ -44,57 +39,51 @@ Deno.serve(async (req) => {
         .select('*', { count: 'exact', head: true })
         .eq('effective_date', row.effective_date);
 
-      if (count && count >= 50) {
-        significantDates.push(row.effective_date);
+      if (count && count > 1000) {
+        bulkDates.push(row.effective_date);
       }
 
       searchBefore = row.effective_date;
     }
 
-    if (significantDates.length < 2) {
+    if (bulkDates.length < 2) {
       return new Response(JSON.stringify({ success: false, error: 'Not enough weekly data to compare' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const currentDate = significantDates[0];
-    const previousDate = significantDates[1];
+    const currentDate = bulkDates[0];
+    const previousDate = bulkDates[1];
 
-    console.log(`Comparing ${currentDate} vs ${previousDate}`);
+    console.log(`Comparing bulk snapshots: ${currentDate} vs ${previousDate}`);
 
-    // Fetch the latest price per NDC as of a given date
-    // We paginate through all records with effective_date <= asOfDate,
-    // ordered by effective_date desc, keeping only the first (newest) per NDC
-    async function fetchLatestPricesAsOf(asOfDate: string) {
-      const priceMap = new Map<string, { drugName: string; price: number; pricingUnit: string }>();
+    // Paginated fetch for a given date
+    async function fetchAllForDate(date: string, columns: string) {
+      const allRows: any[] = [];
       let from = 0;
       const pageSize = 1000;
       while (true) {
         const { data, error } = await supabase
           .from('nadac_drugs')
-          .select('ndc, drug_name, nadac_per_unit, pricing_unit, effective_date')
-          .lte('effective_date', asOfDate)
-          .order('effective_date', { ascending: false })
+          .select(columns)
+          .eq('effective_date', date)
           .range(from, from + pageSize - 1);
         if (error) throw new Error(`Fetch error: ${error.message}`);
         if (!data || data.length === 0) break;
-        for (const row of data) {
-          if (!priceMap.has(row.ndc)) {
-            priceMap.set(row.ndc, {
-              drugName: row.drug_name,
-              price: row.nadac_per_unit,
-              pricingUnit: row.pricing_unit || 'EA',
-            });
-          }
-        }
+        allRows.push(...data);
         if (data.length < pageSize) break;
         from += pageSize;
       }
-      return priceMap;
+      return allRows;
     }
 
-    const currentPrices = await fetchLatestPricesAsOf(currentDate);
-    const previousPrices = await fetchLatestPricesAsOf(previousDate);
+    const currentData = await fetchAllForDate(currentDate, 'ndc, drug_name, nadac_per_unit, pricing_unit');
+    const prevData = await fetchAllForDate(previousDate, 'ndc, nadac_per_unit');
+
+    const prevMap = new Map<string, number>();
+    for (const d of prevData) {
+      prevMap.set(d.ndc, d.nadac_per_unit);
+    }
 
     interface Mover {
       ndc: string;
@@ -107,18 +96,18 @@ Deno.serve(async (req) => {
 
     const movers: Mover[] = [];
 
-    for (const [ndc, current] of currentPrices) {
-      const prev = previousPrices.get(ndc);
-      if (!prev || prev.price === 0 || prev.price === current.price) continue;
+    for (const drug of currentData) {
+      const oldPrice = prevMap.get(drug.ndc);
+      if (oldPrice === undefined || oldPrice === 0 || oldPrice === drug.nadac_per_unit) continue;
 
-      const pctChange = ((current.price - prev.price) / prev.price) * 100;
+      const pctChange = ((drug.nadac_per_unit - oldPrice) / oldPrice) * 100;
       movers.push({
-        ndc,
-        drugName: current.drugName,
-        oldPrice: prev.price,
-        newPrice: current.price,
+        ndc: drug.ndc,
+        drugName: drug.drug_name,
+        oldPrice,
+        newPrice: drug.nadac_per_unit,
         pctChange: Math.round(pctChange * 100) / 100,
-        pricingUnit: current.pricingUnit,
+        pricingUnit: drug.pricing_unit || 'EA',
       });
     }
 
