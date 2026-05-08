@@ -91,7 +91,7 @@ export default function WeeklyMovers() {
       <SEOHead
         title="NADAC Weekly Price Movers — Biggest Drug Price Changes"
         description="See the top 10 NADAC drug price increases and decreases this week. Track pharmacy acquisition cost changes updated every Wednesday."
-        canonicalUrl="https://nadaclookup.com/movers"
+        canonical="https://nadaclookup.com/movers"
       />
 
       <div className="min-h-screen flex flex-col bg-background">
