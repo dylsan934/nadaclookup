@@ -73,21 +73,31 @@ Deno.serve(async (req) => {
 
     console.log(`Comparing ${currentDate} vs ${previousDate}`);
 
-    // Fetch current week prices
-    const { data: currentData, error: currErr } = await supabase
-      .from('nadac_drugs')
-      .select('ndc, drug_name, nadac_per_unit, pricing_unit')
-      .eq('effective_date', currentDate);
+    // Helper to fetch all rows for a date (paginated past 1000 limit)
+    async function fetchAllForDate(date: string, columns: string) {
+      const allRows: any[] = [];
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from('nadac_drugs')
+          .select(columns)
+          .eq('effective_date', date)
+          .range(from, from + pageSize - 1);
+        if (error) throw new Error(`Fetch error: ${error.message}`);
+        if (!data || data.length === 0) break;
+        allRows.push(...data);
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+      return allRows;
+    }
 
-    if (currErr || !currentData) throw new Error('Failed to fetch current data');
+    // Fetch current week prices
+    const currentData = await fetchAllForDate(currentDate, 'ndc, drug_name, nadac_per_unit, pricing_unit');
 
     // Fetch previous week prices
-    const { data: prevData, error: prevErr } = await supabase
-      .from('nadac_drugs')
-      .select('ndc, nadac_per_unit')
-      .eq('effective_date', previousDate);
-
-    if (prevErr || !prevData) throw new Error('Failed to fetch previous data');
+    const prevData = await fetchAllForDate(previousDate, 'ndc, nadac_per_unit');
 
     // Build lookup map for previous prices
     const prevMap = new Map<string, number>();
