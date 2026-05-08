@@ -15,74 +15,63 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Find the two most recent bulk effective dates
-    const bulkDates: string[] = [];
-    let searchBefore: string | null = null;
+    // Get the two most recent distinct effective dates
+    const { data: dates, error: datesErr } = await supabase
+      .from('nadac_drugs')
+      .select('effective_date')
+      .order('effective_date', { ascending: false });
 
-    for (let attempt = 0; attempt < 20 && bulkDates.length < 2; attempt++) {
-      let query = supabase
-        .from('nadac_drugs')
-        .select('effective_date')
-        .order('effective_date', { ascending: false })
-        .limit(1);
+    if (datesErr) throw new Error(`Dates error: ${datesErr.message}`);
 
-      if (searchBefore) {
-        query = query.lt('effective_date', searchBefore);
-      }
+    // Deduplicate dates
+    const uniqueDates = [...new Set((dates || []).map(d => d.effective_date))];
 
-      const { data: row } = await query.single();
-      if (!row) break;
-
-      const { count } = await supabase
-        .from('nadac_drugs')
-        .select('*', { count: 'exact', head: true })
-        .eq('effective_date', row.effective_date);
-
-      if (count && count > 1000) {
-        bulkDates.push(row.effective_date);
-      }
-
-      searchBefore = row.effective_date;
-    }
-
-    if (bulkDates.length < 2) {
+    if (uniqueDates.length < 2) {
       return new Response(JSON.stringify({ success: false, error: 'Not enough weekly data to compare' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const currentDate = bulkDates[0];
-    const previousDate = bulkDates[1];
+    const currentDate = uniqueDates[0];
+    const previousDate = uniqueDates[1];
 
     console.log(`Comparing ${currentDate} vs ${previousDate}`);
 
-    // Helper to fetch all rows for a date (paginated past 1000 limit)
-    async function fetchAllForDate(date: string, columns: string) {
-      const allRows: any[] = [];
+    // For each date, get the latest price per NDC as of that date.
+    // We need the most recent record per NDC where effective_date <= target date.
+    // Use a DB function approach: fetch all records up to each date, keep latest per NDC.
+
+    async function fetchLatestPricesAsOf(asOfDate: string) {
+      const priceMap = new Map<string, { drugName: string; price: number; pricingUnit: string }>();
       let from = 0;
       const pageSize = 1000;
       while (true) {
         const { data, error } = await supabase
           .from('nadac_drugs')
-          .select(columns)
-          .eq('effective_date', date)
+          .select('ndc, drug_name, nadac_per_unit, pricing_unit, effective_date')
+          .lte('effective_date', asOfDate)
+          .order('effective_date', { ascending: false })
           .range(from, from + pageSize - 1);
         if (error) throw new Error(`Fetch error: ${error.message}`);
         if (!data || data.length === 0) break;
-        allRows.push(...data);
+        for (const row of data) {
+          // Keep only the first (most recent) entry per NDC
+          if (!priceMap.has(row.ndc)) {
+            priceMap.set(row.ndc, {
+              drugName: row.drug_name,
+              price: row.nadac_per_unit,
+              pricingUnit: row.pricing_unit || 'EA',
+            });
+          }
+        }
         if (data.length < pageSize) break;
         from += pageSize;
       }
-      return allRows;
+      return priceMap;
     }
 
-    const currentData = await fetchAllForDate(currentDate, 'ndc, drug_name, nadac_per_unit, pricing_unit');
-    const prevData = await fetchAllForDate(previousDate, 'ndc, nadac_per_unit');
-
-    const prevMap = new Map<string, number>();
-    for (const d of prevData) {
-      prevMap.set(d.ndc, d.nadac_per_unit);
-    }
+    const currentPrices = await fetchLatestPricesAsOf(currentDate);
+    const previousPrices = await fetchLatestPricesAsOf(previousDate);
 
     interface Mover {
       ndc: string;
@@ -95,23 +84,22 @@ Deno.serve(async (req) => {
 
     const movers: Mover[] = [];
 
-    for (const drug of currentData) {
-      const oldPrice = prevMap.get(drug.ndc);
-      if (oldPrice === undefined || oldPrice === 0 || oldPrice === drug.nadac_per_unit) continue;
+    for (const [ndc, current] of currentPrices) {
+      const prev = previousPrices.get(ndc);
+      if (!prev || prev.price === 0 || prev.price === current.price) continue;
 
-      const pctChange = ((drug.nadac_per_unit - oldPrice) / oldPrice) * 100;
-
+      const pctChange = ((current.price - prev.price) / prev.price) * 100;
       movers.push({
-        ndc: drug.ndc,
-        drugName: drug.drug_name,
-        oldPrice,
-        newPrice: drug.nadac_per_unit,
+        ndc,
+        drugName: current.drugName,
+        oldPrice: prev.price,
+        newPrice: current.price,
         pctChange: Math.round(pctChange * 100) / 100,
-        pricingUnit: drug.pricing_unit || 'EA',
+        pricingUnit: current.pricingUnit,
       });
     }
 
-    // Deduplicate by drug_name
+    // Deduplicate by drug name (keep largest absolute change)
     const deduped = new Map<string, Mover>();
     for (const m of movers) {
       const existing = deduped.get(m.drugName);
@@ -140,7 +128,7 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to save movers: ${upsertError.message}`);
     }
 
-    console.log(`Saved movers for ${currentDate}: ${topIncreases.length} increases, ${topDecreases.length} decreases`);
+    console.log(`Saved movers for ${currentDate}: ${topIncreases.length} increases, ${topDecreases.length} decreases, ${movers.length} total changed`);
 
     return new Response(JSON.stringify({
       success: true,
