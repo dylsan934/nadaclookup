@@ -85,8 +85,8 @@ export default function WeeklyMovers() {
             success: true,
             currentDate: row.effective_date,
             previousDate: row.previous_date,
-            topIncreases: row.top_increases as Mover[],
-            topDecreases: row.top_decreases as Mover[],
+            topIncreases: row.top_increases as unknown as Mover[],
+            topDecreases: row.top_decreases as unknown as Mover[],
             totalChanged: row.total_changed,
           });
         } else {
