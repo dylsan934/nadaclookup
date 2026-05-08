@@ -15,9 +15,11 @@ export const drugNameToSlug = (name: string): string => {
  * The page uses this to query nadac_drugs by ilike match.
  */
 export const slugToSearchTerm = (slug: string): string => {
+  // Replace dashes with wildcard % so ilike matches drug names that had
+  // special characters (e.g. "/" or ".") which were stripped during slug creation.
   return slug
     .replace(/-nadac-price$/, "")
-    .replace(/-/g, " ")
+    .replace(/-/g, "%")
     .trim();
 };
 
