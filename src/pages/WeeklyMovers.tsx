@@ -90,7 +90,7 @@ export default function WeeklyMovers() {
     <>
       <SEOHead
         title="NADAC Weekly Price Movers — Biggest Drug Price Changes"
-        description="See the top 10 NADAC drug price increases and decreases this week. Track pharmacy acquisition cost changes updated every Wednesday."
+        description="See the top 5 NADAC drug price increases and decreases this week. Track pharmacy acquisition cost changes updated every Wednesday."
         canonical="https://nadaclookup.com/movers"
       />
 
@@ -104,7 +104,7 @@ export default function WeeklyMovers() {
               Weekly NADAC Price Movers
             </h1>
             <p className="text-muted-foreground">
-              Top 10 biggest price increases and decreases — week of {weekLabel}
+              Top 5 biggest price increases and decreases — week of {weekLabel}
             </p>
             {data && (
               <p className="text-xs text-muted-foreground mt-1">
@@ -129,7 +129,7 @@ export default function WeeklyMovers() {
               <Card className="overflow-hidden">
                 <div className="flex items-center gap-2 p-4 border-b border-border/40 bg-red-500/5">
                   <TrendingUp className="h-5 w-5 text-red-500" />
-                  <h2 className="font-semibold text-foreground">Top 10 Increases</h2>
+                  <h2 className="font-semibold text-foreground">Top 5 Increases</h2>
                 </div>
                 <div className="divide-y-0">
                   {data.topIncreases.map((m, i) => (
@@ -142,7 +142,7 @@ export default function WeeklyMovers() {
               <Card className="overflow-hidden">
                 <div className="flex items-center gap-2 p-4 border-b border-border/40 bg-emerald-500/5">
                   <TrendingDown className="h-5 w-5 text-emerald-500" />
-                  <h2 className="font-semibold text-foreground">Top 10 Decreases</h2>
+                  <h2 className="font-semibold text-foreground">Top 5 Decreases</h2>
                 </div>
                 <div className="divide-y-0">
                   {data.topDecreases.map((m, i) => (
