@@ -292,6 +292,36 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_movers: {
+        Row: {
+          created_at: string
+          effective_date: string
+          id: string
+          previous_date: string
+          top_decreases: Json
+          top_increases: Json
+          total_changed: number
+        }
+        Insert: {
+          created_at?: string
+          effective_date: string
+          id?: string
+          previous_date: string
+          top_decreases?: Json
+          top_increases?: Json
+          total_changed?: number
+        }
+        Update: {
+          created_at?: string
+          effective_date?: string
+          id?: string
+          previous_date?: string
+          top_decreases?: Json
+          top_increases?: Json
+          total_changed?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

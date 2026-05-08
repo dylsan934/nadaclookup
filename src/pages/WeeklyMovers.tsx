@@ -70,18 +70,35 @@ export default function WeeklyMovers() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
+    const load = async () => {
       try {
-        const { data: result, error } = await supabase.functions.invoke("weekly-movers");
+        const { data: row, error } = await supabase
+          .from("weekly_movers")
+          .select("*")
+          .order("effective_date", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
         if (error) throw error;
-        setData(result);
+        if (row) {
+          setData({
+            success: true,
+            currentDate: row.effective_date,
+            previousDate: row.previous_date,
+            topIncreases: row.top_increases as unknown as Mover[],
+            topDecreases: row.top_decreases as unknown as Mover[],
+            totalChanged: row.total_changed,
+          });
+        } else {
+          setData({ success: false, currentDate: "", previousDate: "", topIncreases: [], topDecreases: [], totalChanged: 0, error: "No data yet" });
+        }
       } catch (e) {
         console.error("Failed to load movers:", e);
       } finally {
         setLoading(false);
       }
     };
-    fetch();
+    load();
   }, []);
 
   const weekLabel = data?.currentDate ? formatDate(data.currentDate) : "This Week";
