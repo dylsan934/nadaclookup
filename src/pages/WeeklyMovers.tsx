@@ -1,0 +1,179 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { TrendingUp, TrendingDown, ArrowRight, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { SEOHead } from "@/components/SEOHead";
+import { SiteNavigation } from "@/components/SiteNavigation";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { drugNameToSlug } from "@/lib/drug-slug";
+
+interface Mover {
+  ndc: string;
+  drugName: string;
+  oldPrice: number;
+  newPrice: number;
+  pctChange: number;
+  pricingUnit: string;
+}
+
+interface MoversData {
+  success: boolean;
+  currentDate: string;
+  previousDate: string;
+  topIncreases: Mover[];
+  topDecreases: Mover[];
+  totalChanged: number;
+  error?: string;
+}
+
+const formatPrice = (n: number) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 4 }).format(n);
+
+const formatDate = (d: string) =>
+  new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
+const MoverRow = ({ mover, rank, type }: { mover: Mover; rank: number; type: "increase" | "decrease" }) => {
+  const isUp = type === "increase";
+  const slug = drugNameToSlug(mover.drugName);
+
+  return (
+    <Link to={`/drug/${slug}`} className="block">
+      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent/50 transition-colors border-b border-border/30 last:border-0">
+        <span className="text-lg font-bold text-muted-foreground w-7 text-center">{rank}</span>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm text-foreground truncate">{mover.drugName}</p>
+          <p className="text-xs text-muted-foreground">
+            {formatPrice(mover.oldPrice)} → {formatPrice(mover.newPrice)} / {mover.pricingUnit}
+          </p>
+        </div>
+        <Badge
+          variant="outline"
+          className={
+            isUp
+              ? "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 shrink-0"
+              : "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0"
+          }
+        >
+          {isUp ? "+" : ""}{mover.pctChange}%
+        </Badge>
+        <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+      </div>
+    </Link>
+  );
+};
+
+export default function WeeklyMovers() {
+  const [data, setData] = useState<MoversData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const { data: result, error } = await supabase.functions.invoke("weekly-movers");
+        if (error) throw error;
+        setData(result);
+      } catch (e) {
+        console.error("Failed to load movers:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
+  }, []);
+
+  const weekLabel = data?.currentDate ? formatDate(data.currentDate) : "This Week";
+
+  return (
+    <>
+      <SEOHead
+        title="NADAC Weekly Price Movers — Biggest Drug Price Changes"
+        description="See the top 10 NADAC drug price increases and decreases this week. Track pharmacy acquisition cost changes updated every Wednesday."
+        canonicalUrl="https://nadaclookup.com/movers"
+      />
+
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <SiteNavigation />
+
+        <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
+          <div className="mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+              Weekly NADAC Price Movers
+            </h1>
+            <p className="text-muted-foreground">
+              Top 10 biggest price increases and decreases — week of {weekLabel}
+            </p>
+            {data && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Comparing {formatDate(data.previousDate)} → {formatDate(data.currentDate)} · {data.totalChanged.toLocaleString()} drugs changed
+              </p>
+            )}
+          </div>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : !data?.success ? (
+            <Card className="p-8 text-center">
+              <p className="text-muted-foreground">
+                {data?.error || "Unable to load weekly movers. Check back after the next data sync."}
+              </p>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Increases */}
+              <Card className="overflow-hidden">
+                <div className="flex items-center gap-2 p-4 border-b border-border/40 bg-red-500/5">
+                  <TrendingUp className="h-5 w-5 text-red-500" />
+                  <h2 className="font-semibold text-foreground">Top 10 Increases</h2>
+                </div>
+                <div className="divide-y-0">
+                  {data.topIncreases.map((m, i) => (
+                    <MoverRow key={m.ndc} mover={m} rank={i + 1} type="increase" />
+                  ))}
+                </div>
+              </Card>
+
+              {/* Decreases */}
+              <Card className="overflow-hidden">
+                <div className="flex items-center gap-2 p-4 border-b border-border/40 bg-emerald-500/5">
+                  <TrendingDown className="h-5 w-5 text-emerald-500" />
+                  <h2 className="font-semibold text-foreground">Top 10 Decreases</h2>
+                </div>
+                <div className="divide-y-0">
+                  {data.topDecreases.map((m, i) => (
+                    <MoverRow key={m.ndc} mover={m} rank={i + 1} type="decrease" />
+                  ))}
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* SEO Content */}
+          <section className="mt-12 prose prose-sm dark:prose-invert max-w-none">
+            <h2>Understanding NADAC Price Changes</h2>
+            <p>
+              The National Average Drug Acquisition Cost (NADAC) is updated weekly by CMS, typically every Wednesday. 
+              These price changes reflect shifts in what pharmacies actually pay to acquire medications from wholesalers 
+              and manufacturers. Monitoring the biggest movers each week helps independent pharmacies stay ahead of 
+              cost fluctuations that directly impact margins.
+            </p>
+            <h3>Why Do NADAC Prices Change?</h3>
+            <p>
+              Price swings can result from manufacturer price adjustments, supply chain disruptions, generic competition 
+              entering the market, or changes in wholesale acquisition costs reported by pharmacies in the NADAC survey. 
+              Large increases may signal supply shortages, while significant decreases often indicate new generic 
+              alternatives becoming available.
+            </p>
+          </section>
+        </main>
+
+        <Footer />
+      </div>
+    </>
+  );
+}
