@@ -72,7 +72,7 @@ export const HomePricing = () => {
           <p className="text-3xl font-bold text-foreground">$29<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
           <p className="text-sm text-muted-foreground mt-2 mb-6">For serious pharmacy professionals</p>
           <ul className="space-y-2.5 text-sm mb-8">
-            {["Everything in Free", "Unlimited saved drugs", "Full NADAC price history charts", "Automated price change alerts", "Custom alert thresholds", "Drug categories & notes", "Priority support"].map(f => (
+            {["Everything in Free", "Unlimited saved drugs", "Full NADAC price history charts", "Weekly Top 10 movers (increases & decreases)", "Weekly movers email digest", "Automated price change alerts", "Custom alert thresholds", "Drug categories & notes", "Priority support"].map(f => (
               <li key={f} className="flex items-start gap-2 text-muted-foreground">
                 <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />{f}
               </li>
