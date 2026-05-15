@@ -79,7 +79,7 @@ const MoversCard = ({
   isSubscribed: boolean;
 }) => {
   const isUp = type === "increase";
-  // Free users see only the LAST mover (#5, smallest); ranks 1-4 are locked.
+  // Free users see only the #1 (biggest) mover; ranks 2+ are locked.
   const lockedCount = isSubscribed ? 0 : Math.max(0, movers.length - 1);
 
   return (
@@ -99,7 +99,8 @@ const MoversCard = ({
       <div className="relative">
         {movers.map((m, i) => {
           const rank = i + 1;
-          const locked = !isSubscribed && rank <= lockedCount;
+          // Free: rank 1 visible, ranks 2..N blurred
+          const locked = !isSubscribed && rank > 1;
           return (
             <div key={m.ndc} className={locked ? "pointer-events-none select-none blur-sm" : ""} aria-hidden={locked}>
               <MoverRow mover={m} rank={rank} type={type} />
@@ -107,16 +108,16 @@ const MoversCard = ({
           );
         })}
         {!isSubscribed && lockedCount > 0 && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-background/40 via-background/80 to-background/95 backdrop-blur-[1px]">
+          <div className="absolute inset-0 top-[64px] flex items-start justify-center bg-gradient-to-b from-background/60 via-background/90 to-background/95 backdrop-blur-[1px] pt-8">
             <div className="text-center px-4 py-6 max-w-xs">
               <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 mb-3">
                 <Lock className="h-5 w-5 text-primary" />
               </div>
               <p className="text-sm font-semibold text-foreground mb-1">
-                {lockedCount} more {isUp ? "movers" : "movers"} locked
+                {lockedCount} more locked
               </p>
               <p className="text-xs text-muted-foreground mb-4">
-                Upgrade to Pro to see all {movers.length} biggest {isUp ? "increases" : "decreases"} this week.
+                Upgrade to Pro to see the full top {movers.length} {isUp ? "increases" : "decreases"} this week and get them emailed each Wednesday.
               </p>
               <Button asChild size="sm">
                 <Link to="/pricing">
@@ -188,7 +189,7 @@ export default function WeeklyMovers() {
     <>
       <SEOHead
         title="NADAC Weekly Price Movers — Biggest Drug Price Changes"
-        description="See the top 5 NADAC drug price increases and decreases this week. Track pharmacy acquisition cost changes updated every Wednesday."
+        description="See the top 10 NADAC drug price increases and decreases this week. Pharmacy acquisition cost changes updated every Wednesday."
         canonical="https://nadaclookup.com/movers"
       />
 
@@ -202,7 +203,7 @@ export default function WeeklyMovers() {
               Weekly NADAC Price Movers
             </h1>
             <p className="text-muted-foreground">
-              Top 5 biggest price increases and decreases — week of {weekLabel}
+              Top 10 biggest price increases and decreases — week of {weekLabel}
             </p>
             {data && (
               <p className="text-xs text-muted-foreground mt-1">
@@ -253,13 +254,13 @@ export default function WeeklyMovers() {
             ) : (
               <div className="grid md:grid-cols-2 gap-6">
                 <MoversCard
-                  title="Top 5 Increases"
+                  title={`Top ${data.topIncreases.length} Increases`}
                   type="increase"
                   movers={data.topIncreases}
                   isSubscribed={isSubscribed}
                 />
                 <MoversCard
-                  title="Top 5 Decreases"
+                  title={`Top ${data.topDecreases.length} Decreases`}
                   type="decrease"
                   movers={data.topDecreases}
                   isSubscribed={isSubscribed}
