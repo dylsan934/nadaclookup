@@ -242,13 +242,26 @@ const BlogArticle = () => {
 
   if (!article) return <Navigate to="/blog" replace />;
 
+  const canonical = `https://nadaclookup.com/blog/${slug}`;
+  const headline = article.title.split(" | ")[0];
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline,
+    description: article.description,
+    mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
+    author: { "@type": "Organization", name: "NADAC Lookup" },
+    publisher: { "@type": "Organization", name: "NADAC Lookup" },
+  };
+
   return (
     <>
       <SEOHead
         title={article.title}
         description={article.description}
-        canonical={`https://nadaclookup.com/blog/${slug}`}
+        canonical={canonical}
         type="article"
+        jsonLd={articleJsonLd}
       />
       <div className="min-h-screen flex flex-col bg-background">
         <SiteNavigation />
