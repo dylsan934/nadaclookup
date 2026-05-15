@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { TrendingUp, TrendingDown, ArrowRight, Loader2, Info } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowRight, Loader2, Info, Lock, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SEOHead } from "@/components/SEOHead";
 import { SiteNavigation } from "@/components/SiteNavigation";
@@ -8,7 +8,9 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { drugNameToSlug } from "@/lib/drug-slug";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Mover {
   ndc: string;
