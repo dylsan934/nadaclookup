@@ -191,6 +191,7 @@ export default function WeeklyMovers() {
                 </div>
               </Card>
             </div>
+            </>
           )}
 
           {/* SEO Content */}
