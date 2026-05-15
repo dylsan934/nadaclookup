@@ -1,30 +1,21 @@
+## Goal
 
-## Top 10 Biggest Movers — Weekly Price Changes
+When the displayed movers are from an older snapshot (because CMS has only published small incremental batches since), show a clear notice that newer NADAC data exists but the latest **bulk** snapshot with significant movers is what's shown.
 
-Automatically compute and display the top 10 drugs with the largest price increases and decreases each week when CMS releases new NADAC data.
+## Changes
 
-### What you'll get
+**`src/pages/WeeklyMovers.tsx`**
 
-- A new `/movers` page showing two tables: **Top 10 Increases** and **Top 10 Decreases**
-- Each entry shows: drug name, old price, new price, % change, effective date
-- Data updates automatically when the weekly sync runs (no manual work)
-- Links from the homepage and navigation for discoverability
-- Each drug links to its pSEO drug page
-- SEO-optimized with meta tags targeting "NADAC price changes this week"
+1. Also fetch the latest `effective_date` from `nadac_drugs` (single row, ordered desc).
+2. Compare it to the displayed `currentDate` (latest weekly_movers row with `total_changed > 0`).
+3. If they differ, render an info banner above the two cards:
 
-### How it works
+   > New NADAC data was published on **{latestDataDate}**, but it was a small incremental update. The movers below reflect the most recent full weekly snapshot ({currentDate} vs {previousDate}) where meaningful price changes occurred. Movers will refresh when CMS releases the next full snapshot.
 
-1. **New edge function (`weekly-movers`)** — Compares the two most recent weekly NADAC snapshots in the database, calculates % change per NDC, and returns the top 10 increases and top 10 decreases. Results are cached-friendly since they only change weekly.
+4. Use a subtle `Card` with an `Info` icon (lucide), `bg-primary/5 border-primary/20` styling consistent with the rest of the site.
+5. If they match, no banner — current behavior is fine.
 
-2. **New page (`src/pages/WeeklyMovers.tsx`)** — Fetches from the edge function and displays two card/table sections with increase/decrease indicators, color-coded badges, and links to individual drug pages.
+## Out of scope
 
-3. **Route & navigation** — Add `/movers` route in App.tsx. Add a link in the site navigation and homepage.
-
-4. **SEO** — Meta tags, JSON-LD, and a link in the static sitemap for the movers page.
-
-### Technical details
-
-- The edge function runs a SQL query comparing the two most recent effective dates with >1000 records (to skip partial mid-week updates)
-- Filters out drugs where the old price was 0 to avoid division-by-zero / infinite % changes
-- Returns both the raw price change and percentage change
-- No new database tables needed — this reads from the existing `nadac_drugs` table
+- No backend / edge function changes.
+- No copy changes to the existing header subtitle.
