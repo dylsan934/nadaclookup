@@ -64,7 +64,7 @@ export default function Unsubscribe() {
 
   return (
     <>
-      <SEOHead title="Unsubscribe — NADAC Lookup" description="Manage your email preferences." canonical="https://nadaclookup.com/unsubscribe" noindex />
+      <SEOHead title="Unsubscribe — NADAC Lookup" description="Manage your email preferences." canonical="https://nadaclookup.com/unsubscribe" />
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 container mx-auto px-4 py-16 max-w-md">
