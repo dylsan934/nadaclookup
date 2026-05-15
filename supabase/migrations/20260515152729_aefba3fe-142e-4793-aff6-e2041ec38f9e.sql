@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS notify_weekly_movers boolean NOT NULL DEFAULT true;
