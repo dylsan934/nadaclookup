@@ -14,25 +14,27 @@ export const SiteNavigation = () => {
   const location = useLocation();
 
   return (
-    <nav className="border-b border-border/40 bg-background/95 backdrop-blur-sm" aria-label="Main navigation">
-      <div className="container mx-auto px-4">
-        <ul className="flex items-center gap-1 overflow-x-auto py-1 text-sm">
-          {navItems.map((item) => (
-            <li key={item.path}>
-              <Link
-                to={item.path}
-                className={cn(
-                  "px-3 py-2 rounded-md transition-colors whitespace-nowrap",
-                  location.pathname === item.path
-                    ? "text-primary font-medium bg-accent"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                )}
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+    <nav className="bg-background" aria-label="Main navigation">
+      <div className="container mx-auto px-4 py-2">
+        <div className="relative bg-card border border-border p-1.5 rounded-2xl shadow-sm overflow-hidden">
+          <ul className="flex w-full overflow-x-auto no-scrollbar">
+            {navItems.map((item) => (
+              <li key={item.path} className="flex-1 min-w-0">
+                <Link
+                  to={item.path}
+                  className={cn(
+                    "flex items-center justify-center py-2.5 px-2 text-sm rounded-xl transition-all duration-200 whitespace-nowrap",
+                    location.pathname === item.path
+                      ? "font-semibold text-primary-foreground bg-primary shadow-md"
+                      : "font-medium text-muted-foreground hover:text-primary hover:bg-accent/50"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </nav>
   );
