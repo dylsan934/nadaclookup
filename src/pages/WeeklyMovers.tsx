@@ -68,6 +68,7 @@ const MoverRow = ({ mover, rank, type }: { mover: Mover; rank: number; type: "in
 };
 
 export default function WeeklyMovers() {
+  const { user, isSubscribed } = useAuth();
   const [data, setData] = useState<MoversData | null>(null);
   const [latestDataDate, setLatestDataDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
