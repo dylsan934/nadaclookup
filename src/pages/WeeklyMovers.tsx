@@ -167,33 +167,41 @@ export default function WeeklyMovers() {
                 </p>
               </Card>
             )}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Increases */}
-              <Card className="overflow-hidden">
-                <div className="flex items-center gap-2 p-4 border-b border-border/40 bg-red-500/5">
-                  <TrendingUp className="h-5 w-5 text-red-500" />
-                  <h2 className="font-semibold text-foreground">Top 5 Increases</h2>
-                </div>
-                <div className="divide-y-0">
-                  {data.topIncreases.map((m, i) => (
-                    <MoverRow key={m.ndc} mover={m} rank={i + 1} type="increase" />
-                  ))}
-                </div>
-              </Card>
 
-              {/* Decreases */}
-              <Card className="overflow-hidden">
-                <div className="flex items-center gap-2 p-4 border-b border-border/40 bg-emerald-500/5">
-                  <TrendingDown className="h-5 w-5 text-emerald-500" />
-                  <h2 className="font-semibold text-foreground">Top 5 Decreases</h2>
-                </div>
-                <div className="divide-y-0">
-                  {data.topDecreases.map((m, i) => (
-                    <MoverRow key={m.ndc} mover={m} rank={i + 1} type="decrease" />
-                  ))}
+            {!user ? (
+              <Card className="p-10 text-center bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+                <Lock className="h-10 w-10 text-primary mx-auto mb-4" />
+                <h2 className="text-xl font-bold text-foreground mb-2">
+                  Sign up to see this week's biggest NADAC movers
+                </h2>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Create a free account to preview the top mover in each list. Upgrade to Pro to unlock all 10.
+                </p>
+                <div className="flex gap-3 justify-center flex-wrap">
+                  <Button asChild size="lg">
+                    <Link to="/auth">Create free account</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <Link to="/auth">Sign in</Link>
+                  </Button>
                 </div>
               </Card>
-            </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-6">
+                <MoversCard
+                  title="Top 5 Increases"
+                  type="increase"
+                  movers={data.topIncreases}
+                  isSubscribed={isSubscribed}
+                />
+                <MoversCard
+                  title="Top 5 Decreases"
+                  type="decrease"
+                  movers={data.topDecreases}
+                  isSubscribed={isSubscribed}
+                />
+              </div>
+            )}
             </>
           )}
 
