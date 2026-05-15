@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { TrendingUp, TrendingDown, ArrowRight, Loader2 } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowRight, Loader2, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SEOHead } from "@/components/SEOHead";
 import { SiteNavigation } from "@/components/SiteNavigation";
@@ -67,20 +67,30 @@ const MoverRow = ({ mover, rank, type }: { mover: Mover; rank: number; type: "in
 
 export default function WeeklyMovers() {
   const [data, setData] = useState<MoversData | null>(null);
+  const [latestDataDate, setLatestDataDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const { data: row, error } = await supabase
-          .from("weekly_movers")
-          .select("*")
-          .gt("total_changed", 0)
-          .order("effective_date", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        const [{ data: row, error }, { data: latest }] = await Promise.all([
+          supabase
+            .from("weekly_movers")
+            .select("*")
+            .gt("total_changed", 0)
+            .order("effective_date", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from("nadac_drugs")
+            .select("effective_date")
+            .order("effective_date", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+        ]);
 
         if (error) throw error;
+        if (latest?.effective_date) setLatestDataDate(latest.effective_date);
         if (row) {
           setData({
             success: true,
@@ -101,6 +111,9 @@ export default function WeeklyMovers() {
     };
     load();
   }, []);
+
+  const showStaleBanner =
+    !!data?.success && !!latestDataDate && latestDataDate !== data.currentDate;
 
   const weekLabel = data?.currentDate ? formatDate(data.currentDate) : "This Week";
 
@@ -142,6 +155,15 @@ export default function WeeklyMovers() {
               </p>
             </Card>
           ) : (
+            <>
+            {showStaleBanner && (
+              <Card className="p-4 mb-6 bg-primary/5 border-primary/20 flex gap-3 items-start">
+                <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <p className="text-sm text-foreground leading-relaxed">
+                  New NADAC data was published on <strong>{formatDate(latestDataDate!)}</strong>, but it was a small incremental update with too few rows for week-over-week comparison. The movers below reflect the most recent full weekly snapshot ({formatDate(data.previousDate)} → {formatDate(data.currentDate)}). They'll refresh when CMS releases the next full snapshot.
+                </p>
+              </Card>
+            )}
             <div className="grid md:grid-cols-2 gap-6">
               {/* Increases */}
               <Card className="overflow-hidden">
@@ -169,6 +191,7 @@ export default function WeeklyMovers() {
                 </div>
               </Card>
             </div>
+            </>
           )}
 
           {/* SEO Content */}
