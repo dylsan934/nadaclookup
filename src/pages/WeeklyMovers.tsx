@@ -67,6 +67,70 @@ const MoverRow = ({ mover, rank, type }: { mover: Mover; rank: number; type: "in
   );
 };
 
+const MoversCard = ({
+  title,
+  type,
+  movers,
+  isSubscribed,
+}: {
+  title: string;
+  type: "increase" | "decrease";
+  movers: Mover[];
+  isSubscribed: boolean;
+}) => {
+  const isUp = type === "increase";
+  // Free users see only the LAST mover (#5, smallest); ranks 1-4 are locked.
+  const lockedCount = isSubscribed ? 0 : Math.max(0, movers.length - 1);
+
+  return (
+    <Card className="overflow-hidden">
+      <div
+        className={`flex items-center gap-2 p-4 border-b border-border/40 ${
+          isUp ? "bg-red-500/5" : "bg-emerald-500/5"
+        }`}
+      >
+        {isUp ? (
+          <TrendingUp className="h-5 w-5 text-red-500" />
+        ) : (
+          <TrendingDown className="h-5 w-5 text-emerald-500" />
+        )}
+        <h2 className="font-semibold text-foreground">{title}</h2>
+      </div>
+      <div className="relative">
+        {movers.map((m, i) => {
+          const rank = i + 1;
+          const locked = !isSubscribed && rank <= lockedCount;
+          return (
+            <div key={m.ndc} className={locked ? "pointer-events-none select-none blur-sm" : ""} aria-hidden={locked}>
+              <MoverRow mover={m} rank={rank} type={type} />
+            </div>
+          );
+        })}
+        {!isSubscribed && lockedCount > 0 && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-background/40 via-background/80 to-background/95 backdrop-blur-[1px]">
+            <div className="text-center px-4 py-6 max-w-xs">
+              <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 mb-3">
+                <Lock className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-sm font-semibold text-foreground mb-1">
+                {lockedCount} more {isUp ? "movers" : "movers"} locked
+              </p>
+              <p className="text-xs text-muted-foreground mb-4">
+                Upgrade to Pro to see all {movers.length} biggest {isUp ? "increases" : "decreases"} this week.
+              </p>
+              <Button asChild size="sm">
+                <Link to="/pricing">
+                  <Sparkles className="h-3.5 w-3.5 mr-1.5" /> Upgrade to Pro
+                </Link>
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+};
+
 export default function WeeklyMovers() {
   const { user, isSubscribed } = useAuth();
   const [data, setData] = useState<MoversData | null>(null);
