@@ -1,0 +1,30 @@
+# NADAC Lookup
+
+> Free NADAC (National Average Drug Acquisition Cost) price lookup for U.S. pharmacies. Search by drug name or NDC, compare costs, and track weekly CMS updates.
+
+NADAC Lookup helps independent pharmacy owners and pharmacists access the latest CMS NADAC drug acquisition costs, updated every Wednesday. Pro plans add unlimited saves, full price history, and price-change alerts for $29/mo.
+
+## Pages
+
+- [Home](/): Search NADAC drug prices by name or NDC.
+- [Weekly Movers](/movers): Top 5 NADAC price increases and decreases each week.
+- [Pricing](/pricing): Free vs Pro ($29/mo) plans.
+- [Features](/features): Watchlists, alerts, comparisons, and price history.
+- [About](/about): Mission and data sources.
+- [What Is NADAC](/what-is-nadac): Explainer on the NADAC pricing benchmark.
+- [How Often NADAC Updates](/how-often-does-nadac-update): Weekly Wednesday update schedule.
+- [Blog](/blog): Pharmacy pricing guides and PBM strategy.
+
+## Blog
+
+- [NADAC vs WAC explained](/blog/nadac-vs-wac-explained): Differences between NADAC and Wholesale Acquisition Cost.
+- [Calculate reimbursement from NADAC](/blog/calculate-reimbursement-from-nadac): Formula and worked examples.
+- [Improve pharmacy margins with NADAC](/blog/improve-pharmacy-margins): Use weekly NADAC trends to grow margin.
+- [NADAC for PBM negotiations](/blog/nadac-for-pbm-negotiations): Push back on underwater claims.
+- [NADAC lookup by NDC](/blog/nadac-lookup-by-ndc): Searching by 11-digit NDC codes.
+- [Latest NADAC price changes](/blog/latest-nadac-price-changes): What weekly movements mean.
+
+## Optional
+
+- [Sitemap index](/sitemap.xml)
+- [Static sitemap](/sitemap-static.xml)

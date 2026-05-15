@@ -14,6 +14,18 @@ const NadacUpdateFrequency = () => {
         />
         <link rel="canonical" href="https://nadaclookup.com/how-often-does-nadac-update" />
         <meta name="robots" content="index, follow" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            { "@type": "Question", name: "What time on Wednesday does NADAC update?", acceptedAnswer: { "@type": "Answer", text: "NADAC data is typically published by CMS during regular business hours on Wednesday. The exact time may vary, but new data is usually available by early afternoon Eastern Time." } },
+            { "@type": "Question", name: "Are NADAC updates ever delayed?", acceptedAnswer: { "@type": "Answer", text: "While rare, updates may be delayed due to federal holidays or technical issues. CMS typically announces any significant delays through official channels." } },
+            { "@type": "Question", name: "How far back does NADAC historical data go?", acceptedAnswer: { "@type": "Answer", text: "NADAC data has been collected since 2013. Historical files are available through CMS and can be useful for analyzing long-term pricing trends." } },
+            { "@type": "Question", name: "Do all drugs have NADAC prices?", acceptedAnswer: { "@type": "Answer", text: "No, not all drugs have NADAC prices. NADAC only includes drugs that are dispensed by retail community pharmacies and have sufficient survey data. Some specialty or limited-distribution drugs may not be included." } },
+            { "@type": "Question", name: "What's the difference between NADAC and other pricing benchmarks?", acceptedAnswer: { "@type": "Answer", text: "NADAC reflects actual pharmacy acquisition costs, while AWP (Average Wholesale Price) and WAC (Wholesale Acquisition Cost) are manufacturer-set prices." } },
+            { "@type": "Question", name: "Can I get alerts when NADAC prices change?", acceptedAnswer: { "@type": "Answer", text: "Yes. With a free account on nadaclookup.com, you can save drugs to your watchlist and receive notifications when prices change significantly." } },
+          ],
+        })}</script>
       </Helmet>
 
       <div className="min-h-screen bg-background">
