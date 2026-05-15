@@ -105,7 +105,7 @@ const DrugPage = () => {
 
   const canonical = `https://nadaclookup.com/drug/${slug}`;
   const displayName = resolvedName || slugToSearchTerm(slug).toUpperCase();
-  const pageTitle = `${displayName} NADAC Price (Free Lookup Tool for Pharmacies)`;
+  const pageTitle = `${displayName} NADAC Price | NADAC Lookup`.slice(0, 60);
   const pageDesc = `Check the latest NADAC price for ${displayName}. Updated weekly. Built for independent pharmacies to compare acquisition costs.`;
 
   const primary = rows[0];

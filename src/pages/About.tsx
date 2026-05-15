@@ -8,7 +8,7 @@ import { ArrowRight } from "lucide-react";
 const About = () => (
   <>
     <SEOHead
-      title="About NADAC Lookup — Pharmacy Drug Pricing Transparency Tool"
+      title="About NADAC Lookup — Pharmacy Pricing Transparency"
       description="NADAC Lookup helps independent pharmacists access current drug acquisition costs from official CMS data. Learn about our mission to bring pricing transparency to pharmacy."
       canonical="https://nadaclookup.com/about"
     />
