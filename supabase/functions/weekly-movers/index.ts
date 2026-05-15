@@ -121,8 +121,8 @@ Deno.serve(async (req) => {
     }
     const uniqueMovers = Array.from(deduped.values());
 
-    const topIncreases = [...uniqueMovers].sort((a, b) => b.pctChange - a.pctChange).slice(0, 5);
-    const topDecreases = [...uniqueMovers].sort((a, b) => a.pctChange - b.pctChange).slice(0, 5);
+    const topIncreases = [...uniqueMovers].sort((a, b) => b.pctChange - a.pctChange).slice(0, 10);
+    const topDecreases = [...uniqueMovers].sort((a, b) => a.pctChange - b.pctChange).slice(0, 10);
 
     // Upsert into weekly_movers table
     const { error: upsertError } = await supabase
