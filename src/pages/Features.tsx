@@ -3,7 +3,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Search, BarChart3, Bell, ArrowRight, Scale, BookmarkCheck } from "lucide-react";
+import { Search, BarChart3, Bell, ArrowRight, Scale, BookmarkCheck, Mail, TrendingUp } from "lucide-react";
 
 const Features = () => (
   <>
