@@ -75,6 +75,7 @@ export default function WeeklyMovers() {
         const { data: row, error } = await supabase
           .from("weekly_movers")
           .select("*")
+          .gt("total_changed", 0)
           .order("effective_date", { ascending: false })
           .limit(1)
           .maybeSingle();
