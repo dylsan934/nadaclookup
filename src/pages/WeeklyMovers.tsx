@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { TrendingUp, TrendingDown, ArrowRight, Loader2, Info } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowRight, Loader2, Info, Lock, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SEOHead } from "@/components/SEOHead";
 import { SiteNavigation } from "@/components/SiteNavigation";
@@ -8,7 +8,9 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { drugNameToSlug } from "@/lib/drug-slug";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Mover {
   ndc: string;
@@ -65,7 +67,72 @@ const MoverRow = ({ mover, rank, type }: { mover: Mover; rank: number; type: "in
   );
 };
 
+const MoversCard = ({
+  title,
+  type,
+  movers,
+  isSubscribed,
+}: {
+  title: string;
+  type: "increase" | "decrease";
+  movers: Mover[];
+  isSubscribed: boolean;
+}) => {
+  const isUp = type === "increase";
+  // Free users see only the LAST mover (#5, smallest); ranks 1-4 are locked.
+  const lockedCount = isSubscribed ? 0 : Math.max(0, movers.length - 1);
+
+  return (
+    <Card className="overflow-hidden">
+      <div
+        className={`flex items-center gap-2 p-4 border-b border-border/40 ${
+          isUp ? "bg-red-500/5" : "bg-emerald-500/5"
+        }`}
+      >
+        {isUp ? (
+          <TrendingUp className="h-5 w-5 text-red-500" />
+        ) : (
+          <TrendingDown className="h-5 w-5 text-emerald-500" />
+        )}
+        <h2 className="font-semibold text-foreground">{title}</h2>
+      </div>
+      <div className="relative">
+        {movers.map((m, i) => {
+          const rank = i + 1;
+          const locked = !isSubscribed && rank <= lockedCount;
+          return (
+            <div key={m.ndc} className={locked ? "pointer-events-none select-none blur-sm" : ""} aria-hidden={locked}>
+              <MoverRow mover={m} rank={rank} type={type} />
+            </div>
+          );
+        })}
+        {!isSubscribed && lockedCount > 0 && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-background/40 via-background/80 to-background/95 backdrop-blur-[1px]">
+            <div className="text-center px-4 py-6 max-w-xs">
+              <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 mb-3">
+                <Lock className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-sm font-semibold text-foreground mb-1">
+                {lockedCount} more {isUp ? "movers" : "movers"} locked
+              </p>
+              <p className="text-xs text-muted-foreground mb-4">
+                Upgrade to Pro to see all {movers.length} biggest {isUp ? "increases" : "decreases"} this week.
+              </p>
+              <Button asChild size="sm">
+                <Link to="/pricing">
+                  <Sparkles className="h-3.5 w-3.5 mr-1.5" /> Upgrade to Pro
+                </Link>
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+};
+
 export default function WeeklyMovers() {
+  const { user, isSubscribed } = useAuth();
   const [data, setData] = useState<MoversData | null>(null);
   const [latestDataDate, setLatestDataDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -164,33 +231,41 @@ export default function WeeklyMovers() {
                 </p>
               </Card>
             )}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Increases */}
-              <Card className="overflow-hidden">
-                <div className="flex items-center gap-2 p-4 border-b border-border/40 bg-red-500/5">
-                  <TrendingUp className="h-5 w-5 text-red-500" />
-                  <h2 className="font-semibold text-foreground">Top 5 Increases</h2>
-                </div>
-                <div className="divide-y-0">
-                  {data.topIncreases.map((m, i) => (
-                    <MoverRow key={m.ndc} mover={m} rank={i + 1} type="increase" />
-                  ))}
-                </div>
-              </Card>
 
-              {/* Decreases */}
-              <Card className="overflow-hidden">
-                <div className="flex items-center gap-2 p-4 border-b border-border/40 bg-emerald-500/5">
-                  <TrendingDown className="h-5 w-5 text-emerald-500" />
-                  <h2 className="font-semibold text-foreground">Top 5 Decreases</h2>
-                </div>
-                <div className="divide-y-0">
-                  {data.topDecreases.map((m, i) => (
-                    <MoverRow key={m.ndc} mover={m} rank={i + 1} type="decrease" />
-                  ))}
+            {!user ? (
+              <Card className="p-10 text-center bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+                <Lock className="h-10 w-10 text-primary mx-auto mb-4" />
+                <h2 className="text-xl font-bold text-foreground mb-2">
+                  Sign up to see this week's biggest NADAC movers
+                </h2>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Create a free account to preview the top mover in each list. Upgrade to Pro to unlock all 10.
+                </p>
+                <div className="flex gap-3 justify-center flex-wrap">
+                  <Button asChild size="lg">
+                    <Link to="/auth">Create free account</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <Link to="/auth">Sign in</Link>
+                  </Button>
                 </div>
               </Card>
-            </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-6">
+                <MoversCard
+                  title="Top 5 Increases"
+                  type="increase"
+                  movers={data.topIncreases}
+                  isSubscribed={isSubscribed}
+                />
+                <MoversCard
+                  title="Top 5 Decreases"
+                  type="decrease"
+                  movers={data.topDecreases}
+                  isSubscribed={isSubscribed}
+                />
+              </div>
+            )}
             </>
           )}
 
