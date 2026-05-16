@@ -234,6 +234,107 @@ const articles: Record<string, { title: string; description: string; content: JS
       </>
     ),
   },
+  "pbm-cost-plus-dispensing-fee-audit": {
+    title: "The New PBM Cost-Plus + Dispensing Fee Model: How to Audit Your Claims | NADAC Lookup",
+    description: "A new PBM cost-plus plus professional dispensing fee reimbursement model is rolling out. Learn the formula and how to use NADAC Lookup to audit every claim for underpayment.",
+    content: (
+      <>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          A growing wave of PBM contracts — driven by employer demand for transparency and recent state and federal reforms — has moved away from opaque MAC and AWP-minus pricing toward a <strong className="text-foreground">cost-plus model</strong>: the pharmacy is paid its actual acquisition cost plus a flat professional dispensing fee. On paper, that's a fairer deal for independents. In practice, you only capture that fairness if you audit every claim.
+        </p>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          This guide breaks down the new model and shows you exactly how to use NADAC Lookup to verify each reimbursement and catch underpayments before they pile up.
+        </p>
+
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">What "Cost-Plus + Dispensing Fee" Actually Means</h2>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          Under the new model, your reimbursement is calculated as:
+        </p>
+        <div className="bg-muted/50 border border-border rounded-lg p-4 mb-4">
+          <code className="text-foreground text-sm">Reimbursement = (Acquisition Cost per unit × Quantity) + Professional Dispensing Fee</code>
+        </div>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          The "acquisition cost" benchmark is typically NADAC — the CMS-published, invoice-based price that updates every Wednesday. The dispensing fee is contract-specific but usually lands in the <strong className="text-foreground">$9 to $12</strong> range, mirroring the Medicaid professional dispensing fee methodology. For background on how that fee is set and how Medicaid programs use the same structure, see <Link to="/blog/calculate-reimbursement-from-nadac" className="text-primary hover:underline">Calculate Reimbursement from NADAC</Link>.
+        </p>
+
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Why You Still Need to Audit Every Claim</h2>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          Even under a transparent cost-plus contract, underpayments happen — and they usually fall into three buckets:
+        </p>
+        <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
+          <li><strong className="text-foreground">Stale NADAC reference.</strong> The PBM priced your claim against an older NADAC effective date. If the price went up Wednesday and your claim was adjudicated using last week's NADAC, you're underwater on the ingredient cost.</li>
+          <li><strong className="text-foreground">Wrong NDC mapping.</strong> The PBM applied NADAC for a generic equivalent or a different package size instead of the NDC you actually dispensed.</li>
+          <li><strong className="text-foreground">Missing or reduced dispensing fee.</strong> Some plans quietly carve out specialty, 90-day, or 340B claims and pay a lower fee than the contract states.</li>
+        </ul>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          Each of these is appealable — but only if you spot it. That's where a weekly audit habit pays for itself.
+        </p>
+
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">A 5-Minute Per-Claim Audit Using NADAC Lookup</h2>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          Pull your remittance for any cost-plus contract claim, then walk through these steps:
+        </p>
+        <ol className="list-decimal list-inside text-muted-foreground space-y-3 mb-4">
+          <li>
+            <strong className="text-foreground">Search the exact NDC dispensed</strong> on <Link to="/" className="text-primary hover:underline">NADAC Lookup</Link>. Using the 11-digit NDC (not just the drug name) ensures you're comparing the same product the PBM should have priced — see <Link to="/blog/nadac-lookup-by-ndc" className="text-primary hover:underline">how to look up by NDC</Link>.
+          </li>
+          <li>
+            <strong className="text-foreground">Check the effective date.</strong> Confirm the NADAC effective date is on or before the fill date on your claim. If your claim used an older NADAC than what was published the prior Wednesday, that's an audit flag.
+          </li>
+          <li>
+            <strong className="text-foreground">Calculate expected ingredient cost.</strong> Multiply NADAC per unit by the quantity dispensed. Compare to the ingredient cost paid on the remittance — any shortfall greater than a rounding penny is recoverable.
+          </li>
+          <li>
+            <strong className="text-foreground">Add the contracted dispensing fee.</strong> Verify the PBM paid the full fee specified in your contract, not a reduced specialty or chain-equivalent rate.
+          </li>
+          <li>
+            <strong className="text-foreground">Sum and compare.</strong> Expected reimbursement = (NADAC × qty) + dispensing fee. If the PBM paid less, file an appeal with the NADAC entry, effective date, and your calculation as supporting evidence.
+          </li>
+        </ol>
+
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Worked Example</h2>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          You dispense 30 tablets of Atorvastatin 20 mg under a cost-plus contract with a $10.50 dispensing fee. NADAC for the NDC on the fill date is <strong className="text-foreground">$0.0412 per unit</strong>. The PBM paid you $1.05 ingredient + $10.50 fee = $11.55 total.
+        </p>
+        <div className="bg-muted/50 border border-border rounded-lg p-4 mb-4 text-sm">
+          <div className="text-muted-foreground">Expected ingredient: 30 × $0.0412 = <strong className="text-foreground">$1.24</strong></div>
+          <div className="text-muted-foreground">Dispensing fee: <strong className="text-foreground">$10.50</strong></div>
+          <div className="text-muted-foreground mt-2 pt-2 border-t border-border">Expected total: <strong className="text-foreground">$11.74</strong></div>
+          <div className="text-muted-foreground">Actual paid: <strong className="text-foreground">$11.55</strong></div>
+          <div className="text-muted-foreground mt-2 pt-2 border-t border-border">Shortfall: <strong className="text-foreground">$0.19</strong> — recoverable via appeal</div>
+        </div>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          Nineteen cents sounds trivial. Multiply it across hundreds of claims a week on the dozens of high-volume generics that move price most often, and the recoverable revenue is meaningful.
+        </p>
+
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Scaling the Audit: Catch the Movers First</h2>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          You can't audit every claim manually, but you don't need to. The highest-risk claims are the ones where NADAC moved this week — those are most likely to be priced against a stale benchmark. Start your audit there:
+        </p>
+        <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
+          <li>Check the <Link to="/movers" className="text-primary hover:underline">Weekly Movers</Link> page every Wednesday after CMS publishes new NADAC data. The top 10 increases are the drugs most likely to be underpaid this week.</li>
+          <li>Cross-reference those movers against your dispensing volume. Any drug in both lists deserves an immediate spot-check.</li>
+          <li>Pull the matching remittances and run the 5-step audit above.</li>
+        </ul>
+
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Make the Audit Automatic with Pro</h2>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          <Link to="/pricing" className="text-primary hover:underline">NADAC Lookup Pro ($29/mo)</Link> turns this from a manual task into a routine:
+        </p>
+        <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
+          <li><strong className="text-foreground">Save your top-dispensed drugs</strong> so they're one click away each Wednesday.</li>
+          <li><strong className="text-foreground">Price change alerts</strong> notify you the moment NADAC moves on a drug you stock — before any claim gets paid against the new number.</li>
+          <li><strong className="text-foreground">Full 5-year price history</strong> makes documenting a trend trivial when you escalate to contract renegotiation.</li>
+          <li><strong className="text-foreground">Weekly movers email digest</strong> delivers the top 10 increases and decreases straight to your inbox every Wednesday morning.</li>
+        </ul>
+
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">The Bottom Line</h2>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          Cost-plus PBM contracts are a real win for independent pharmacies — but only if you treat the contract as a floor, not a ceiling. Audit weekly, document every shortfall, and use the data to push back. The same NADAC numbers that justify your reimbursement also justify your appeals. For broader strategy on bringing this data to the negotiating table, see <Link to="/blog/nadac-for-pbm-negotiations" className="text-primary hover:underline">Using NADAC for PBM Negotiations</Link>.
+        </p>
+      </>
+    ),
+  },
 };
 
 const BlogArticle = () => {
