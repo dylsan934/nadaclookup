@@ -6,6 +6,12 @@ import { ArrowRight } from "lucide-react";
 
 const articles = [
   {
+    slug: "pbm-cost-plus-dispensing-fee-audit",
+    title: "The New PBM Cost-Plus + Dispensing Fee Model: How to Audit Your Claims",
+    excerpt: "A new wave of PBM contracts pays acquisition cost plus a flat dispensing fee. Here's the formula, the most common underpayment traps, and a 5-step claim audit using NADAC Lookup.",
+    date: "2026-05-16",
+  },
+  {
     slug: "calculate-reimbursement-from-nadac",
     title: "How to Calculate Reimbursement from NADAC",
     excerpt: "How Medicaid and select payers reimburse pharmacies using the NADAC plus a professional dispensing fee — with a worked example and tips for spotting underwater claims.",
