@@ -61,14 +61,14 @@ export const Footer = () => {
                 </a>
               </p>
             </div>
-            <p className="text-muted-foreground/70">
+            <p className="text-muted-foreground">
               © {new Date().getFullYear()} NADAC Lookup • Updated weekly • For informational purposes only
             </p>
           </div>
           
           {/* Contact row */}
           <div className="flex justify-center sm:justify-start pt-2 border-t border-border/40">
-            <p className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Mail className="h-3 w-3" />
               Contact:{" "}
               <a 
