@@ -61,7 +61,7 @@ export const Footer = () => {
                 </a>
               </p>
             </div>
-            <p className="text-muted-foreground/70">
+            <p className="text-muted-foreground">
               © {new Date().getFullYear()} NADAC Lookup • Updated weekly • For informational purposes only
             </p>
           </div>
