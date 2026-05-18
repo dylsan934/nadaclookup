@@ -102,6 +102,10 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const authError = requireServiceRole(req, corsHeaders);
+  if (authError) return authError;
+
+
   try {
     console.log('Starting NADAC data sync...');
 
