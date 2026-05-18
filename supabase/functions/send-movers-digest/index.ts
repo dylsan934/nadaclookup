@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { requireServiceRole } from '../_shared/require-service-role.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,6 +15,9 @@ const fmtDate = (d: string) =>
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
+
+  const authError = requireServiceRole(req, corsHeaders)
+  if (authError) return authError
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!

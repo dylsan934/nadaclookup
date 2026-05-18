@@ -4,7 +4,7 @@ project_id = "wcbzqrskgfszkwgrzogo"
 verify_jwt = false
 
 [functions.sync-nadac]
-verify_jwt = false
+verify_jwt = true
 
 [functions.check-subscription]
 verify_jwt = false
@@ -16,7 +16,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.check-price-alerts]
-verify_jwt = false
+verify_jwt = true
 
 [functions.get-price-history]
 verify_jwt = false
@@ -25,7 +25,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.weekly-movers]
-verify_jwt = false
+verify_jwt = true
 
 [functions.process-email-queue]
 verify_jwt = true
@@ -43,4 +43,4 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.send-movers-digest]
-verify_jwt = false
+verify_jwt = true
