@@ -66,7 +66,7 @@ interface UsersResponse {
 }
 
 const Admin = () => {
-  const { user, session, isAdmin, isLoading: authLoading } = useAuth();
+  const { user, session, isAdmin, isLoading: authLoading, isRoleCheckComplete } = useAuth();
   const navigate = useNavigate();
   
   const [stats, setStats] = useState<Stats | null>(null);
@@ -79,10 +79,15 @@ const Admin = () => {
 
   // Redirect non-admins (client-side UX guard - real protection is backend)
   useEffect(() => {
-    if (!authLoading && (!user || !isAdmin)) {
+    if (authLoading) return;
+    if (!user) {
+      navigate("/");
+      return;
+    }
+    if (isRoleCheckComplete && !isAdmin) {
       navigate("/");
     }
-  }, [user, isAdmin, authLoading, navigate]);
+  }, [user, isAdmin, authLoading, isRoleCheckComplete, navigate]);
 
   // Fetch stats
   useEffect(() => {
@@ -196,7 +201,7 @@ const Admin = () => {
     return new Date(trialEndsAt) > new Date();
   };
 
-  if (authLoading) {
+  if (authLoading || !isRoleCheckComplete) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

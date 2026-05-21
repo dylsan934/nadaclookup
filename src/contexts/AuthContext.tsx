@@ -10,6 +10,7 @@ interface AuthContextType {
   isLoading: boolean;
   isSubscribed: boolean;
   isAdmin: boolean;
+  isRoleCheckComplete: boolean;
   isTrialActive: boolean;
   trialEndsAt: string | null;
   subscriptionEnd: string | null;
@@ -33,6 +34,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isRoleCheckComplete, setIsRoleCheckComplete] = useState(false);
   const [isTrialActive, setIsTrialActive] = useState(false);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
@@ -94,12 +96,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsTrialActive(false);
       setTrialEndsAt(null);
       setSubscriptionEnd(null);
+      setIsRoleCheckComplete(true);
       return;
     }
 
     // Check if admin first - admins bypass subscription
     const adminCheck = await checkAdminRole(user.id);
-    if (adminCheck) return;
+    if (adminCheck) {
+      setIsRoleCheckComplete(true);
+      return;
+    }
 
     try {
       const { data, error } = await supabase.functions.invoke('check-subscription', {
@@ -119,6 +125,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSubscriptionEnd(data?.subscription_end ?? null);
     } catch (error) {
       console.error('Error checking subscription:', error);
+    } finally {
+      setIsRoleCheckComplete(true);
     }
   };
 
@@ -160,6 +168,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setTrialEndsAt(null);
       setSubscriptionEnd(null);
       setLifetimeSavesCount(0);
+      setIsRoleCheckComplete(true);
     }
   }, [session, user]);
 
@@ -206,6 +215,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isLoading, 
       isSubscribed, 
       isAdmin,
+      isRoleCheckComplete,
       isTrialActive,
       trialEndsAt,
       subscriptionEnd,
