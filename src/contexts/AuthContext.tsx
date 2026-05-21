@@ -10,6 +10,7 @@ interface AuthContextType {
   isLoading: boolean;
   isSubscribed: boolean;
   isAdmin: boolean;
+  isRoleCheckComplete: boolean;
   isTrialActive: boolean;
   trialEndsAt: string | null;
   subscriptionEnd: string | null;
