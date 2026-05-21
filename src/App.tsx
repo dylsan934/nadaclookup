@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import SavedDrugs from "./pages/SavedDrugs";
 import WhatIsNadac from "./pages/WhatIsNadac";
 import NadacUpdateFrequency from "./pages/NadacUpdateFrequency";
+import NdcLookup from "./pages/NdcLookup";
 import Admin from "./pages/Admin";
 import Blog from "./pages/Blog";
 import BlogArticle from "./pages/BlogArticle";
