@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import SavedDrugs from "./pages/SavedDrugs";
 import WhatIsNadac from "./pages/WhatIsNadac";
 import NadacUpdateFrequency from "./pages/NadacUpdateFrequency";
+import NdcLookup from "./pages/NdcLookup";
 import Admin from "./pages/Admin";
 import Blog from "./pages/Blog";
 import BlogArticle from "./pages/BlogArticle";
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/saved-drugs" element={<SavedDrugs />} />
               <Route path="/what-is-nadac" element={<WhatIsNadac />} />
               <Route path="/how-often-does-nadac-update" element={<NadacUpdateFrequency />} />
+              <Route path="/ndc-lookup" element={<NdcLookup />} />
               <Route path="/features" element={<Features />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/about" element={<About />} />
