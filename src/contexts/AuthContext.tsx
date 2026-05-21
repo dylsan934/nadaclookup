@@ -96,12 +96,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsTrialActive(false);
       setTrialEndsAt(null);
       setSubscriptionEnd(null);
+      setIsRoleCheckComplete(true);
       return;
     }
 
     // Check if admin first - admins bypass subscription
     const adminCheck = await checkAdminRole(user.id);
-    if (adminCheck) return;
+    if (adminCheck) {
+      setIsRoleCheckComplete(true);
+      return;
+    }
 
     try {
       const { data, error } = await supabase.functions.invoke('check-subscription', {
@@ -121,6 +125,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSubscriptionEnd(data?.subscription_end ?? null);
     } catch (error) {
       console.error('Error checking subscription:', error);
+    } finally {
+      setIsRoleCheckComplete(true);
     }
   };
 
