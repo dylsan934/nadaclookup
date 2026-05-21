@@ -168,6 +168,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setTrialEndsAt(null);
       setSubscriptionEnd(null);
       setLifetimeSavesCount(0);
+      setIsRoleCheckComplete(true);
     }
   }, [session, user]);
 
