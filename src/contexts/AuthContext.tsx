@@ -214,6 +214,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isLoading, 
       isSubscribed, 
       isAdmin,
+      isRoleCheckComplete,
       isTrialActive,
       trialEndsAt,
       subscriptionEnd,
