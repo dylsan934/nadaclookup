@@ -416,7 +416,7 @@ const Admin = () => {
                         <TableHead>Role</TableHead>
                         <TableHead>Pro</TableHead>
                         <TableHead>Trial</TableHead>
-                        <TableHead>Actions</TableHead>
+                        
                       </TableRow>
                     </TableHeader>
                     <TableBody>
