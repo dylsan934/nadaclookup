@@ -68,7 +68,7 @@ export const HomePricing = () => {
             ))}
           </ul>
           {user ? (
-            <Button className="w-full" onClick={handleStartTrial}>
+            <Button className="w-full" onClick={handleStartTrial} disabled={isStarting}>
               Start 14-Day Free Trial
             </Button>
           ) : (
