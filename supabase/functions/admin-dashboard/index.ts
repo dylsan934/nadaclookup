@@ -217,6 +217,7 @@ async function getStats(adminClient: SupabaseClient<any, any, any>) {
     activeProCount,
     mrrCents,
     activeTrials: activeTrials || 0,
+    stripeActiveTrials,
     trialConversionRate,
   };
 }
