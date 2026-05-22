@@ -69,6 +69,8 @@ interface UserData {
   isAdmin: boolean;
   trialEndsAt: string | null;
   isTrialActive: boolean;
+  stripeTrialing: boolean;
+  stripeTrialEnd: string | null;
   isProMember: boolean;
   subscriptionEnd: string | null;
 }
