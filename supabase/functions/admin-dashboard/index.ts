@@ -144,35 +144,42 @@ async function getStats(adminClient: SupabaseClient<any, any, any>) {
     .select('*', { count: 'exact', head: true })
     .not('trial_granted_by', 'is', null);
 
-  // Stripe MRR + Pro count
+  // Stripe MRR + Pro count + Stripe trials
   let activeProCount = 0;
   let mrrCents = 0;
+  let stripeActiveTrials = 0;
   const proEmails = new Set<string>();
   const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
   if (stripeKey) {
     try {
       const stripe = new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' });
-      let hasMore = true;
-      let startingAfter: string | undefined = undefined;
-      while (hasMore) {
-        const res: Stripe.Response<Stripe.ApiList<Stripe.Subscription>> = await stripe.subscriptions.list({
-          status: 'active',
-          limit: 100,
-          starting_after: startingAfter,
-          expand: ['data.customer'],
-        });
-        for (const sub of res.data) {
-          activeProCount += 1;
-          const amount = sub.items.data[0]?.price?.unit_amount || 0;
-          mrrCents += amount;
-          const cust = sub.customer as Stripe.Customer | Stripe.DeletedCustomer;
-          if (cust && !('deleted' in cust) && cust.email) {
-            proEmails.add(cust.email.toLowerCase());
+      for (const status of ['active', 'trialing'] as const) {
+        let hasMore = true;
+        let startingAfter: string | undefined = undefined;
+        while (hasMore) {
+          const res: Stripe.Response<Stripe.ApiList<Stripe.Subscription>> = await stripe.subscriptions.list({
+            status,
+            limit: 100,
+            starting_after: startingAfter,
+            expand: ['data.customer'],
+          });
+          for (const sub of res.data) {
+            if (status === 'active') {
+              activeProCount += 1;
+              const amount = sub.items.data[0]?.price?.unit_amount || 0;
+              mrrCents += amount;
+            } else {
+              stripeActiveTrials += 1;
+            }
+            const cust = sub.customer as Stripe.Customer | Stripe.DeletedCustomer;
+            if (cust && !('deleted' in cust) && cust.email && status === 'active') {
+              proEmails.add(cust.email.toLowerCase());
+            }
           }
+          hasMore = res.has_more;
+          startingAfter = res.data.length ? res.data[res.data.length - 1].id : undefined;
+          if (!startingAfter) break;
         }
-        hasMore = res.has_more;
-        startingAfter = res.data.length ? res.data[res.data.length - 1].id : undefined;
-        if (!startingAfter) break;
       }
     } catch (e) {
       console.error('Stripe stats error:', e);
@@ -210,6 +217,7 @@ async function getStats(adminClient: SupabaseClient<any, any, any>) {
     activeProCount,
     mrrCents,
     activeTrials: activeTrials || 0,
+    stripeActiveTrials,
     trialConversionRate,
   };
 }
@@ -300,40 +308,53 @@ async function getUsers(
     rolesMap.set(ur.user_id, cur);
   });
 
-  // Stripe Pro lookup for all emails (cached set)
+  // Stripe lookup for all emails: active (Pro) + trialing
   const proSet = new Set<string>();
   const subEndByEmail = new Map<string, string | null>();
+  const stripeTrialByEmail = new Map<string, string | null>();
   const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
   if (stripeKey && allEmails.length > 0) {
     try {
       const stripe = new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' });
-      let hasMore = true;
-      let startingAfter: string | undefined = undefined;
-      while (hasMore) {
-        const res: Stripe.Response<Stripe.ApiList<Stripe.Subscription>> = await stripe.subscriptions.list({
-          status: 'active',
-          limit: 100,
-          starting_after: startingAfter,
-          expand: ['data.customer'],
-        });
-        for (const sub of res.data) {
-          const cust = sub.customer as Stripe.Customer | Stripe.DeletedCustomer;
-          if (cust && !('deleted' in cust) && cust.email) {
+      for (const status of ['active', 'trialing'] as const) {
+        let hasMore = true;
+        let startingAfter: string | undefined = undefined;
+        while (hasMore) {
+          const res: Stripe.Response<Stripe.ApiList<Stripe.Subscription>> = await stripe.subscriptions.list({
+            status,
+            limit: 100,
+            starting_after: startingAfter,
+            expand: ['data.customer'],
+          });
+          for (const sub of res.data) {
+            const cust = sub.customer as Stripe.Customer | Stripe.DeletedCustomer;
+            if (!cust || ('deleted' in cust) || !cust.email) continue;
             const e = cust.email.toLowerCase();
-            proSet.add(e);
-            let endIso: string | null = null;
-            if (sub.current_period_end) {
-              const ts = typeof sub.current_period_end === 'number'
-                ? sub.current_period_end * 1000
-                : new Date(sub.current_period_end).getTime();
-              endIso = new Date(ts).toISOString();
+            if (status === 'active') {
+              proSet.add(e);
+              let endIso: string | null = null;
+              if (sub.current_period_end) {
+                const ts = typeof sub.current_period_end === 'number'
+                  ? sub.current_period_end * 1000
+                  : new Date(sub.current_period_end).getTime();
+                endIso = new Date(ts).toISOString();
+              }
+              subEndByEmail.set(e, endIso);
+            } else {
+              let trialEndIso: string | null = null;
+              if (sub.trial_end) {
+                const ts = typeof sub.trial_end === 'number'
+                  ? sub.trial_end * 1000
+                  : new Date(sub.trial_end).getTime();
+                trialEndIso = new Date(ts).toISOString();
+              }
+              stripeTrialByEmail.set(e, trialEndIso);
             }
-            subEndByEmail.set(e, endIso);
           }
+          hasMore = res.has_more;
+          startingAfter = res.data.length ? res.data[res.data.length - 1].id : undefined;
+          if (!startingAfter) break;
         }
-        hasMore = res.has_more;
-        startingAfter = res.data.length ? res.data[res.data.length - 1].id : undefined;
-        if (!startingAfter) break;
       }
     } catch (e) {
       console.error('Stripe lookup error:', e);
@@ -350,6 +371,8 @@ async function getUsers(
     const emailLower = u.email?.toLowerCase();
     const isPro = emailLower ? proSet.has(emailLower) : false;
     const subEnd = emailLower ? (subEndByEmail.get(emailLower) || null) : null;
+    const stripeTrialEnd = emailLower ? (stripeTrialByEmail.get(emailLower) || null) : null;
+    const stripeTrialing = emailLower ? stripeTrialByEmail.has(emailLower) : false;
     const trialEndsAt = profile?.trial_ends_at || null;
     const trialActive = !!trialEndsAt && new Date(trialEndsAt) > now;
 
@@ -380,6 +403,8 @@ async function getUsers(
       isAdmin,
       trialEndsAt,
       isTrialActive: trialActive,
+      stripeTrialing,
+      stripeTrialEnd,
       isProMember: isPro,
       subscriptionEnd: subEnd,
     };
@@ -394,8 +419,11 @@ async function getUsers(
     case 'trial':
       filtered = enrichedAll.filter(u => u.isTrialActive);
       break;
+    case 'stripe-trial':
+      filtered = enrichedAll.filter(u => u.stripeTrialing);
+      break;
     case 'free':
-      filtered = enrichedAll.filter(u => !u.isProMember && !u.isTrialActive);
+      filtered = enrichedAll.filter(u => !u.isProMember && !u.isTrialActive && !u.stripeTrialing);
       break;
     case 'unverified':
       filtered = enrichedAll.filter(u => !u.emailConfirmedAt);

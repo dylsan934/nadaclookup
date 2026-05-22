@@ -49,6 +49,7 @@ interface Stats {
   activeProCount: number;
   mrrCents: number;
   activeTrials: number;
+  stripeActiveTrials: number;
   trialConversionRate: number;
 }
 
@@ -68,6 +69,8 @@ interface UserData {
   isAdmin: boolean;
   trialEndsAt: string | null;
   isTrialActive: boolean;
+  stripeTrialing: boolean;
+  stripeTrialEnd: string | null;
   isProMember: boolean;
   subscriptionEnd: string | null;
 }
@@ -80,7 +83,7 @@ interface UsersResponse {
   totalPages: number;
 }
 
-type FilterKey = "all" | "pro" | "trial" | "free" | "unverified" | "admin";
+type FilterKey = "all" | "pro" | "stripe-trial" | "trial" | "free" | "unverified" | "admin";
 type SortKey =
   | "createdAt"
   | "lastSignInAt"
@@ -92,7 +95,8 @@ type SortKey =
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "all", label: "All" },
   { key: "pro", label: "Pro" },
-  { key: "trial", label: "Trial" },
+  { key: "stripe-trial", label: "Stripe Trial" },
+  { key: "trial", label: "Legacy Trial" },
   { key: "free", label: "Free" },
   { key: "unverified", label: "Unverified" },
   { key: "admin", label: "Admin" },
@@ -241,8 +245,8 @@ const Admin = () => {
       color: "text-amber-600",
     },
     {
-      title: "Active Trials",
-      value: stats?.activeTrials ?? "-",
+      title: "Stripe Trials",
+      value: stats?.stripeActiveTrials ?? "-",
       icon: Sparkles,
       color: "text-blue-500",
     },
@@ -497,7 +501,16 @@ const Admin = () => {
                             )}
                           </TableCell>
                           <TableCell>
-                            {userData.isTrialActive ? (
+                            {userData.stripeTrialing ? (
+                              <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+                                Stripe
+                                {userData.stripeTrialEnd && (
+                                  <span className="ml-1 text-xs opacity-75">
+                                    until {format(new Date(userData.stripeTrialEnd), "MMM d")}
+                                  </span>
+                                )}
+                              </Badge>
+                            ) : userData.isTrialActive ? (
                               <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
                                 Until {format(new Date(userData.trialEndsAt!), "MMM d, yyyy")}
                               </Badge>
