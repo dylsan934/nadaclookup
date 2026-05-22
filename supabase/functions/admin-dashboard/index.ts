@@ -82,31 +82,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (action === 'grant-trial') {
-      if (req.method !== 'POST') {
-        return new Response(
-          JSON.stringify({ error: 'Method not allowed' }),
-          { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      const body = await req.json();
-      const { user_id, grant } = body;
-
-      if (!user_id) {
-        return new Response(
-          JSON.stringify({ error: 'user_id is required' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      const result = await handleTrialAction(adminClient, user_id, grant, adminUserId);
-      return new Response(
-        JSON.stringify(result),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     return new Response(
       JSON.stringify({ error: 'Invalid action' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -121,40 +96,6 @@ Deno.serve(async (req) => {
   }
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function handleTrialAction(
-  adminClient: SupabaseClient<any, any, any>,
-  userId: string,
-  grant: boolean,
-  grantedBy: string
-) {
-  if (grant) {
-    const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + 30);
-
-    const { error } = await adminClient
-      .from('profiles')
-      .update({
-        trial_ends_at: trialEndsAt.toISOString(),
-        trial_granted_by: grantedBy,
-      })
-      .eq('user_id', userId);
-
-    if (error) throw error;
-    return { success: true, trial_ends_at: trialEndsAt.toISOString() };
-  } else {
-    const { error } = await adminClient
-      .from('profiles')
-      .update({
-        trial_ends_at: null,
-        trial_granted_by: null,
-      })
-      .eq('user_id', userId);
-
-    if (error) throw error;
-    return { success: true, trial_ends_at: null };
-  }
-}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getStats(adminClient: SupabaseClient<any, any, any>) {

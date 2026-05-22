@@ -26,8 +26,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  Gift,
-  X,
   Crown,
   DollarSign,
   TrendingUp,
@@ -120,7 +118,7 @@ const Admin = () => {
   const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
-  const [processingTrialUserId, setProcessingTrialUserId] = useState<string | null>(null);
+  
 
   useEffect(() => {
     if (authLoading) return;
@@ -192,34 +190,8 @@ const Admin = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, session, search, page, filter, sort, order]);
 
-  const handleTrialAction = async (userId: string, grant: boolean) => {
-    if (!session?.access_token) return;
-    setProcessingTrialUserId(userId);
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-dashboard?action=grant-trial`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ user_id: userId, grant }),
-        }
-      );
-      if (!response.ok) throw new Error("Failed to update trial");
-      const result = await response.json();
-      if (result.success) {
-        toast.success(grant ? "Trial granted successfully" : "Trial revoked");
-        fetchUsers();
-      }
-    } catch (error) {
-      console.error("Error updating trial:", error);
-      toast.error("Failed to update trial");
-    } finally {
-      setProcessingTrialUserId(null);
-    }
-  };
+
+
 
   const toggleSort = (key: SortKey) => {
     if (sort === key) {
@@ -444,7 +416,7 @@ const Admin = () => {
                         <TableHead>Role</TableHead>
                         <TableHead>Pro</TableHead>
                         <TableHead>Trial</TableHead>
-                        <TableHead>Actions</TableHead>
+                        
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -533,39 +505,14 @@ const Admin = () => {
                               <span className="text-muted-foreground text-sm">None</span>
                             )}
                           </TableCell>
-                          <TableCell>
-                            {!userData.isAdmin &&
-                              (processingTrialUserId === userData.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : userData.isTrialActive ? (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleTrialAction(userData.id, false)}
-                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                >
-                                  <X className="h-4 w-4 mr-1" />
-                                  Revoke
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleTrialAction(userData.id, true)}
-                                  className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
-                                >
-                                  <Gift className="h-4 w-4 mr-1" />
-                                  Grant Trial
-                                </Button>
-                              ))}
-                          </TableCell>
                         </TableRow>
                       ))}
                       {usersData?.users?.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                             No users found
                           </TableCell>
+
                         </TableRow>
                       )}
                     </TableBody>

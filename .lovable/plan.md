@@ -1,17 +1,20 @@
-## Fix crowded mobile nav tabs
+## Remove admin "Grant Trial" feature
 
-The `SiteNavigation` pill bar forces all 6 items into equal-width slots (`flex-1 min-w-0`) on every breakpoint. At 393px each tab is ~60px wide with 8px padding, so labels touch each other and the pill looks cramped.
+Stripe already offers a 14-day trial on checkout (`subscription_data.trial_period_days: 14` in `create-checkout`). Admins no longer need to grant trials manually. Existing grandfathered trials must continue working until their `trial_ends_at` date.
 
-### Change
+### Changes
 
-In `src/components/SiteNavigation.tsx`:
+**`supabase/functions/admin-dashboard/index.ts`**
+- Remove the `action === 'grant-trial'` block from the request router.
+- Delete the `handleTrialAction` helper.
+- Keep `getUsers` returning `trialEndsAt` / `isTrialActive` and `getStats` returning `activeTrials` + `trialConversionRate` so admins can still observe trial activity read-only.
 
-- **Mobile (default):** Switch items to natural width + horizontal scroll. Add comfortable horizontal padding (`px-3.5`) and a small gap between items so they breathe. Container already has `overflow-x-auto no-scrollbar` — just remove `flex-1 min-w-0` from `<li>` at the mobile breakpoint.
-- **Desktop (`md:` and up):** Keep current equal-width behavior (`md:flex-1`) so the pill fills the row like today.
-- Add a tiny right-edge fade gradient on mobile only, as a visual hint that the row scrolls (matches the rounded card look).
-- Slightly reduce the outer container's left/right padding on mobile (`px-3 md:px-4`) so the pill itself has more room.
+**`src/pages/Admin.tsx`**
+- Remove the **Actions** column header and cell (Grant Trial / Revoke buttons).
+- Remove `handleTrialAction`, `processingTrialUserId` state, and the `Gift` / `X` icon imports they used.
+- Keep the **Trial** column, the **Trial** filter chip, and the **Active Trials** stat card.
 
-No route/label changes, no new dependencies, no behavior change on desktop.
-
-### Files
-- `src/components/SiteNavigation.tsx` — single-file edit
+### What stays untouched
+- `profiles.trial_ends_at` and `profiles.trial_granted_by` columns — existing trial rows preserved.
+- `check-subscription` — still honors `trial_ends_at`, so users currently on a granted trial keep Pro access until expiry.
+- `create-checkout` — Stripe trial unchanged.
