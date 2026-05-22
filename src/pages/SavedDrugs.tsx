@@ -19,7 +19,6 @@ import { toast } from "sonner";
 import { CategoryManager, Category, getCategoryColors } from "@/components/CategoryManager";
 import { SavedDrugCard } from "@/components/SavedDrugCard";
 import { UpgradeModal } from "@/components/UpgradeModal";
-import { useStartCheckout } from "@/hooks/useStartCheckout";
 
 interface SavedDrug {
   id: string;
@@ -383,7 +382,7 @@ export default function SavedDrugs() {
     return result;
   }, [savedDrugs, drugPrices, sortBy, selectedCategory, drugCategoryLinks, searchQuery]);
 
-  const { start: handleUpgrade, isStarting: isUpgradeStarting } = useStartCheckout();
+
 
 
   if (isLoading) {
