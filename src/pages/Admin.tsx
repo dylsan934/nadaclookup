@@ -118,7 +118,7 @@ const Admin = () => {
   const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
-  const [processingTrialUserId, setProcessingTrialUserId] = useState<string | null>(null);
+  
 
   useEffect(() => {
     if (authLoading) return;
