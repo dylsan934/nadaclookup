@@ -83,7 +83,7 @@ interface UsersResponse {
   totalPages: number;
 }
 
-type FilterKey = "all" | "pro" | "trial" | "free" | "unverified" | "admin";
+type FilterKey = "all" | "pro" | "stripe-trial" | "trial" | "free" | "unverified" | "admin";
 type SortKey =
   | "createdAt"
   | "lastSignInAt"
@@ -95,7 +95,8 @@ type SortKey =
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "all", label: "All" },
   { key: "pro", label: "Pro" },
-  { key: "trial", label: "Trial" },
+  { key: "stripe-trial", label: "Stripe Trial" },
+  { key: "trial", label: "Legacy Trial" },
   { key: "free", label: "Free" },
   { key: "unverified", label: "Unverified" },
   { key: "admin", label: "Admin" },
