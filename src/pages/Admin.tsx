@@ -501,7 +501,16 @@ const Admin = () => {
                             )}
                           </TableCell>
                           <TableCell>
-                            {userData.isTrialActive ? (
+                            {userData.stripeTrialing ? (
+                              <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+                                Stripe
+                                {userData.stripeTrialEnd && (
+                                  <span className="ml-1 text-xs opacity-75">
+                                    until {format(new Date(userData.stripeTrialEnd), "MMM d")}
+                                  </span>
+                                )}
+                              </Badge>
+                            ) : userData.isTrialActive ? (
                               <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
                                 Until {format(new Date(userData.trialEndsAt!), "MMM d, yyyy")}
                               </Badge>
