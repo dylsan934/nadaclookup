@@ -505,39 +505,14 @@ const Admin = () => {
                               <span className="text-muted-foreground text-sm">None</span>
                             )}
                           </TableCell>
-                          <TableCell>
-                            {!userData.isAdmin &&
-                              (processingTrialUserId === userData.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : userData.isTrialActive ? (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleTrialAction(userData.id, false)}
-                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                >
-                                  <X className="h-4 w-4 mr-1" />
-                                  Revoke
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleTrialAction(userData.id, true)}
-                                  className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
-                                >
-                                  <Gift className="h-4 w-4 mr-1" />
-                                  Grant Trial
-                                </Button>
-                              ))}
-                          </TableCell>
                         </TableRow>
                       ))}
                       {usersData?.users?.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                             No users found
                           </TableCell>
+
                         </TableRow>
                       )}
                     </TableBody>
