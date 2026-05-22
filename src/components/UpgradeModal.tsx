@@ -133,7 +133,8 @@ export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeMo
             <>
               <Button 
                 size="lg" 
-                onClick={handleUpgrade} 
+                onClick={handleUpgrade}
+                disabled={isStarting}
                 className="w-full font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md"
               >
                 <Crown className="h-4 w-4 mr-2" />
