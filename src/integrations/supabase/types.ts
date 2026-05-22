@@ -253,6 +253,8 @@ export type Database = {
           notify_large_changes_only: boolean
           notify_saved_drugs: boolean
           notify_weekly_movers: boolean
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           trial_ends_at: string | null
           trial_granted_by: string | null
           updated_at: string
@@ -266,6 +268,8 @@ export type Database = {
           notify_large_changes_only?: boolean
           notify_saved_drugs?: boolean
           notify_weekly_movers?: boolean
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           trial_ends_at?: string | null
           trial_granted_by?: string | null
           updated_at?: string
@@ -279,6 +283,8 @@ export type Database = {
           notify_large_changes_only?: boolean
           notify_saved_drugs?: boolean
           notify_weekly_movers?: boolean
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           trial_ends_at?: string | null
           trial_granted_by?: string | null
           updated_at?: string
