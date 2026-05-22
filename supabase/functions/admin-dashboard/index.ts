@@ -371,6 +371,8 @@ async function getUsers(
     const emailLower = u.email?.toLowerCase();
     const isPro = emailLower ? proSet.has(emailLower) : false;
     const subEnd = emailLower ? (subEndByEmail.get(emailLower) || null) : null;
+    const stripeTrialEnd = emailLower ? (stripeTrialByEmail.get(emailLower) || null) : null;
+    const stripeTrialing = emailLower ? stripeTrialByEmail.has(emailLower) : false;
     const trialEndsAt = profile?.trial_ends_at || null;
     const trialActive = !!trialEndsAt && new Date(trialEndsAt) > now;
 
@@ -401,6 +403,8 @@ async function getUsers(
       isAdmin,
       trialEndsAt,
       isTrialActive: trialActive,
+      stripeTrialing,
+      stripeTrialEnd,
       isProMember: isPro,
       subscriptionEnd: subEnd,
     };
@@ -415,8 +419,11 @@ async function getUsers(
     case 'trial':
       filtered = enrichedAll.filter(u => u.isTrialActive);
       break;
+    case 'stripe-trial':
+      filtered = enrichedAll.filter(u => u.stripeTrialing);
+      break;
     case 'free':
-      filtered = enrichedAll.filter(u => !u.isProMember && !u.isTrialActive);
+      filtered = enrichedAll.filter(u => !u.isProMember && !u.isTrialActive && !u.stripeTrialing);
       break;
     case 'unverified':
       filtered = enrichedAll.filter(u => !u.emailConfirmedAt);
