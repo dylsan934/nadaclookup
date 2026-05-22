@@ -70,6 +70,8 @@ export const PremiumFeatureGate = ({
           variant="secondary" 
           className="h-7 text-xs"
           onClick={handleSubscribe}
+          disabled={isStarting}
+
         >
           Upgrade
         </Button>
@@ -88,7 +90,7 @@ export const PremiumFeatureGate = ({
           Upgrade to Pro to access {featureName}
         </p>
       </div>
-      <Button size="sm" onClick={handleSubscribe}>
+      <Button size="sm" onClick={handleSubscribe} disabled={isStarting}>
         <Crown className="h-4 w-4 mr-1.5" />
         Upgrade to Pro
       </Button>
