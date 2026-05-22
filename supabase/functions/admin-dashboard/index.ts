@@ -144,35 +144,42 @@ async function getStats(adminClient: SupabaseClient<any, any, any>) {
     .select('*', { count: 'exact', head: true })
     .not('trial_granted_by', 'is', null);
 
-  // Stripe MRR + Pro count
+  // Stripe MRR + Pro count + Stripe trials
   let activeProCount = 0;
   let mrrCents = 0;
+  let stripeActiveTrials = 0;
   const proEmails = new Set<string>();
   const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
   if (stripeKey) {
     try {
       const stripe = new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' });
-      let hasMore = true;
-      let startingAfter: string | undefined = undefined;
-      while (hasMore) {
-        const res: Stripe.Response<Stripe.ApiList<Stripe.Subscription>> = await stripe.subscriptions.list({
-          status: 'active',
-          limit: 100,
-          starting_after: startingAfter,
-          expand: ['data.customer'],
-        });
-        for (const sub of res.data) {
-          activeProCount += 1;
-          const amount = sub.items.data[0]?.price?.unit_amount || 0;
-          mrrCents += amount;
-          const cust = sub.customer as Stripe.Customer | Stripe.DeletedCustomer;
-          if (cust && !('deleted' in cust) && cust.email) {
-            proEmails.add(cust.email.toLowerCase());
+      for (const status of ['active', 'trialing'] as const) {
+        let hasMore = true;
+        let startingAfter: string | undefined = undefined;
+        while (hasMore) {
+          const res: Stripe.Response<Stripe.ApiList<Stripe.Subscription>> = await stripe.subscriptions.list({
+            status,
+            limit: 100,
+            starting_after: startingAfter,
+            expand: ['data.customer'],
+          });
+          for (const sub of res.data) {
+            if (status === 'active') {
+              activeProCount += 1;
+              const amount = sub.items.data[0]?.price?.unit_amount || 0;
+              mrrCents += amount;
+            } else {
+              stripeActiveTrials += 1;
+            }
+            const cust = sub.customer as Stripe.Customer | Stripe.DeletedCustomer;
+            if (cust && !('deleted' in cust) && cust.email && status === 'active') {
+              proEmails.add(cust.email.toLowerCase());
+            }
           }
+          hasMore = res.has_more;
+          startingAfter = res.data.length ? res.data[res.data.length - 1].id : undefined;
+          if (!startingAfter) break;
         }
-        hasMore = res.has_more;
-        startingAfter = res.data.length ? res.data[res.data.length - 1].id : undefined;
-        if (!startingAfter) break;
       }
     } catch (e) {
       console.error('Stripe stats error:', e);
