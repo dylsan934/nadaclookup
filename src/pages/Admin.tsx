@@ -190,34 +190,8 @@ const Admin = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, session, search, page, filter, sort, order]);
 
-  const handleTrialAction = async (userId: string, grant: boolean) => {
-    if (!session?.access_token) return;
-    setProcessingTrialUserId(userId);
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-dashboard?action=grant-trial`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ user_id: userId, grant }),
-        }
-      );
-      if (!response.ok) throw new Error("Failed to update trial");
-      const result = await response.json();
-      if (result.success) {
-        toast.success(grant ? "Trial granted successfully" : "Trial revoked");
-        fetchUsers();
-      }
-    } catch (error) {
-      console.error("Error updating trial:", error);
-      toast.error("Failed to update trial");
-    } finally {
-      setProcessingTrialUserId(null);
-    }
-  };
+
+
 
   const toggleSort = (key: SortKey) => {
     if (sort === key) {
