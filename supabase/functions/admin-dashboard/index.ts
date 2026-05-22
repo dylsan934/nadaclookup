@@ -8,13 +8,11 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verify authorization
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(
@@ -27,14 +25,13 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // Create client with user's token to verify identity
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
 
     const token = authHeader.replace('Bearer ', '');
     const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    
+
     if (claimsError || !claimsData?.claims) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
@@ -43,11 +40,8 @@ Deno.serve(async (req) => {
     }
 
     const adminUserId = claimsData.claims.sub;
-
-    // Create service role client for admin operations
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Server-side admin check - this is the REAL authorization
     const { data: roleData, error: roleError } = await adminClient
       .from('user_roles')
       .select('role')
@@ -66,7 +60,6 @@ Deno.serve(async (req) => {
     const action = url.searchParams.get('action') || 'stats';
 
     if (action === 'stats') {
-      // Get statistics
       const stats = await getStats(adminClient);
       return new Response(
         JSON.stringify(stats),
@@ -78,8 +71,11 @@ Deno.serve(async (req) => {
       const search = url.searchParams.get('search') || '';
       const page = parseInt(url.searchParams.get('page') || '1');
       const limit = parseInt(url.searchParams.get('limit') || '20');
-      
-      const users = await getUsers(adminClient, search, page, limit);
+      const filter = url.searchParams.get('filter') || 'all';
+      const sort = url.searchParams.get('sort') || 'createdAt';
+      const order = (url.searchParams.get('order') || 'desc') as 'asc' | 'desc';
+
+      const users = await getUsers(adminClient, search, page, limit, filter, sort, order);
       return new Response(
         JSON.stringify(users),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -87,7 +83,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'grant-trial') {
-      // Handle POST request for granting/revoking trial
       if (req.method !== 'POST') {
         return new Response(
           JSON.stringify({ error: 'Method not allowed' }),
@@ -134,7 +129,6 @@ async function handleTrialAction(
   grantedBy: string
 ) {
   if (grant) {
-    // Grant 30-day trial
     const trialEndsAt = new Date();
     trialEndsAt.setDate(trialEndsAt.getDate() + 30);
 
@@ -146,14 +140,9 @@ async function handleTrialAction(
       })
       .eq('user_id', userId);
 
-    if (error) {
-      console.error('Error granting trial:', error);
-      throw error;
-    }
-
+    if (error) throw error;
     return { success: true, trial_ends_at: trialEndsAt.toISOString() };
   } else {
-    // Revoke trial
     const { error } = await adminClient
       .from('profiles')
       .update({
@@ -162,24 +151,15 @@ async function handleTrialAction(
       })
       .eq('user_id', userId);
 
-    if (error) {
-      console.error('Error revoking trial:', error);
-      throw error;
-    }
-
+    if (error) throw error;
     return { success: true, trial_ends_at: null };
   }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getStats(adminClient: SupabaseClient<any, any, any>) {
-  // Get total users from auth
   const { data: authUsers, error: authError } = await adminClient.auth.admin.listUsers();
-  
-  if (authError) {
-    console.error('Error fetching auth users:', authError);
-    throw authError;
-  }
+  if (authError) throw authError;
 
   const totalUsers = authUsers?.users?.length || 0;
   const now = new Date();
@@ -194,17 +174,14 @@ async function getStats(adminClient: SupabaseClient<any, any, any>) {
     (u: { created_at: string }) => new Date(u.created_at) >= thirtyDaysAgo
   ).length || 0;
 
-  // Get total saved drugs
   const { count: totalSavedDrugs } = await adminClient
     .from('saved_drugs')
     .select('*', { count: 'exact', head: true });
 
-  // Get total price alerts sent
   const { count: totalAlertsSent } = await adminClient
     .from('price_alerts')
     .select('*', { count: 'exact', head: true });
 
-  // Count users with roles
   const { data: userRoles } = await adminClient
     .from('user_roles')
     .select('user_id, role');
@@ -213,6 +190,75 @@ async function getStats(adminClient: SupabaseClient<any, any, any>) {
     r => r.role === 'admin'
   ).length || 0;
 
+  // Active trials from profiles
+  const nowIso = new Date().toISOString();
+  const { count: activeTrials } = await adminClient
+    .from('profiles')
+    .select('*', { count: 'exact', head: true })
+    .gt('trial_ends_at', nowIso);
+
+  // Users who have ever been granted a trial
+  const { count: everTrialed } = await adminClient
+    .from('profiles')
+    .select('*', { count: 'exact', head: true })
+    .not('trial_granted_by', 'is', null);
+
+  // Stripe MRR + Pro count
+  let activeProCount = 0;
+  let mrrCents = 0;
+  const proEmails = new Set<string>();
+  const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+  if (stripeKey) {
+    try {
+      const stripe = new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' });
+      let hasMore = true;
+      let startingAfter: string | undefined = undefined;
+      while (hasMore) {
+        const res: Stripe.Response<Stripe.ApiList<Stripe.Subscription>> = await stripe.subscriptions.list({
+          status: 'active',
+          limit: 100,
+          starting_after: startingAfter,
+          expand: ['data.customer'],
+        });
+        for (const sub of res.data) {
+          activeProCount += 1;
+          const amount = sub.items.data[0]?.price?.unit_amount || 0;
+          mrrCents += amount;
+          const cust = sub.customer as Stripe.Customer | Stripe.DeletedCustomer;
+          if (cust && !('deleted' in cust) && cust.email) {
+            proEmails.add(cust.email.toLowerCase());
+          }
+        }
+        hasMore = res.has_more;
+        startingAfter = res.data.length ? res.data[res.data.length - 1].id : undefined;
+        if (!startingAfter) break;
+      }
+    } catch (e) {
+      console.error('Stripe stats error:', e);
+    }
+  }
+
+  // Trial → Paid conversion: # of past-trialed users who now have an active sub
+  let trialConverted = 0;
+  if (everTrialed && proEmails.size > 0) {
+    const { data: trialedProfiles } = await adminClient
+      .from('profiles')
+      .select('user_id')
+      .not('trial_granted_by', 'is', null);
+    const trialedIds = new Set((trialedProfiles || []).map((p: { user_id: string }) => p.user_id));
+    const emailByUserId = new Map<string, string>();
+    authUsers?.users?.forEach((u: { id: string; email?: string }) => {
+      if (u.email) emailByUserId.set(u.id, u.email.toLowerCase());
+    });
+    for (const id of trialedIds) {
+      const e = emailByUserId.get(id);
+      if (e && proEmails.has(e)) trialConverted += 1;
+    }
+  }
+  const trialConversionRate = everTrialed && everTrialed > 0
+    ? Math.round((trialConverted / everTrialed) * 1000) / 10
+    : 0;
+
   return {
     totalUsers,
     newUsersLast7Days,
@@ -220,6 +266,10 @@ async function getStats(adminClient: SupabaseClient<any, any, any>) {
     totalSavedDrugs: totalSavedDrugs || 0,
     totalAlertsSent: totalAlertsSent || 0,
     adminCount,
+    activeProCount,
+    mrrCents,
+    activeTrials: activeTrials || 0,
+    trialConversionRate,
   };
 }
 
@@ -228,15 +278,13 @@ async function getUsers(
   adminClient: SupabaseClient<any, any, any>,
   search: string,
   page: number,
-  limit: number
+  limit: number,
+  filter: string,
+  sort: string,
+  order: 'asc' | 'desc',
 ) {
-  // Get all users from auth
   const { data: authData, error: authError } = await adminClient.auth.admin.listUsers();
-  
-  if (authError) {
-    console.error('Error fetching users:', authError);
-    throw authError;
-  }
+  if (authError) throw authError;
 
   type AuthUser = {
     id: string;
@@ -248,133 +296,196 @@ async function getUsers(
 
   let users: AuthUser[] = authData?.users || [];
 
-  // Filter by search term (email)
   if (search) {
     const searchLower = search.toLowerCase();
-    users = users.filter(u => 
-      u.email?.toLowerCase().includes(searchLower)
-    );
+    users = users.filter(u => u.email?.toLowerCase().includes(searchLower));
   }
 
-  // Sort by created_at descending
-  users.sort((a, b) => 
-    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
+  const allUserIds = users.map(u => u.id);
+  const allEmails = users.map(u => u.email).filter(Boolean) as string[];
 
-  const totalCount = users.length;
-  const offset = (page - 1) * limit;
-  const paginatedUsers = users.slice(offset, offset + limit);
+  // Fetch supporting data for ALL filtered users (so filter chips work across pages)
+  const [profilesRes, savedDrugsRes, alertsRes, rolesRes] = await Promise.all([
+    adminClient
+      .from('profiles')
+      .select('user_id, lifetime_saves_count, trial_ends_at, trial_granted_by, notify_weekly_movers, notify_saved_drugs')
+      .in('user_id', allUserIds),
+    adminClient
+      .from('saved_drugs')
+      .select('user_id, created_at')
+      .in('user_id', allUserIds),
+    adminClient
+      .from('price_alerts')
+      .select('user_id, sent_at')
+      .in('user_id', allUserIds),
+    adminClient
+      .from('user_roles')
+      .select('user_id, role')
+      .in('user_id', allUserIds),
+  ]);
 
-  // Get profiles for these users (including trial info)
-  const userIds = paginatedUsers.map(u => u.id);
-  const userEmails = paginatedUsers.map(u => u.email).filter(Boolean) as string[];
-  
-  const { data: profiles } = await adminClient
-    .from('profiles')
-    .select('user_id, lifetime_saves_count, created_at, updated_at, trial_ends_at, trial_granted_by')
-    .in('user_id', userIds);
+  type Profile = {
+    user_id: string;
+    lifetime_saves_count: number;
+    trial_ends_at: string | null;
+    trial_granted_by: string | null;
+    notify_weekly_movers: boolean;
+    notify_saved_drugs: boolean;
+  };
 
-  const { data: savedDrugsCounts } = await adminClient
-    .from('saved_drugs')
-    .select('user_id')
-    .in('user_id', userIds);
+  const profilesMap = new Map<string, Profile>();
+  (profilesRes.data as Profile[] | null)?.forEach(p => profilesMap.set(p.user_id, p));
 
-  const { data: userRoles } = await adminClient
-    .from('user_roles')
-    .select('user_id, role')
-    .in('user_id', userIds);
+  const savedDrugsMap = new Map<string, { count: number; last: string | null }>();
+  (savedDrugsRes.data as { user_id: string; created_at: string }[] | null)?.forEach(sd => {
+    const cur = savedDrugsMap.get(sd.user_id) || { count: 0, last: null };
+    cur.count += 1;
+    if (!cur.last || sd.created_at > cur.last) cur.last = sd.created_at;
+    savedDrugsMap.set(sd.user_id, cur);
+  });
 
-  // Check Stripe subscriptions for these users
-  const subscriptionMap: Record<string, { isSubscribed: boolean; subscriptionEnd: string | null }> = {};
-  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-  
-  if (stripeKey && userEmails.length > 0) {
+  const alertsMap = new Map<string, { count: number; last: string | null }>();
+  (alertsRes.data as { user_id: string; sent_at: string }[] | null)?.forEach(a => {
+    const cur = alertsMap.get(a.user_id) || { count: 0, last: null };
+    cur.count += 1;
+    if (!cur.last || a.sent_at > cur.last) cur.last = a.sent_at;
+    alertsMap.set(a.user_id, cur);
+  });
+
+  const rolesMap = new Map<string, string[]>();
+  (rolesRes.data as { user_id: string; role: string }[] | null)?.forEach(ur => {
+    const cur = rolesMap.get(ur.user_id) || [];
+    cur.push(ur.role);
+    rolesMap.set(ur.user_id, cur);
+  });
+
+  // Stripe Pro lookup for all emails (cached set)
+  const proSet = new Set<string>();
+  const subEndByEmail = new Map<string, string | null>();
+  const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+  if (stripeKey && allEmails.length > 0) {
     try {
-      const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-      
-      // Fetch all customers and their subscriptions in batch
-      for (const email of userEmails) {
-        try {
-          const customers = await stripe.customers.list({ email, limit: 1 });
-          if (customers.data.length > 0) {
-            const customerId = customers.data[0].id;
-            const subscriptions = await stripe.subscriptions.list({
-              customer: customerId,
-              status: "active",
-              limit: 1,
-            });
-            
-            if (subscriptions.data.length > 0) {
-              const sub = subscriptions.data[0];
-              let subscriptionEnd = null;
-              if (sub.current_period_end) {
-                const endTimestamp = typeof sub.current_period_end === 'number' 
-                  ? sub.current_period_end * 1000 
-                  : new Date(sub.current_period_end).getTime();
-                subscriptionEnd = new Date(endTimestamp).toISOString();
-              }
-              subscriptionMap[email] = { isSubscribed: true, subscriptionEnd };
+      const stripe = new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' });
+      let hasMore = true;
+      let startingAfter: string | undefined = undefined;
+      while (hasMore) {
+        const res: Stripe.Response<Stripe.ApiList<Stripe.Subscription>> = await stripe.subscriptions.list({
+          status: 'active',
+          limit: 100,
+          starting_after: startingAfter,
+          expand: ['data.customer'],
+        });
+        for (const sub of res.data) {
+          const cust = sub.customer as Stripe.Customer | Stripe.DeletedCustomer;
+          if (cust && !('deleted' in cust) && cust.email) {
+            const e = cust.email.toLowerCase();
+            proSet.add(e);
+            let endIso: string | null = null;
+            if (sub.current_period_end) {
+              const ts = typeof sub.current_period_end === 'number'
+                ? sub.current_period_end * 1000
+                : new Date(sub.current_period_end).getTime();
+              endIso = new Date(ts).toISOString();
             }
+            subEndByEmail.set(e, endIso);
           }
-        } catch (e) {
-          console.error(`Error checking subscription for ${email}:`, e);
         }
+        hasMore = res.has_more;
+        startingAfter = res.data.length ? res.data[res.data.length - 1].id : undefined;
+        if (!startingAfter) break;
       }
     } catch (e) {
-      console.error('Error initializing Stripe:', e);
+      console.error('Stripe lookup error:', e);
     }
   }
 
-  type SavedDrug = { user_id: string };
-  type UserRole = { user_id: string; role: string };
-  type Profile = { 
-    user_id: string; 
-    lifetime_saves_count: number; 
-    created_at: string; 
-    updated_at: string;
-    trial_ends_at: string | null;
-    trial_granted_by: string | null;
-  };
+  const now = new Date();
 
-  // Count saved drugs per user
-  const savedDrugsMap: Record<string, number> = {};
-  (savedDrugsCounts as SavedDrug[] | null)?.forEach(sd => {
-    savedDrugsMap[sd.user_id] = (savedDrugsMap[sd.user_id] || 0) + 1;
-  });
+  // Enrich
+  const enrichedAll = users.map(u => {
+    const profile = profilesMap.get(u.id);
+    const saved = savedDrugsMap.get(u.id);
+    const alerts = alertsMap.get(u.id);
+    const emailLower = u.email?.toLowerCase();
+    const isPro = emailLower ? proSet.has(emailLower) : false;
+    const subEnd = emailLower ? (subEndByEmail.get(emailLower) || null) : null;
+    const trialEndsAt = profile?.trial_ends_at || null;
+    const trialActive = !!trialEndsAt && new Date(trialEndsAt) > now;
 
-  // Map roles
-  const rolesMap: Record<string, string[]> = {};
-  (userRoles as UserRole[] | null)?.forEach(ur => {
-    if (!rolesMap[ur.user_id]) rolesMap[ur.user_id] = [];
-    rolesMap[ur.user_id].push(ur.role);
-  });
+    const candidates = [
+      u.last_sign_in_at || null,
+      saved?.last || null,
+      alerts?.last || null,
+    ].filter(Boolean) as string[];
+    const lastActivityAt = candidates.length
+      ? candidates.reduce((a, b) => (a > b ? a : b))
+      : null;
 
-  // Map profiles
-  const profilesMap: Record<string, Profile> = {};
-  (profiles as Profile[] | null)?.forEach(p => {
-    profilesMap[p.user_id] = p;
-  });
+    const isAdmin = (rolesMap.get(u.id) || []).includes('admin');
 
-  const enrichedUsers = paginatedUsers.map(u => {
-    const stripeStatus = u.email ? subscriptionMap[u.email] : null;
     return {
       id: u.id,
       email: u.email,
       createdAt: u.created_at,
-      lastSignInAt: u.last_sign_in_at,
-      emailConfirmedAt: u.email_confirmed_at,
-      savedDrugsCount: savedDrugsMap[u.id] || 0,
-      lifetimeSavesCount: profilesMap[u.id]?.lifetime_saves_count || 0,
-      roles: rolesMap[u.id] || [],
-      isAdmin: rolesMap[u.id]?.includes('admin') || false,
-      trialEndsAt: profilesMap[u.id]?.trial_ends_at || null,
-      isProMember: stripeStatus?.isSubscribed || false,
-      subscriptionEnd: stripeStatus?.subscriptionEnd || null,
+      lastSignInAt: u.last_sign_in_at || null,
+      emailConfirmedAt: u.email_confirmed_at || null,
+      savedDrugsCount: saved?.count || 0,
+      lifetimeSavesCount: profile?.lifetime_saves_count || 0,
+      alertsReceivedCount: alerts?.count || 0,
+      lastActivityAt,
+      notifyWeeklyMovers: profile?.notify_weekly_movers ?? true,
+      notifySavedDrugs: profile?.notify_saved_drugs ?? true,
+      roles: rolesMap.get(u.id) || [],
+      isAdmin,
+      trialEndsAt,
+      isTrialActive: trialActive,
+      isProMember: isPro,
+      subscriptionEnd: subEnd,
     };
   });
 
+  // Apply filter
+  let filtered = enrichedAll;
+  switch (filter) {
+    case 'pro':
+      filtered = enrichedAll.filter(u => u.isProMember);
+      break;
+    case 'trial':
+      filtered = enrichedAll.filter(u => u.isTrialActive);
+      break;
+    case 'free':
+      filtered = enrichedAll.filter(u => !u.isProMember && !u.isTrialActive);
+      break;
+    case 'unverified':
+      filtered = enrichedAll.filter(u => !u.emailConfirmedAt);
+      break;
+    case 'admin':
+      filtered = enrichedAll.filter(u => u.isAdmin);
+      break;
+  }
+
+  // Sort
+  const sortKey = sort as keyof typeof enrichedAll[number];
+  filtered.sort((a, b) => {
+    const av = (a as Record<string, unknown>)[sortKey as string];
+    const bv = (b as Record<string, unknown>)[sortKey as string];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (typeof av === 'number' && typeof bv === 'number') {
+      return order === 'asc' ? av - bv : bv - av;
+    }
+    const as = String(av);
+    const bs = String(bv);
+    return order === 'asc' ? as.localeCompare(bs) : bs.localeCompare(as);
+  });
+
+  const totalCount = filtered.length;
+  const offset = (page - 1) * limit;
+  const paginated = filtered.slice(offset, offset + limit);
+
   return {
-    users: enrichedUsers,
+    users: paginated,
     totalCount,
     page,
     limit,
