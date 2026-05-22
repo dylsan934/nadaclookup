@@ -2,23 +2,12 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useStartCheckout } from "@/hooks/useStartCheckout";
 
 export const HomePricing = () => {
   const { user, isSubscribed } = useAuth();
+  const { start: handleStartTrial, isStarting } = useStartCheckout();
 
-  const handleStartTrial = async () => {
-    if (!user) return;
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout');
-      if (error) throw error;
-      if (data?.url) window.open(data.url, '_blank');
-    } catch (error) {
-      console.error('Error creating checkout:', error);
-      toast.error('Failed to start checkout');
-    }
-  };
 
   if (isSubscribed) return null;
 
@@ -79,7 +68,7 @@ export const HomePricing = () => {
             ))}
           </ul>
           {user ? (
-            <Button className="w-full" onClick={handleStartTrial}>
+            <Button className="w-full" onClick={handleStartTrial} disabled={isStarting}>
               Start 14-Day Free Trial
             </Button>
           ) : (

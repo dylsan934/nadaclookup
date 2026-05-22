@@ -2,8 +2,7 @@ import { Link } from "react-router-dom";
 import { Crown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useStartCheckout } from "@/hooks/useStartCheckout";
 
 interface PremiumFeatureGateProps {
   children: React.ReactNode;
@@ -17,19 +16,8 @@ export const PremiumFeatureGate = ({
   compact = false 
 }: PremiumFeatureGateProps) => {
   const { user, isSubscribed } = useAuth();
+  const { start: handleSubscribe, isStarting } = useStartCheckout();
 
-  const handleSubscribe = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout');
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-    } catch (error) {
-      console.error('Error creating checkout:', error);
-      toast.error('Failed to start checkout');
-    }
-  };
 
   // If user is subscribed, show the feature
   if (isSubscribed) {
@@ -82,6 +70,8 @@ export const PremiumFeatureGate = ({
           variant="secondary" 
           className="h-7 text-xs"
           onClick={handleSubscribe}
+          disabled={isStarting}
+
         >
           Upgrade
         </Button>
@@ -100,7 +90,7 @@ export const PremiumFeatureGate = ({
           Upgrade to Pro to access {featureName}
         </p>
       </div>
-      <Button size="sm" onClick={handleSubscribe}>
+      <Button size="sm" onClick={handleSubscribe} disabled={isStarting}>
         <Crown className="h-4 w-4 mr-1.5" />
         Upgrade to Pro
       </Button>

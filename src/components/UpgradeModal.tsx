@@ -1,9 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { History, Bookmark, Bell, Check, Crown, TrendingUp } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { useStartCheckout } from "@/hooks/useStartCheckout";
 import { Link } from "react-router-dom";
 
 interface UpgradeModalProps {
@@ -44,25 +43,10 @@ const freeFeatures = [
 
 export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeModalProps) => {
   const { user } = useAuth();
+  const { start: handleUpgrade, isStarting } = useStartCheckout({
+    onSuccess: () => onOpenChange(false),
+  });
 
-  const handleUpgrade = async () => {
-    if (!user) {
-      onOpenChange(false);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout');
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        onOpenChange(false);
-      }
-    } catch (error) {
-      console.error('Error creating checkout:', error);
-      toast.error('Failed to start checkout');
-    }
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -149,7 +133,8 @@ export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeMo
             <>
               <Button 
                 size="lg" 
-                onClick={handleUpgrade} 
+                onClick={handleUpgrade}
+                disabled={isStarting}
                 className="w-full font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md"
               >
                 <Crown className="h-4 w-4 mr-2" />

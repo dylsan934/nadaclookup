@@ -93,30 +93,47 @@ serve(async (req) => {
 
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
-      status: "active",
-      limit: 1,
+      status: "all",
+      limit: 10,
     });
-    const hasActiveSub = subscriptions.data.length > 0;
+    const activeOrTrialing = subscriptions.data.find(
+      (s) => s.status === "active" || s.status === "trialing"
+    );
+    const hasActiveSub = !!activeOrTrialing;
     let productId = null;
     let subscriptionEnd = null;
+    let isStripeTrial = false;
+    let stripeTrialEnd: string | null = null;
 
-    if (hasActiveSub) {
-      const subscription = subscriptions.data[0];
-      logStep("Active subscription found", { subscriptionId: subscription.id, rawEndDate: subscription.current_period_end });
-      
-      // Handle current_period_end safely - it could be a number (unix timestamp) or undefined
+    if (activeOrTrialing) {
+      const subscription = activeOrTrialing;
+      logStep("Active/trialing subscription found", { subscriptionId: subscription.id, status: subscription.status });
+
+      try {
+        await supabaseClient
+          .from("profiles")
+          .update({ stripe_subscription_id: subscription.id, stripe_customer_id: customerId })
+          .eq("user_id", user.id);
+      } catch (e) {
+        logStep("Could not persist stripe ids", { error: String(e) });
+      }
+
       if (subscription.current_period_end) {
         try {
-          const endTimestamp = typeof subscription.current_period_end === 'number' 
-            ? subscription.current_period_end * 1000 
+          const endTimestamp = typeof subscription.current_period_end === 'number'
+            ? subscription.current_period_end * 1000
             : new Date(subscription.current_period_end).getTime();
           subscriptionEnd = new Date(endTimestamp).toISOString();
-          logStep("Subscription end date parsed", { subscriptionEnd });
         } catch (e) {
-          logStep("Could not parse subscription end date, continuing without it", { error: String(e) });
+          logStep("Could not parse subscription end date", { error: String(e) });
         }
       }
-      
+
+      if (subscription.status === "trialing" && (subscription as any).trial_end) {
+        isStripeTrial = true;
+        stripeTrialEnd = new Date((subscription as any).trial_end * 1000).toISOString();
+      }
+
       productId = subscription.items.data[0]?.price?.product || null;
       logStep("Determined subscription product", { productId });
     } else {
@@ -125,8 +142,8 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
-      is_trial: false,
-      trial_ends_at: null,
+      is_trial: isStripeTrial,
+      trial_ends_at: stripeTrialEnd,
       product_id: productId,
       subscription_end: subscriptionEnd
     }), {
