@@ -49,6 +49,7 @@ interface Stats {
   activeProCount: number;
   mrrCents: number;
   activeTrials: number;
+  stripeActiveTrials: number;
   trialConversionRate: number;
 }
 
