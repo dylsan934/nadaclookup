@@ -12,14 +12,30 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
+const BLOCKING_STATUSES = new Set([
+  "active",
+  "trialing",
+  "past_due",
+  "incomplete",
+  "unpaid",
+]);
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
+  // Anon client to authenticate the caller
+  const supabaseAuth = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+  );
+
+  // Service-role client to persist Stripe IDs on profiles
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
   );
 
   try {
@@ -28,52 +44,102 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("No authorization header provided");
     const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
+    const { data: userData, error: userError } = await supabaseAuth.auth.getUser(token);
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { email: user.email });
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-      logStep("Existing customer found", { customerId });
+
+    // Prefer stored stripe_customer_id; fall back to email lookup
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("stripe_customer_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    let customerId: string | undefined = profile?.stripe_customer_id ?? undefined;
+
+    if (!customerId) {
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (customers.data.length > 0) {
+        customerId = customers.data[0].id;
+        logStep("Existing customer found via email", { customerId });
+        await supabaseAdmin
+          .from("profiles")
+          .update({ stripe_customer_id: customerId })
+          .eq("user_id", user.id);
+      }
+    } else {
+      logStep("Reusing stored customer", { customerId });
     }
 
-    // Check if user already has an active subscription
+    // Block duplicate trials/subs: check all non-terminal statuses
     if (customerId) {
-      const existingSubs = await stripe.subscriptions.list({
+      const existing = await stripe.subscriptions.list({
         customer: customerId,
-        status: "active",
-        limit: 1,
+        status: "all",
+        limit: 10,
       });
-      if (existingSubs.data.length > 0) {
-        throw new Error("You already have an active subscription");
+      const blocking = existing.data.find((s) => BLOCKING_STATUSES.has(s.status));
+      if (blocking) {
+        logStep("Blocking duplicate subscription", {
+          subscriptionId: blocking.id,
+          status: blocking.status,
+        });
+        // Persist for future lookups
+        await supabaseAdmin
+          .from("profiles")
+          .update({ stripe_subscription_id: blocking.id })
+          .eq("user_id", user.id);
+
+        return new Response(
+          JSON.stringify({
+            url: null,
+            alreadySubscribed: true,
+            status: blocking.status,
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          }
+        );
       }
     }
 
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price: "price_1SkIucGsrovbpMNPYgTHHtuO",
-          quantity: 1,
-        },
-      ],
-      mode: "subscription",
-      subscription_data: {
-        trial_period_days: 14,
-      },
-      payment_method_collection: "if_required",
-      success_url: `${req.headers.get("origin")}/?subscription=success`,
-      cancel_url: `${req.headers.get("origin")}/?subscription=cancelled`,
-    });
+    // Idempotency key — same user within same hour returns same session
+    const hourBucket = Math.floor(Date.now() / (1000 * 60 * 60));
+    const idempotencyKey = `checkout_${user.id}_${hourBucket}`;
 
-    logStep("Checkout session created", { sessionId: session.id });
+    const session = await stripe.checkout.sessions.create(
+      {
+        customer: customerId,
+        customer_email: customerId ? undefined : user.email,
+        client_reference_id: user.id,
+        metadata: { app_user_id: user.id },
+        subscription_data: {
+          trial_period_days: 14,
+          metadata: { app_user_id: user.id },
+        },
+        line_items: [
+          {
+            price: "price_1SkIucGsrovbpMNPYgTHHtuO",
+            quantity: 1,
+          },
+        ],
+        mode: "subscription",
+        payment_method_collection: "if_required",
+        success_url: `${req.headers.get("origin")}/?subscription=success`,
+        cancel_url: `${req.headers.get("origin")}/?subscription=cancelled`,
+      },
+      { idempotencyKey }
+    );
+
+    logStep("Checkout session created", { sessionId: session.id, idempotencyKey });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
