@@ -26,8 +26,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  Gift,
-  X,
   Crown,
   DollarSign,
   TrendingUp,
