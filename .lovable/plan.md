@@ -1,40 +1,46 @@
-## Goal
+## Admin page upgrade
 
-- Expand weekly movers to top 10 increases + 10 decreases
-- Free users (signed in): see only the #1 mover in each list, the other 9 blurred with upgrade CTA
-- Signed-out: keep current sign-up prompt
-- Pro users: see all 10 + receive a weekly email when a new list publishes
+Add engagement data, filters/sorting, and revenue/MRR summary to the admin dashboard. No new admin actions — read-only data additions.
 
-## Site impact of going to top 10
+### 1. Engagement columns (in users table)
 
-- Payload: ~2 KB extra in `weekly_movers.top_increases/decreases` JSONB. Negligible.
-- Page perf: data is precomputed weekly; rendering 20 rows total is trivial.
-- UX: longer scroll on `/movers`. Free users still see only 1 row visible (rest blurred), so the upgrade pressure actually increases — "1 of 10" is a stronger hook than "1 of 5".
-- SEO: page is auth-gated, no SEO impact.
+New columns per user:
+- **Lifetime saves** — `profiles.lifetime_saves_count` (already returned, surface it)
+- **Alerts received** — count from `price_alerts` per user
+- **Last activity** — max of `last_sign_in_at`, most recent `saved_drugs.created_at`, and most recent `price_alerts.sent_at`
+- **Notification opt-ins** — compact icons for `notify_weekly_movers` + `notify_saved_drugs` from `profiles`
 
-## Changes
+### 2. Filters + sorting
 
-### 1. Edge function — `weekly-movers/index.ts`
-- Change `slice(0, 5)` → `slice(0, 10)` for both increases and decreases.
-- Next Wednesday's cron run will populate the new size; existing rows stay at 5 until then (UI handles either length).
+Above the users table:
+- Filter chips: **All / Pro / Trial / Free / Unverified / Admin**
+- Sortable column headers: Joined, Last Sign In, Last Activity, Saved Drugs, Lifetime Saves, Alerts
+- Existing email search stays
 
-### 2. Page — `src/pages/WeeklyMovers.tsx`
-- Flip free-tier visibility: show **#1 (biggest mover)** unblurred, blur ranks #2–#10.
-- Update overlay copy: "9 more locked — Upgrade to Pro to see the full top 10".
-- Signed-out branch: unchanged.
+Filtering/sorting handled server-side via new query params (`filter`, `sort`, `order`) on the `users` action.
 
-### 3. Pro weekly email
-- New transactional template `weekly-movers-digest.tsx` — full top 10 increases + decreases, drug name / % change / new price, link to `/movers`.
-- New edge function `send-movers-digest`: queries latest `weekly_movers` row, fetches all Pro subscribers' emails (via service role from `auth.users` joined with active subscriptions), invokes `send-transactional-email` per recipient with idempotency key `movers-digest-${effective_date}-${user_id}`.
-- Cron: schedule `send-movers-digest` to run shortly after the existing Wed 6AM UTC sync (e.g., Wed 6:30 AM UTC) via pg_cron.
-- Respects `profiles.notify_saved_drugs` toggle? → propose adding a separate `notify_weekly_movers` boolean (default true) so users can opt out independently.
+### 3. Revenue / MRR summary card
 
-### 4. Database migration
-- Add `notify_weekly_movers boolean not null default true` to `profiles`.
+New row of summary cards above (or alongside) the existing stats grid:
+- **Active Pro subscribers** — count of users with active Stripe subscription
+- **MRR** — sum of active subscription prices (one tier at $29/mo → count × $29, with safe fallback that reads the actual Stripe price amount)
+- **Active trials** — count of `profiles` with `trial_ends_at > now()`
+- **Trial → Paid conversion** — `% of users who had a trial and now have an active subscription`
 
-### 5. Prereq
-- Requires Lovable Email infrastructure (domain + setup_email_infra + transactional scaffold). If not yet set up, I'll prompt for the email domain setup dialog before deploying the digest function.
+### Technical details
 
-## Open question
+**Edge function `admin-dashboard`:**
+- Extend `getStats` to also return: `activeProCount`, `mrrCents`, `activeTrials`, `trialConversionRate`. Pull Stripe active subscriptions in one pass (`stripe.subscriptions.list({ status: 'active', limit: 100 })`) and sum `items.data[0].price.unit_amount` for MRR; cross-reference customer emails to count trial conversions.
+- Extend `getUsers` to:
+  - Return `alertsReceivedCount`, `lastActivityAt`, `notifyWeeklyMovers`, `notifySavedDrugs`
+  - Accept `filter` (pro|trial|free|unverified|admin), `sort`, `order` params and apply in-memory (sorting/filtering happens after enrichment since Pro status comes from Stripe).
+- Continue to compute Stripe Pro status the same way per page (keeps current behavior).
 
-- Should the email also respect `notify_large_changes_only` / `large_change_threshold` from `profiles`, or is the weekly digest always the full top 10 regardless of those existing alert preferences? Default assumption: always full top 10 — the digest is separate from per-saved-drug alerts.
+**Frontend `src/pages/Admin.tsx`:**
+- Update `UserData` type with the new fields
+- Add filter chip row + sortable `<TableHead>` buttons (toggle asc/desc, store `sort`/`order` in state, include in fetch params)
+- Add 3 new columns: Lifetime Saves, Alerts, Last Activity (with notification opt-in icons in a compact cell)
+- Add a new "Revenue" stat row showing the 4 new cards (with the existing 6 stats kept). Format MRR with `Intl.NumberFormat` USD.
+
+### Out of scope (explicitly skipped)
+- CSV export, detail drawer, promote/demote admin, edit notification prefs — user chose "data only"
