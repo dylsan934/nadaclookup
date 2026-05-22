@@ -245,8 +245,8 @@ const Admin = () => {
       color: "text-amber-600",
     },
     {
-      title: "Active Trials",
-      value: stats?.activeTrials ?? "-",
+      title: "Stripe Trials",
+      value: stats?.stripeActiveTrials ?? "-",
       icon: Sparkles,
       color: "text-blue-500",
     },
