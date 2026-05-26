@@ -219,10 +219,10 @@ export const Header = () => {
             Updated weekly with official CMS data
           </div>
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 text-balance">
-            NADAC Drug Pricing Database
+            NADAC Pricing Lookup for Independent Pharmacies
           </h1>
           <p className="text-base md:text-lg text-primary-foreground/85 max-w-xl mx-auto leading-relaxed">
-            Search the National Average Drug Acquisition Cost database for current pharmaceutical pricing information.
+            Free NADAC drug pricing lookup with weekly CMS updates. Search the National Average Drug Acquisition Cost by drug name or NDC code.
           </p>
         </div>
       </div>

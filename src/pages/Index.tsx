@@ -17,7 +17,7 @@ const faqJsonLd = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   mainEntity: [
-    { "@type": "Question", name: "What is NADAC and why does it matter for pharmacies?", acceptedAnswer: { "@type": "Answer", text: "NADAC (National Average Drug Acquisition Cost) is a weekly pricing benchmark published by CMS based on actual pharmacy invoice data. It's the most accurate reflection of what pharmacies pay for drugs." }},
+    { "@type": "Question", name: "What is NADAC pricing?", acceptedAnswer: { "@type": "Answer", text: "NADAC pricing (National Average Drug Acquisition Cost) is a weekly pricing benchmark published by CMS based on actual pharmacy invoice data. It's the most accurate reflection of what pharmacies pay for drugs." }},
     { "@type": "Question", name: "How often are NADAC prices updated?", acceptedAnswer: { "@type": "Answer", text: "NADAC prices are updated every Wednesday by CMS." }},
     { "@type": "Question", name: "Can I look up NADAC prices by NDC code?", acceptedAnswer: { "@type": "Answer", text: "Yes. You can search by either drug name or 11-digit NDC code." }},
     { "@type": "Question", name: "How is NADAC different from AWP or WAC?", acceptedAnswer: { "@type": "Answer", text: "AWP and WAC are manufacturer-set list prices. NADAC is based on real pharmacy invoice data, making it far more accurate for understanding true acquisition costs." }},
