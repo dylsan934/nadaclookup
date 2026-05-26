@@ -94,8 +94,8 @@ export const HomeSEOContent = () => (
       <div className="space-y-4">
         {[
           {
-            q: "What is NADAC and why does it matter for pharmacies?",
-            a: "NADAC (National Average Drug Acquisition Cost) is a weekly pricing benchmark published by CMS based on actual pharmacy invoice data. It's the most accurate reflection of what pharmacies pay for drugs and is used by many state Medicaid programs for reimbursement calculations."
+            q: "What is NADAC pricing?",
+            a: "NADAC pricing (National Average Drug Acquisition Cost) is a weekly pricing benchmark published by CMS based on actual pharmacy invoice data. It's the most accurate reflection of what pharmacies pay for drugs and is used by many state Medicaid programs for reimbursement calculations."
           },
           {
             q: "How often are NADAC prices updated?",
