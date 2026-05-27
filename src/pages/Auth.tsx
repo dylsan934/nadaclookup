@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Search, Bookmark, Calculator, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -121,6 +122,36 @@ const Auth = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsSubmitting(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast({
+          title: "Google sign-in failed",
+          description: result.error.message ?? "Please try again.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      if (result.redirected) {
+        // Browser will navigate away to Google
+        return;
+      }
+      navigate("/");
+    } catch (err) {
+      toast({
+        title: "Google sign-in failed",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -163,7 +194,7 @@ const Auth = () => {
           navigate("/");
         }
       } else {
-        const { error } = await signUp(email, password);
+        const { data, error } = await signUp(email, password);
         if (error) {
           // Handle various signup error cases
           const errorMessage = error.message.toLowerCase();
@@ -195,12 +226,21 @@ const Auth = () => {
               variant: "destructive",
             });
           }
-        } else {
+        } else if (data?.session) {
+          // Auto-confirmed signup — user is already signed in
           toast({
             title: "Account created!",
             description: "Welcome! You can now access all features.",
           });
           navigate("/");
+        } else {
+          // Email confirmation required — no session until they click the link
+          toast({
+            title: "Check your email",
+            description: `We sent a confirmation link to ${email} to activate your account.`,
+          });
+          setIsLogin(true);
+          setPassword("");
         }
       }
     } finally {
@@ -342,6 +382,26 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleGoogleSignIn}
+              disabled={isSubmitting}
+            >
+              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.66 4.1-5.5 4.1-3.31 0-6.01-2.74-6.01-6.1S8.69 5.9 12 5.9c1.88 0 3.14.8 3.86 1.49l2.63-2.53C16.86 3.36 14.66 2.4 12 2.4 6.79 2.4 2.6 6.59 2.6 11.8s4.19 9.4 9.4 9.4c5.42 0 9-3.81 9-9.18 0-.62-.07-1.09-.16-1.82H12z"/>
+              </svg>
+              Continue with Google
+            </Button>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">or</span>
+              </div>
+            </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
