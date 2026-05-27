@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Search, Bookmark, Calculator, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -163,7 +164,7 @@ const Auth = () => {
           navigate("/");
         }
       } else {
-        const { error } = await signUp(email, password);
+        const { data, error } = await signUp(email, password);
         if (error) {
           // Handle various signup error cases
           const errorMessage = error.message.toLowerCase();
@@ -195,12 +196,21 @@ const Auth = () => {
               variant: "destructive",
             });
           }
-        } else {
+        } else if (data?.session) {
+          // Auto-confirmed signup — user is already signed in
           toast({
             title: "Account created!",
             description: "Welcome! You can now access all features.",
           });
           navigate("/");
+        } else {
+          // Email confirmation required — no session until they click the link
+          toast({
+            title: "Check your email",
+            description: `We sent a confirmation link to ${email} to activate your account.`,
+          });
+          setIsLogin(true);
+          setPassword("");
         }
       }
     } finally {
