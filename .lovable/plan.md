@@ -1,49 +1,42 @@
+## The fix
 
-## Goal
+Right now `/sitemap.xml` only points at `/sitemap-static.xml` (16 URLs). The 6,227 drug pages live behind an edge function (`sitemap-drugs`) that Google has never been told about. Result: **0 drug pages discovered, 0 indexed**.
 
-Make the signup flow honest about email confirmation, and add Google as a one-click sign-in option alongside email/password.
+The cleanest fix is to generate the drug sitemaps as **static files at build time** and list them in the sitemap index. This avoids cross-host sitemap issues (Supabase functions live on `*.supabase.co`, not `nadaclookup.com`) and means Google sees fast, plain XML at well-known paths.
 
 ## Changes
 
-### 1. Fix the misleading signup success toast
+**1. New build script: `scripts/generate-sitemap.ts`**
+- Connects to Supabase using the project anon key (read-only)
+- Pulls all distinct `drug_name` values from `nadac_drugs` (with their latest `effective_date`)
+- Writes one or more files in 5,000-URL chunks:
+  - `public/sitemap-drugs-1.xml`
+  - `public/sitemap-drugs-2.xml` (etc., as the catalog grows)
+- Writes/overwrites `public/sitemap.xml` as a sitemap index referencing `sitemap-static.xml` + every `sitemap-drugs-N.xml`
 
-In `src/pages/Auth.tsx` `handleSubmit`:
-- Have `AuthContext.signUp` return `{ data, error }` instead of just `{ error }` so the page can inspect `data.session`.
-- After a successful `signUp`, branch:
-  - If `data.session` exists → user is auto-confirmed, keep current toast + `navigate("/")`.
-  - If `data.session` is null → email confirmation is required. Show toast: "Check your email — we sent a confirmation link to {email} to activate your account." Do NOT navigate. Switch the form back to login view.
+**2. `package.json`**
+- Add `"predev"` and `"prebuild"` scripts: `bunx tsx scripts/generate-sitemap.ts`
+- So the sitemap regenerates locally and on every publish (catches new drugs automatically)
 
-In `src/contexts/AuthContext.tsx`:
-- Update `signUp` signature to return Supabase's full response (`{ data, error }`).
-- Update the `AuthContextType` interface accordingly.
+**3. `public/robots.txt`**
+- Add `Sitemap: https://nadaclookup.com/sitemap.xml` directive (helps every crawler, not just Googlebot)
 
-### 2. Add Google sign-in
+**4. Existing pieces left alone**
+- `public/sitemap-static.xml` — kept as-is, just referenced from the new index
+- `supabase/functions/sitemap-drugs` edge function — left in place as a backup/programmatic option; not referenced by `sitemap.xml` anymore. We can delete it later if you'd like.
 
-Use Lovable Cloud's managed Google OAuth (no credentials needed from the user).
+## After deploying
 
-- Call `supabase--configure_social_auth` with `providers: ["google"]` to enable the provider. This also installs `@lovable.dev/cloud-auth-js` and generates `src/integrations/lovable/index.ts`.
-- In `src/pages/Auth.tsx`:
-  - Add a "Continue with Google" button at the top of the auth card (above the email field) on both the login and signup views.
-  - Add a horizontal "or" divider between the Google button and the email/password form.
-  - Handler calls `lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin })`, handles `result.error` with a toast, returns on `result.redirected`, otherwise navigates to `/`.
-  - Hide the Google button on the forgot-password and password-reset views.
-- Do NOT add Google to the header — keep that surface unchanged.
+The Search Console resubmit takes ~24–72h for the first crawl, then indexing rolls out over 2–8 weeks. I won't be able to manually request indexing for 6,227 URLs (Google's URL Inspection API caps at a handful per day), but the sitemap submission is the right mechanism for bulk discovery.
 
-### 3. Out of scope (not touching)
+You'll see progress here:
+- Search Console → Sitemaps: "Discovered URLs" should climb from 16 toward 6,200+ within a week
+- Search Console → Pages: indexed count starts growing within 2–4 weeks
 
-- Linter warnings (extension in public, SECURITY DEFINER function) — unrelated to auth flow.
-- Header, AuthContext periodic checks, admin/role logic, subscription checks — all working correctly.
-- Email templates — Lovable's default confirmation email is fine for now.
+## Out of scope (flag for later)
 
-## Technical notes
+- Indexing API integration (only allowed for job-posting / livestream content — not drug pages, would violate Google's terms)
+- Fixing the unrelated "0 of 16 static pages indexed" oddity — worth a separate look after the bulk fix is live
+- Backlink building (the bigger lever, but a different workstream)
 
-- `signInWithOAuth` triggers a full-page redirect; the existing `onAuthStateChange` listener in `AuthContext` will pick up the session on return.
-- `redirect_uri: window.location.origin` works on both `.lovable.app` preview and the custom domain `nadaclookup.com` — Lovable's OAuth broker handles both.
-- The Auth page's existing `useEffect` that redirects logged-in users to `/` will catch users returning from a successful Google OAuth flow.
-- No database migration or edge function changes required.
-
-## Files touched
-
-- `src/contexts/AuthContext.tsx` — update `signUp` return type
-- `src/pages/Auth.tsx` — handle no-session signup case, add Google button + handler
-- `src/integrations/lovable/index.ts` — auto-generated by `configure_social_auth` (do not hand-edit)
+Ready to switch to build mode and ship this?
