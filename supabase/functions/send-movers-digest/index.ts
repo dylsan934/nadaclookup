@@ -103,6 +103,7 @@ Deno.serve(async (req) => {
     // Short-circuit: admin testRecipient override sends a single email and exits
     if (body.testRecipient) {
       const { data: invokeRes, error: invokeErr } = await supabase.functions.invoke('send-transactional-email', {
+        headers: { Authorization: `Bearer ${serviceKey}` },
         body: {
           templateName: 'weekly-movers-digest',
           recipientEmail: body.testRecipient,
