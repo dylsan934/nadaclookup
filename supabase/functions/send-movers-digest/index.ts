@@ -106,6 +106,28 @@ Deno.serve(async (req) => {
       }
     }
 
+    // 4b. Always include admins (one copy per digest run), regardless of Pro/opt-in status
+    const { data: adminRoles, error: rolesErr } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'admin')
+    if (rolesErr) throw rolesErr
+
+    const existingEmails = new Set(recipients.map((r) => r.email.toLowerCase()))
+    const adminRecipients: { userId: string; email: string; isAdmin: boolean }[] = []
+    for (const ar of adminRoles ?? []) {
+      const email = userEmails.get(ar.user_id)
+      if (!email) continue
+      if (existingEmails.has(email.toLowerCase())) continue
+      adminRecipients.push({ userId: ar.user_id, email, isAdmin: true })
+      existingEmails.add(email.toLowerCase())
+    }
+
+    const allRecipients = [
+      ...recipients.map((r) => ({ ...r, isAdmin: false })),
+      ...adminRecipients,
+    ]
+
     // 5. Enqueue one transactional email per recipient
     const weekLabel = fmtDate(row.effective_date)
     const previousLabel = fmtDate(row.previous_date)
