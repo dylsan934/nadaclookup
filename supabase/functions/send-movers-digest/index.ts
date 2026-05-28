@@ -16,13 +16,47 @@ const fmtDate = (d: string) =>
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
-  const authError = requireServiceRole(req, corsHeaders)
-  if (authError) return authError
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+  const supabase = createClient(supabaseUrl, serviceKey)
+
+  // Parse optional body first (for testRecipient override)
+  let body: { testRecipient?: string } = {}
+  if (req.method === 'POST') {
+    try { body = await req.json() } catch { body = {} }
+  }
+
+  // Auth: allow either service_role OR an authenticated admin user
+  const authHeader = req.headers.get('Authorization') || ''
+  let isAdminUser = false
+  if (authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice('Bearer '.length).trim()
+    try {
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      })
+      const { data: claims } = await userClient.auth.getClaims(token)
+      const uid = claims?.claims?.sub
+      if (uid) {
+        const { data: role } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', uid)
+          .eq('role', 'admin')
+          .maybeSingle()
+        if (role) isAdminUser = true
+      }
+    } catch (_) { /* fall through */ }
+  }
+  if (!isAdminUser) {
+    const authError = requireServiceRole(req, corsHeaders)
+    if (authError) return authError
+  }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, serviceKey)
+
+
 
     // 1. Latest weekly_movers row
     const { data: row, error: moversErr } = await supabase
