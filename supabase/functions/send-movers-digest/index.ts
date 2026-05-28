@@ -74,6 +74,34 @@ Deno.serve(async (req) => {
       })
     }
 
+    const weekLabelEarly = fmtDate(row.effective_date)
+    const previousLabelEarly = fmtDate(row.previous_date)
+    const templateDataEarly = {
+      weekLabel: weekLabelEarly,
+      previousLabel: previousLabelEarly,
+      totalChanged: row.total_changed,
+      topIncreases: row.top_increases,
+      topDecreases: row.top_decreases,
+    }
+
+    // Short-circuit: admin testRecipient override sends a single email and exits
+    if (body.testRecipient) {
+      const { data: invokeRes, error: invokeErr } = await supabase.functions.invoke('send-transactional-email', {
+        body: {
+          templateName: 'weekly-movers-digest',
+          recipientEmail: body.testRecipient,
+          idempotencyKey: `movers-digest-test-${row.effective_date}-${Date.now()}`,
+          templateData: templateDataEarly,
+        },
+      })
+      if (invokeErr) throw invokeErr
+      return new Response(
+        JSON.stringify({ success: true, test: true, recipient: body.testRecipient, effectiveDate: row.effective_date, result: invokeRes }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+
     // 2. Find Pro subscribers (active stripe sub OR active trial)
     //    NOTE: this project tracks subscriptions via Stripe; we approximate Pro
     //    by users with an active trial in profiles, and by querying check-subscription
