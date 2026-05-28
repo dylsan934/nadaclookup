@@ -49,10 +49,26 @@ Deno.serve(async (req) => {
       }
     } catch (_) { /* fall through */ }
   }
-  if (!isAdminUser) {
+  // For testRecipient short-circuit, allow if the recipient is itself a registered admin email
+  let testRecipientIsAdmin = false
+  if (!isAdminUser && body.testRecipient) {
+    const { data: list } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 })
+    const target = list?.users.find((u) => u.email?.toLowerCase() === body.testRecipient!.toLowerCase())
+    if (target) {
+      const { data: role } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', target.id)
+        .eq('role', 'admin')
+        .maybeSingle()
+      if (role) testRecipientIsAdmin = true
+    }
+  }
+  if (!isAdminUser && !testRecipientIsAdmin) {
     const authError = requireServiceRole(req, corsHeaders)
     if (authError) return authError
   }
+
 
   try {
 
