@@ -27,6 +27,11 @@ export function requireServiceRole(
     })
   }
   const token = authHeader.slice('Bearer '.length).trim()
+
+  // Accept the new sb_secret_* / sb_publishable_* style service key by constant comparison.
+  const serviceKeyEnv = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+  if (serviceKeyEnv && token === serviceKeyEnv) return null
+
   const claims = parseJwtClaims(token)
   if (claims?.role !== 'service_role') {
     return new Response(JSON.stringify({ error: 'Forbidden' }), {
