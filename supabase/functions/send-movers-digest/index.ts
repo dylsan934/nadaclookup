@@ -16,13 +16,63 @@ const fmtDate = (d: string) =>
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
-  const authError = requireServiceRole(req, corsHeaders)
-  if (authError) return authError
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+  const supabase = createClient(supabaseUrl, serviceKey)
+
+  // Parse optional body first (for testRecipient override)
+  let body: { testRecipient?: string } = {}
+  if (req.method === 'POST') {
+    try { body = await req.json() } catch { body = {} }
+  }
+
+  // Auth: allow either service_role OR an authenticated admin user
+  const authHeader = req.headers.get('Authorization') || ''
+  let isAdminUser = false
+  if (authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice('Bearer '.length).trim()
+    try {
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      })
+      const { data: claims } = await userClient.auth.getClaims(token)
+      const uid = claims?.claims?.sub
+      if (uid) {
+        const { data: role } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', uid)
+          .eq('role', 'admin')
+          .maybeSingle()
+        if (role) isAdminUser = true
+      }
+    } catch (_) { /* fall through */ }
+  }
+  // For testRecipient short-circuit, allow if the recipient is itself a registered admin email
+  let testRecipientIsAdmin = false
+  if (!isAdminUser && body.testRecipient) {
+    const { data: list } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 })
+    const target = list?.users.find((u) => u.email?.toLowerCase() === body.testRecipient!.toLowerCase())
+    if (target) {
+      const { data: role } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', target.id)
+        .eq('role', 'admin')
+        .maybeSingle()
+      if (role) testRecipientIsAdmin = true
+    }
+  }
+  if (!isAdminUser && !testRecipientIsAdmin) {
+    const authError = requireServiceRole(req, corsHeaders)
+    if (authError) return authError
+  }
+
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, serviceKey)
+
+
 
     // 1. Latest weekly_movers row
     const { data: row, error: moversErr } = await supabase
@@ -39,6 +89,35 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+
+    const weekLabelEarly = fmtDate(row.effective_date)
+    const previousLabelEarly = fmtDate(row.previous_date)
+    const templateDataEarly = {
+      weekLabel: weekLabelEarly,
+      previousLabel: previousLabelEarly,
+      totalChanged: row.total_changed,
+      topIncreases: row.top_increases,
+      topDecreases: row.top_decreases,
+    }
+
+    // Short-circuit: admin testRecipient override sends a single email and exits
+    if (body.testRecipient) {
+      const { data: invokeRes, error: invokeErr } = await supabase.functions.invoke('send-transactional-email', {
+        headers: { Authorization: `Bearer ${serviceKey}` },
+        body: {
+          templateName: 'weekly-movers-digest',
+          recipientEmail: body.testRecipient,
+          idempotencyKey: `movers-digest-test-${row.effective_date}-${Date.now()}`,
+          templateData: templateDataEarly,
+        },
+      })
+      if (invokeErr) throw invokeErr
+      return new Response(
+        JSON.stringify({ success: true, test: true, recipient: body.testRecipient, effectiveDate: row.effective_date, result: invokeRes }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
 
     // 2. Find Pro subscribers (active stripe sub OR active trial)
     //    NOTE: this project tracks subscriptions via Stripe; we approximate Pro

@@ -31,7 +31,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.send-transactional-email]
-verify_jwt = true
+verify_jwt = false
 
 [functions.preview-transactional-email]
 verify_jwt = false
@@ -43,4 +43,5 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.send-movers-digest]
-verify_jwt = true
+verify_jwt = false
+
