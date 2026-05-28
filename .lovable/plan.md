@@ -1,42 +1,22 @@
-## The fix
+## Goal
 
-Right now `/sitemap.xml` only points at `/sitemap-static.xml` (16 URLs). The 6,227 drug pages live behind an edge function (`sitemap-drugs`) that Google has never been told about. Result: **0 drug pages discovered, 0 indexed**.
-
-The cleanest fix is to generate the drug sitemaps as **static files at build time** and list them in the sitemap index. This avoids cross-host sitemap issues (Supabase functions live on `*.supabase.co`, not `nadaclookup.com`) and means Google sees fast, plain XML at well-known paths.
+When the weekly movers digest runs, send a single copy to every user with the `admin` role — in addition to the existing Pro recipients. Pro-only behavior for regular users stays unchanged.
 
 ## Changes
 
-**1. New build script: `scripts/generate-sitemap.ts`**
-- Connects to Supabase using the project anon key (read-only)
-- Pulls all distinct `drug_name` values from `nadac_drugs` (with their latest `effective_date`)
-- Writes one or more files in 5,000-URL chunks:
-  - `public/sitemap-drugs-1.xml`
-  - `public/sitemap-drugs-2.xml` (etc., as the catalog grows)
-- Writes/overwrites `public/sitemap.xml` as a sitemap index referencing `sitemap-static.xml` + every `sitemap-drugs-N.xml`
+**`supabase/functions/send-movers-digest/index.ts`**
 
-**2. `package.json`**
-- Add `"predev"` and `"prebuild"` scripts: `bunx tsx scripts/generate-sitemap.ts`
-- So the sitemap regenerates locally and on every publish (catches new drugs automatically)
+After building the Pro `recipients` list and before the send loop:
 
-**3. `public/robots.txt`**
-- Add `Sitemap: https://nadaclookup.com/sitemap.xml` directive (helps every crawler, not just Googlebot)
+1. Query `public.user_roles` for all rows with `role = 'admin'` to get admin `user_id`s.
+2. Resolve each admin's email from the already-paged `userEmails` map (re-uses the existing `auth.admin.listUsers` paging — no extra calls).
+3. For each admin email not already in `recipients`, push a single entry with a distinct idempotency key prefix (`movers-digest-admin-<date>-<userId>`) so admins always receive the digest even if they're not Pro and even if they previously opted out via `notify_weekly_movers`.
+4. Existing send loop handles delivery; admins get exactly one email per digest run.
 
-**4. Existing pieces left alone**
-- `public/sitemap-static.xml` — kept as-is, just referenced from the new index
-- `supabase/functions/sitemap-drugs` edge function — left in place as a backup/programmatic option; not referenced by `sitemap.xml` anymore. We can delete it later if you'd like.
+No DB migration, no template change, no UI change. The digest is already triggered weekly by the existing cron, so admins start receiving it on the next run. Manual test: invoke `send-movers-digest` with the service role and confirm admins appear in the recipients count and in `email_send_log`.
 
-## After deploying
+## Out of scope
 
-The Search Console resubmit takes ~24–72h for the first crawl, then indexing rolls out over 2–8 weeks. I won't be able to manually request indexing for 6,227 URLs (Google's URL Inspection API caps at a handful per day), but the sitemap submission is the right mechanism for bulk discovery.
-
-You'll see progress here:
-- Search Console → Sitemaps: "Discovered URLs" should climb from 16 toward 6,200+ within a week
-- Search Console → Pages: indexed count starts growing within 2–4 weeks
-
-## Out of scope (flag for later)
-
-- Indexing API integration (only allowed for job-posting / livestream content — not drug pages, would violate Google's terms)
-- Fixing the unrelated "0 of 16 static pages indexed" oddity — worth a separate look after the bulk fix is live
-- Backlink building (the bigger lever, but a different workstream)
-
-Ready to switch to build mode and ship this?
+- Sending the digest to free users (explicitly declined).
+- A separate "admin summary" template — admins get the same email Pros get.
+- BCC mechanics (we send a separate email per admin so each lands in their own inbox with a working unsubscribe footer scoped to them).
