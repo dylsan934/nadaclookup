@@ -141,13 +141,14 @@ Deno.serve(async (req) => {
 
     let sent = 0
     let failed = 0
-    for (const r of recipients) {
+    for (const r of allRecipients) {
       try {
+        const keyPrefix = r.isAdmin ? 'movers-digest-admin' : 'movers-digest'
         await supabase.functions.invoke('send-transactional-email', {
           body: {
             templateName: 'weekly-movers-digest',
             recipientEmail: r.email,
-            idempotencyKey: `movers-digest-${row.effective_date}-${r.userId}`,
+            idempotencyKey: `${keyPrefix}-${row.effective_date}-${r.userId}`,
             templateData,
           },
         })
@@ -159,7 +160,14 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, effectiveDate: row.effective_date, sent, failed, candidates: recipients.length }),
+      JSON.stringify({
+        success: true,
+        effectiveDate: row.effective_date,
+        sent,
+        failed,
+        candidates: allRecipients.length,
+        admins: adminRecipients.length,
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (error) {
