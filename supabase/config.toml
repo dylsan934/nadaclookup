@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.send-movers-digest]
 verify_jwt = false
+
+[functions.debug-key-format]
+verify_jwt = false
