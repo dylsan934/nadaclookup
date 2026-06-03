@@ -508,7 +508,7 @@ const ReimbursementCalculator = () => {
           setUpgradeOpen(true);
         }}
       />
-      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature={upgradeReason} />
+      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} featureHighlight={upgradeReason} />
     </div>
   );
 };
