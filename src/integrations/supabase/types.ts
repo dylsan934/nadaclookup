@@ -292,6 +292,120 @@ export type Database = {
         }
         Relationships: []
       }
+      reimbursement_calculations: {
+        Row: {
+          actual_reimbursement: number | null
+          created_at: string
+          difference: number | null
+          drug_name: string
+          estimated_reimbursement: number
+          gross_margin: number | null
+          id: string
+          ingredient_cost: number
+          margin_percentage: number | null
+          nadac_effective_date: string | null
+          nadac_unit_price: number
+          ndc: string
+          notes: string | null
+          quantity: number
+          rule_id: string | null
+          rule_name_snapshot: string
+          user_id: string
+        }
+        Insert: {
+          actual_reimbursement?: number | null
+          created_at?: string
+          difference?: number | null
+          drug_name: string
+          estimated_reimbursement: number
+          gross_margin?: number | null
+          id?: string
+          ingredient_cost: number
+          margin_percentage?: number | null
+          nadac_effective_date?: string | null
+          nadac_unit_price: number
+          ndc: string
+          notes?: string | null
+          quantity: number
+          rule_id?: string | null
+          rule_name_snapshot: string
+          user_id: string
+        }
+        Update: {
+          actual_reimbursement?: number | null
+          created_at?: string
+          difference?: number | null
+          drug_name?: string
+          estimated_reimbursement?: number
+          gross_margin?: number | null
+          id?: string
+          ingredient_cost?: number
+          margin_percentage?: number | null
+          nadac_effective_date?: string | null
+          nadac_unit_price?: number
+          ndc?: string
+          notes?: string | null
+          quantity?: number
+          rule_id?: string | null
+          rule_name_snapshot?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reimbursement_rules: {
+        Row: {
+          adjustment_type: Database["public"]["Enums"]["reimbursement_adjustment_type"]
+          cost_basis: Database["public"]["Enums"]["reimbursement_cost_basis"]
+          created_at: string
+          dispensing_fee: number
+          flat_adjustment: number
+          id: string
+          is_default: boolean
+          maximum_reimbursement: number | null
+          minimum_reimbursement: number | null
+          multiplier: number
+          name: string
+          notes: string | null
+          percentage_value: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          adjustment_type?: Database["public"]["Enums"]["reimbursement_adjustment_type"]
+          cost_basis?: Database["public"]["Enums"]["reimbursement_cost_basis"]
+          created_at?: string
+          dispensing_fee?: number
+          flat_adjustment?: number
+          id?: string
+          is_default?: boolean
+          maximum_reimbursement?: number | null
+          minimum_reimbursement?: number | null
+          multiplier?: number
+          name: string
+          notes?: string | null
+          percentage_value?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          adjustment_type?: Database["public"]["Enums"]["reimbursement_adjustment_type"]
+          cost_basis?: Database["public"]["Enums"]["reimbursement_cost_basis"]
+          created_at?: string
+          dispensing_fee?: number
+          flat_adjustment?: number
+          id?: string
+          is_default?: boolean
+          maximum_reimbursement?: number | null
+          minimum_reimbursement?: number | null
+          multiplier?: number
+          name?: string
+          notes?: string | null
+          percentage_value?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_drug_categories: {
         Row: {
           category_id: string
@@ -483,6 +597,8 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      reimbursement_adjustment_type: "plus_pct" | "minus_pct" | "none"
+      reimbursement_cost_basis: "nadac" | "nadac_adjusted" | "manual"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -611,6 +727,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      reimbursement_adjustment_type: ["plus_pct", "minus_pct", "none"],
+      reimbursement_cost_basis: ["nadac", "nadac_adjusted", "manual"],
     },
   },
 } as const
