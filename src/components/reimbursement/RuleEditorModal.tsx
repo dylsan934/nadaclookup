@@ -93,7 +93,7 @@ export const RuleEditorModal = ({ open, onOpenChange, initial, onSaved, existing
     }
 
     // Free plan gate: max 1 rule on create
-    if (!isSubscribed && !initial && existingRulesCount >= 1) {
+    if (!isSubscribed && !(initial && initial.id) && existingRulesCount >= 1) {
       onOpenChange(false);
       onUpgradeRequired();
       return;
@@ -121,7 +121,7 @@ export const RuleEditorModal = ({ open, onOpenChange, initial, onSaved, existing
         is_default: form.is_default,
       };
 
-      const { error } = initial
+      const { error } = initial && initial.id
         ? await supabase.from("reimbursement_rules").update(payload).eq("id", initial.id)
         : await supabase.from("reimbursement_rules").insert(payload);
 
