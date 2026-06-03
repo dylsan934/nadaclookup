@@ -121,7 +121,7 @@ export const RuleEditorModal = ({ open, onOpenChange, initial, onSaved, existing
         is_default: form.is_default,
       };
 
-      const { error } = initial
+      const { error } = initial && initial.id
         ? await supabase.from("reimbursement_rules").update(payload).eq("id", initial.id)
         : await supabase.from("reimbursement_rules").insert(payload);
 
