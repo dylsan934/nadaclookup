@@ -93,7 +93,7 @@ export const RuleEditorModal = ({ open, onOpenChange, initial, onSaved, existing
     }
 
     // Free plan gate: max 1 rule on create
-    if (!isSubscribed && !initial && existingRulesCount >= 1) {
+    if (!isSubscribed && !(initial && initial.id) && existingRulesCount >= 1) {
       onOpenChange(false);
       onUpgradeRequired();
       return;
