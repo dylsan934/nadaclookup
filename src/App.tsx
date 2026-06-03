@@ -20,6 +20,7 @@ import About from "./pages/About";
 import DrugPage from "./pages/DrugPage";
 import WeeklyMovers from "./pages/WeeklyMovers";
 import CompareDrugPrices from "./pages/CompareDrugPrices";
+import ReimbursementCalculator from "./pages/ReimbursementCalculator";
 import Unsubscribe from "./pages/Unsubscribe";
 import NotFound from "./pages/NotFound";
 
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="/drug/:slug" element={<DrugPage />} />
               <Route path="/movers" element={<WeeklyMovers />} />
               <Route path="/compare-prescription-drug-prices" element={<CompareDrugPrices />} />
+              <Route path="/reimbursement-calculator" element={<ReimbursementCalculator />} />
               <Route path="/unsubscribe" element={<Unsubscribe />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
