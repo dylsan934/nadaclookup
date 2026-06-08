@@ -517,69 +517,79 @@ const ReimbursementCalculator = () => {
                 </Card>
               </div>
 
-              {/* Saved rules */}
-              <div className="lg:col-span-5">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle className="text-lg">Saved contract rules</CardTitle>
-                      <CardDescription>
-                        {isSubscribed ? "Unlimited rules on Pro." : `Free plan: ${rules.length}/1 rule saved.`}
-                      </CardDescription>
-                    </div>
-                    <Button size="sm" onClick={handleNewRule}><Plus className="h-4 w-4" /> New rule</Button>
-                  </CardHeader>
-                  <CardContent>
-                    {rules.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No rules yet — create one or start from a template below.</p>
-                    ) : (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Formula</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {rules.map((r) => (
-                            <TableRow key={r.id}>
-                              <TableCell className="font-medium">
-                                {r.name}
-                                {r.is_default && <Badge variant="secondary" className="ml-2">Default</Badge>}
-                              </TableCell>
-                              <TableCell className="text-sm text-muted-foreground">{formatFormula(r)}</TableCell>
-                              <TableCell className="text-right">
-                                <Button variant="ghost" size="icon" onClick={() => handleSetDefault(r.id)} aria-label="Set default"><Star className={`h-4 w-4 ${r.is_default ? "fill-current" : ""}`} /></Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleEditRule(r)} aria-label="Edit"><Edit2 className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleDeleteRule(r.id)} aria-label="Delete"><Trash2 className="h-4 w-4" /></Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    )}
-
-                    <div className="mt-6">
-                      <h3 className="text-sm font-medium mb-2">Rule templates</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {RULE_TEMPLATES.map((tpl) => (
-                          <button
-                            key={tpl.name}
-                            onClick={() => handleUseTemplate(tpl)}
-                            className="text-left p-3 border rounded-lg hover:bg-accent/50 transition-colors"
-                          >
-                            <div className="text-sm font-medium">{tpl.name}</div>
-                            <div className="text-xs text-muted-foreground">{formatFormula(tpl)}</div>
-                          </button>
-                        ))}
+              {/* Saved rules (logged-in users only) */}
+              {!isGuest ? (
+                <div className="lg:col-span-5">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <div>
+                        <CardTitle className="text-lg">Saved contract rules</CardTitle>
+                        <CardDescription>
+                          {isSubscribed ? "Unlimited rules on Pro." : `Free plan: ${rules.length}/1 rule saved.`}
+                        </CardDescription>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                      <Button size="sm" onClick={handleNewRule}><Plus className="h-4 w-4" /> New rule</Button>
+                    </CardHeader>
+                    <CardContent>
+                      {rules.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No rules yet — create one or start from a template below.</p>
+                      ) : (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Name</TableHead>
+                              <TableHead>Formula</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {rules.map((r) => (
+                              <TableRow key={r.id}>
+                                <TableCell className="font-medium">
+                                  {r.name}
+                                  {r.is_default && <Badge variant="secondary" className="ml-2">Default</Badge>}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground">{formatFormula(r)}</TableCell>
+                                <TableCell className="text-right">
+                                  <Button variant="ghost" size="icon" onClick={() => handleSetDefault(r.id)} aria-label="Set default"><Star className={`h-4 w-4 ${r.is_default ? "fill-current" : ""}`} /></Button>
+                                  <Button variant="ghost" size="icon" onClick={() => handleEditRule(r)} aria-label="Edit"><Edit2 className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" onClick={() => handleDeleteRule(r.id)} aria-label="Delete"><Trash2 className="h-4 w-4" /></Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+
+                      <div className="mt-6">
+                        <h3 className="text-sm font-medium mb-2">Rule templates</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {RULE_TEMPLATES.map((tpl) => (
+                            <button
+                              key={tpl.name}
+                              onClick={() => handleUseTemplate(tpl)}
+                              className="text-left p-3 border rounded-lg hover:bg-accent/50 transition-colors"
+                            >
+                              <div className="text-sm font-medium">{tpl.name}</div>
+                              <div className="text-xs text-muted-foreground">{formatFormula(tpl)}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : (
+                <div className="lg:col-span-5">
+                  <GuestSignupCta
+                    title="Save your own contract rules"
+                    description="Create a free account to build PBM, Medicaid, LTC, and cash rules — and run unlimited calculations."
+                  />
+                </div>
+              )}
             </div>
           )}
+
         </div>
       </main>
 
