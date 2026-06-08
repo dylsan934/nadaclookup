@@ -325,7 +325,7 @@ const ReimbursementCalculator = () => {
                         {searchResults.map((d) => (
                           <button
                             key={d.ndc}
-                            onClick={() => { setSelectedDrug(d); setSearchResults([]); }}
+                            onClick={() => handleSelectDrug(d)}
                             className="w-full text-left p-3 hover:bg-accent/50 transition-colors"
                           >
                             <div className="font-medium text-sm">{d.drugName}</div>
