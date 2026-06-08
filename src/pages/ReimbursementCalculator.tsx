@@ -45,8 +45,17 @@ const GuestSignupCta = ({ title, description }: { title: string; description: st
 const ReimbursementCalculator = () => {
   const { user, isSubscribed, isLoading } = useAuth();
   const { toast } = useToast();
-  const { rules, refresh } = useReimbursementRules();
+  const { rules: savedRules, refresh } = useReimbursementRules();
   const [searchParams] = useSearchParams();
+
+  const isGuest = !user;
+
+  // Guests get all templates as in-memory rules so they can try the tool.
+  const guestRules: ReimbursementRule[] = useMemo(
+    () => RULE_TEMPLATES.map((t, i) => ({ ...t, id: `guest-${i}`, is_default: i === 1 } as ReimbursementRule)),
+    []
+  );
+  const rules: ReimbursementRule[] = isGuest ? guestRules : savedRules;
 
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,10 +76,18 @@ const ReimbursementCalculator = () => {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState<string>("");
 
+  // Guest gating: allow one full calculation, then require signup for another drug.
+  const [guestCalcUsed, setGuestCalcUsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(GUEST_USED_KEY) === "1";
+  });
+  const [guestGateOpen, setGuestGateOpen] = useState(false);
+
   const selectedRule = useMemo(
     () => rules.find((r) => r.id === selectedRuleId) ?? rules.find((r) => r.is_default) ?? rules[0] ?? null,
     [rules, selectedRuleId]
   );
+
 
   const result = useMemo(() => {
     if (!selectedDrug || !selectedRule) return null;
