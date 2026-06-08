@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowRight, Search, Calendar, DollarSign, Pill, ChevronRight } from "lucide-react";
+import { ArrowRight, Search, Calendar, DollarSign, Pill, ChevronRight, Calculator } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SEOHead } from "@/components/SEOHead";
 import { SiteNavigation } from "@/components/SiteNavigation";
@@ -228,10 +228,15 @@ const DrugPage = () => {
                 </div>
               )}
 
-              <div className="mt-6">
+              <div className="mt-6 flex flex-wrap gap-2">
                 <Button asChild variant="default">
+                  <Link to={`/reimbursement-calculator?ndc=${encodeURIComponent(primary.ndc)}&drug=${encodeURIComponent(displayName)}`}>
+                    <Calculator className="h-4 w-4 mr-2" /> Calculate reimbursement for this NDC
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
                   <Link to={`/?search=${encodeURIComponent(displayName)}`}>
-                    <Search className="h-4 w-4 mr-2" /> Open in NADAC Lookup Tool
+                    <Search className="h-4 w-4 mr-2" /> Open in NADAC Lookup
                   </Link>
                 </Button>
               </div>

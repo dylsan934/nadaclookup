@@ -1,138 +1,95 @@
-## Goal
 
-Build a logged-in-only **Pharmacy Reimbursement Calculator** at `/reimbursement-calculator` that lets pharmacy users pull NADAC ingredient cost for any drug/NDC, apply a saved contract rule (PBM, Medicaid, LTC, cash), and see estimated reimbursement vs. actual paid claim with margin.
+# Make the Reimbursement Calculator the Conversion Engine
 
-## Route & access
+Goal: Reposition the Pharmacy Reimbursement Calculator as the primary value driver and convert more free users to Pro.
 
-- New route: `/reimbursement-calculator` → `src/pages/ReimbursementCalculator.tsx`
-- Logged-out users see a locked card: "Create a free account or log in to use the Pharmacy Reimbursement Calculator" with **Log In** and **Create Free Account** buttons (links to `/auth`). No calculator UI rendered.
-- Add **"Reimbursement Calculator"** to `SiteNavigation.tsx` (between Movers and Resources).
+## Part 1 — Make the calculator front and center
 
-## Database (one migration)
+### 1. Homepage hero restructure
+Today the homepage leads with a generic NADAC search bar. Change the hero to a two-tab interface:
 
-**`reimbursement_rules`** — user-saved contract rules
-- `id, user_id, name, cost_basis` (enum: `nadac`, `nadac_adjusted`, `manual`)
-- `adjustment_type` (enum: `plus_pct`, `minus_pct`, `none`)
-- `percentage_value, multiplier, dispensing_fee, flat_adjustment`
-- `minimum_reimbursement, maximum_reimbursement` (nullable)
-- `notes, is_default` (only one default per user, enforced via partial unique index)
-- `created_at, updated_at`
-- RLS: user owns rows; `GRANT` for `authenticated` + `service_role`
-
-**`reimbursement_calculations`** — Pro-only history
-- `id, user_id, drug_name, ndc, nadac_unit_price, nadac_effective_date, quantity, ingredient_cost, rule_id, rule_name_snapshot, estimated_reimbursement, actual_reimbursement, difference, gross_margin, margin_percentage, notes, created_at`
-- RLS: user owns rows
-
-Reuse existing `nadac_drugs` table and `search-nadac` edge function for drug lookup — no changes there.
-
-## Page layout (mobile-first, single column on mobile, 2-col on `md+`)
-
-**Header**: Title + subtitle + educational disclaimer link.
-
-**Left column — Calculator**
-1. Drug/NDC search (reuse `SearchBar` + `search-nadac` pattern from `Index.tsx`)
-2. Selected drug card (name, NDC, strength, NADAC unit price, effective date, stale-date warning if >60 days)
-3. Quantity dispensed input (decimal allowed, ≥0)
-4. Auto-calculated ingredient cost (read-only)
-5. Contract rule selector (dropdown of user's saved rules + "Create new rule…")
-6. Actual reimbursement received (optional)
-7. Notes (optional)
-
-**Right column — Results card**
-- Drug, NDC, NADAC unit price, quantity, ingredient cost
-- Selected rule + human-readable formula string ("NADAC + 10% + $10.65")
-- Estimated reimbursement (bold, large)
-- If actual entered: difference, gross margin, margin %
-- Color indicators: green (margin healthy), yellow (low margin <5%), red (below ingredient cost)
-- Warnings: actual < ingredient cost; estimated < ingredient cost; stale/missing NADAC date
-- Pro-only **Save calculation** + **Export/Print** buttons (locked for free)
-
-**Below**
-- **Saved contract rules** table with edit/duplicate/delete/set-default
-- **Rule templates** section (4 examples: NADAC+0%, NADAC+10%, NADAC-2%, Manual+10%) — "Use as template" duplicates into a new editable rule
-- **Calculation history** (Pro only) — list with re-load action
-
-## Rule create/edit modal
-
-Friendly builder, no formula typing:
-- Name
-- Cost basis dropdown
-- Adjustment type dropdown (plus % / minus % / none) → percentage field → auto-shows multiplier
-- Dispensing fee, flat adjustment
-- **Advanced contract settings** accordion: min reimbursement, max cap, notes, set-as-default toggle
-- Pro gate: free user already has 1 rule → save shows upgrade modal with copy:
-  *"Free accounts can save 1 reimbursement rule. Upgrade to Pro to save unlimited contract rules for different PBMs, Medicaid plans, LTC contracts, and cash pricing formulas."*
-
-## Calculation logic (`src/lib/reimbursement.ts`)
-
-Pure functions, fully unit-testable:
-
-```text
-ingredientCost = unitPrice * qty (or manual override if cost_basis = manual)
-base = ingredientCost * multiplier   (multiplier=1 when adjustment_type=none)
-raw = base + dispensingFee + (flatAdjustment ?? 0)
-final = clamp(raw, minimum, maximum)
-grossMargin = (actualReimbursement ?? estimated) - ingredientCost
-marginPct = grossMargin / (actualReimbursement ?? estimated) * 100
+```
+[ Reimbursement Calculator ]  [ NADAC Lookup ]
 ```
 
-Formula string is generated from rule fields for display.
+- Calculator tab is selected by default.
+- Live, fully usable mini-calculator embedded in the hero (drug search → NDC → quantity → instant estimated reimbursement & margin).
+- Logged-out users can run 1–2 calculations, then hit a soft gate: "Sign up free to save rules and unlock unlimited calculations."
+- New H1: "Know exactly what every prescription pays — before you fill it."
+- Sub-headline focused on margin protection, not data lookup.
 
-## Free vs Pro gating
+### 2. Navigation priority
+- Rename nav item "Calculator" → "Reimbursement Calculator" and move it to position 2 (right after Home).
+- Style it with a subtle accent (dot, badge, or primary color) so it visually pops vs other nav items.
+- Add a persistent top-right CTA button: "Try the Calculator" (shown on every marketing page).
 
-Uses existing `useAuth().isSubscribed`:
-- Free: 1 rule max, no history save, no export, no rule comparison, no min/max/flat fields (gated in modal with Pro badge)
-- Pro: unlimited rules, default rule, save history, export/print, side-by-side compare (Phase 2 — out of scope below)
+### 3. Dedicated landing page polish
+Upgrade `/reimbursement-calculator` with conversion sections above and below the tool:
+- Hero with screenshot/animation of a real calculation
+- "How it works" 3-step
+- Social proof block (testimonials / pharmacy count / claims analyzed)
+- Comparison table: Free vs Pro for the calculator specifically
+- FAQ targeting reimbursement search intent (SEO + trust)
 
-Upgrade modal reuses existing `UpgradeModal` component.
+### 4. Cross-promotion from existing high-traffic pages
+- On every Drug Page (`/drug/:slug`), add a "Calculate reimbursement for this NDC" CTA card next to the NADAC price — one click deep-links into the calculator with that NDC preloaded.
+- On NDC Lookup results, add a "Run reimbursement →" button on each result row.
+- On Weekly Movers, add inline CTA: "See how this price change affects your reimbursement."
 
-## SEO
+## Part 2 — Conversion rate optimization
 
-Logged-in utility page — `noindex` via Helmet (don't want it indexed; gated content). Title: "Pharmacy Reimbursement Calculator — NADAC Lookup".
+### 5. Strategic paywalls inside the calculator
+Free users can calculate, but Pro-gated moments create natural upgrade triggers:
+- Saving more than 1 rule → upgrade modal
+- Saving calculation history → upgrade modal
+- Exporting CSV from Saved Calculations → upgrade modal
+- Bulk calculation (paste multiple NDCs) → Pro-only
+- Multi-payer comparison (run same drug across all saved rules at once) → Pro-only
+Each modal shows the specific feature being gated + a "Start 7-day free trial" CTA.
 
-## Validation
+### 6. Value reinforcement after each calculation
+After a calculation runs, show a small contextual card:
+- "This calculation saved you ~X minutes of manual work."
+- "Pro users have run N calculations this month."
+- "Save this rule to reuse it on every claim →"
 
-- Quantity ≥ 0 (decimals allowed)
-- Dispensing fee ≥ 0
-- Percentage 0–1000
-- Min ≤ Max if both set
-- Zod schemas for rule create/edit and calculator inputs
-- Currency formatted to 2 decimals; NADAC unit price up to 4 decimals
+### 7. Pricing page improvements
+- Anchor with annual pricing first (show monthly savings).
+- Add a calculator-specific value column showing Pro unlocks.
+- Add a money-back / cancel-anytime line.
+- Add 2–3 short testimonials from pharmacy owners.
 
-## Files touched
+### 8. Trust + urgency signals (sitewide)
+- Header strip with live count: "Tracking X NDCs · Updated [last sync date]"
+- Footer trust row: "Data sourced from CMS NADAC · Updated weekly"
+- Exit-intent modal on pricing page offering a one-time discount code (Pro plan only).
 
-**New**
-- `src/pages/ReimbursementCalculator.tsx`
-- `src/components/reimbursement/LockedAccessCard.tsx`
-- `src/components/reimbursement/DrugPicker.tsx` (wraps existing search)
-- `src/components/reimbursement/CalculatorForm.tsx`
-- `src/components/reimbursement/ResultsCard.tsx`
-- `src/components/reimbursement/RuleSelector.tsx`
-- `src/components/reimbursement/RuleEditorModal.tsx`
-- `src/components/reimbursement/SavedRulesTable.tsx`
-- `src/components/reimbursement/RuleTemplates.tsx`
-- `src/components/reimbursement/CalculationHistory.tsx` (Pro)
-- `src/lib/reimbursement.ts` (pure calc + formula formatter)
-- `src/hooks/useReimbursementRules.ts`
-- Migration: `reimbursement_rules` + `reimbursement_calculations` tables
+### 9. Onboarding funnel for new signups
+After a free user signs up:
+- Forced 60-second onboarding: pick one drug, enter one rule, see the reimbursement.
+- End screen: "Want to do this for unlimited claims? Start your 7-day Pro trial."
+- Email day-1: "Here's the calculation you ran — see what you'd save on Pro."
+- Email day-3: case study of a pharmacy recovering $X/month.
+- Email day-7: trial offer expiring.
 
-**Edited**
-- `src/App.tsx` (add route)
-- `src/components/SiteNavigation.tsx` (add nav item)
-- `public/sitemap-static.xml` — **not added** (noindex page)
+### 10. Analytics + measurement
+Instrument key events so we can iterate:
+- `hero_calculator_used`, `calculator_completed`, `rule_save_blocked`, `csv_export_blocked`, `upgrade_modal_shown`, `pricing_page_view`, `checkout_started`, `pro_subscribed`.
+- Add a simple funnel view in `/admin` so you can see weekly conversion rate per step.
 
-## Out of scope (Phase 2)
+## Technical Notes
 
-- Side-by-side multi-rule comparison view
-- Actual PDF/CSV export implementation (button stub only; opens print dialog for v1)
-- Bulk calculations / claim file upload
-- Any MAC/GER/BER/DIR modeling
+- Hero tab component: shared `<HeroCalculator />` reusing logic from `src/lib/reimbursement.ts` and `useReimbursementRules`, but accepting an `embedded` prop that hides save controls when logged out.
+- Deep-link support: extend `/reimbursement-calculator` to read `?ndc=` and `?drug=` query params and prefill state.
+- Paywall modal: extract existing upgrade modal into reusable `<ProUpgradeModal feature="..." />`.
+- Analytics: add a small `track(event, props)` helper writing to a new `analytics_events` table (or reuse existing if present), with RLS scoped to admin reads.
+- All copy/CTA changes are presentation-only; no schema changes needed for Part 1 items 1–4.
 
-## Order of work
+## Suggested rollout order
 
-1. Migration (rules + calculations + RLS + grants)
-2. `reimbursement.ts` pure calc lib
-3. Page shell + locked-access gate + nav item
-4. Rule editor modal + saved rules table + free-tier gate
-5. Calculator form + results card (with warnings/color indicators)
-6. Pro history save + templates + print button
+1. Items 1, 2, 4 (highest-leverage placement changes).
+2. Items 5, 6 (paywall + reinforcement — direct conversion lift).
+3. Items 3, 7, 8 (trust + landing polish).
+4. Items 9, 10 (onboarding + analytics for ongoing optimization).
+
+Want me to proceed with this full scope, or trim to just Part 1 (placement) first?

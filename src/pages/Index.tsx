@@ -9,6 +9,7 @@ import { DataStatus } from "@/components/DataStatus";
 import { HomeSEOContent } from "@/components/HomeSEOContent";
 import { HomePricing } from "@/components/HomePricing";
 import { PopularDrugLinks } from "@/components/PopularDrugLinks";
+import { CalculatorHeroPromo } from "@/components/CalculatorHeroPromo";
 import { DrugData } from "@/components/DrugCard";
 import { nadacApi } from "@/lib/nadac-api";
 import { useToast } from "@/hooks/use-toast";
@@ -108,6 +109,9 @@ const Index = () => {
       <Header />
       <SiteNavigation />
       
+      {/* Calculator promo — primary conversion driver */}
+      <CalculatorHeroPromo />
+
       {/* Sticky Search Bar */}
       <div 
         className={`sticky top-0 z-50 bg-background/98 backdrop-blur-lg transition-all duration-200 ${

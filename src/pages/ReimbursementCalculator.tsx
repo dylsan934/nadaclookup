@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
-import { AlertCircle, Calculator, Edit2, Plus, Printer, Star, Trash2 } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { AlertCircle, Calculator, Edit2, Plus, Printer, Star, Trash2, Sparkles, ShieldCheck, Zap } from "lucide-react";
 import { Header } from "@/components/Header";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
@@ -46,6 +46,7 @@ const ReimbursementCalculator = () => {
   const { user, isSubscribed, isLoading } = useAuth();
   const { toast } = useToast();
   const { rules, refresh } = useReimbursementRules();
+  const [searchParams] = useSearchParams();
 
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
@@ -97,6 +98,28 @@ const ReimbursementCalculator = () => {
     setSearchResults(res.data ?? []);
     setSearching(false);
   };
+
+  // Deep-link prefill: ?ndc=... or ?drug=...
+  useEffect(() => {
+    if (!user) return;
+    const ndc = searchParams.get("ndc");
+    const drug = searchParams.get("drug");
+    const term = ndc || drug;
+    if (!term || selectedDrug) return;
+    (async () => {
+      setSearching(true);
+      const res = await nadacApi.search(term, 5);
+      const list = res.data ?? [];
+      if (ndc) {
+        const exact = list.find((d) => d.ndc === ndc);
+        if (exact) { setSelectedDrug(exact); setSearching(false); return; }
+      }
+      if (list[0]) setSelectedDrug(list[0]);
+      else setSearchTerm(term);
+      setSearching(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, searchParams]);
 
   const handleEditRule = (rule: ReimbursementRule) => {
     setEditingRule(rule);
@@ -174,11 +197,45 @@ const ReimbursementCalculator = () => {
       <main className="flex-1 container py-6 md:py-10">
         <div className="max-w-6xl mx-auto">
           <header className="mb-6 md:mb-8">
-            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Pharmacy Reimbursement Calculator</h1>
-            <p className="text-muted-foreground mt-2 max-w-3xl">
-              Estimate reimbursement using NADAC ingredient cost, contract formulas, dispensing fees, and optional actual paid claim amounts.
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-3">
+              <Calculator className="h-3.5 w-3.5" /> Pharmacy Tool
+            </div>
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Pharmacy Reimbursement Calculator</h1>
+            <p className="text-muted-foreground mt-3 max-w-3xl text-base">
+              Estimate reimbursement and margin using real NADAC ingredient cost, your contract formulas, dispensing fees, and optional paid-claim amounts. Built for independent pharmacies.
             </p>
           </header>
+
+          {user && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+              {[
+                { icon: Zap, title: "1. Pick a drug", desc: "Search by name or NDC. NADAC unit price loads automatically." },
+                { icon: Calculator, title: "2. Apply a rule", desc: "Use your PBM, Medicaid, LTC, or cash formula — or start from a template." },
+                { icon: ShieldCheck, title: "3. See your margin", desc: "Estimated reimbursement, gross margin, and underwater alerts in real time." },
+              ].map((s) => (
+                <div key={s.title} className="rounded-lg border bg-card p-4">
+                  <s.icon className="h-5 w-5 text-primary mb-2" />
+                  <div className="font-medium text-sm">{s.title}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{s.desc}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {user && !isSubscribed && (
+            <div className="mb-8 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+              <div className="flex items-start gap-3">
+                <Sparkles className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                <div>
+                  <div className="font-medium text-sm">Unlock unlimited rules, saved calculations, and CSV export</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">Free plan saves 1 rule. Pro saves unlimited rules, full calculation history, and printable reports.</div>
+                </div>
+              </div>
+              <Button asChild>
+                <Link to="/pricing">Upgrade to Pro</Link>
+              </Button>
+            </div>
+          )}
 
           {!user ? (
             <LockedAccess />
