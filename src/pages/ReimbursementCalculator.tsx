@@ -261,19 +261,26 @@ const ReimbursementCalculator = () => {
             </p>
           </header>
 
-          {user && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-              {[
-                { icon: Zap, title: "1. Pick a drug", desc: "Search by name or NDC. NADAC unit price loads automatically." },
-                { icon: Calculator, title: "2. Apply a rule", desc: "Use your PBM, Medicaid, LTC, or cash formula — or start from a template." },
-                { icon: ShieldCheck, title: "3. See your margin", desc: "Estimated reimbursement, gross margin, and underwater alerts in real time." },
-              ].map((s) => (
-                <div key={s.title} className="rounded-lg border bg-card p-4">
-                  <s.icon className="h-5 w-5 text-primary mb-2" />
-                  <div className="font-medium text-sm">{s.title}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{s.desc}</div>
-                </div>
-              ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+            {[
+              { icon: Zap, title: "1. Pick a drug", desc: "Search by name or NDC. NADAC unit price loads automatically." },
+              { icon: Calculator, title: "2. Apply a rule", desc: "Use your PBM, Medicaid, LTC, or cash formula — or start from a template." },
+              { icon: ShieldCheck, title: "3. See your margin", desc: "Estimated reimbursement, gross margin, and underwater alerts in real time." },
+            ].map((s) => (
+              <div key={s.title} className="rounded-lg border bg-card p-4">
+                <s.icon className="h-5 w-5 text-primary mb-2" />
+                <div className="font-medium text-sm">{s.title}</div>
+                <div className="text-xs text-muted-foreground mt-1">{s.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          {isGuest && (
+            <div className="mb-6">
+              <GuestSignupCta
+                title={guestCalcUsed ? "You've used your free calculation — create an account to keep going" : "Try one calculation free — no signup required"}
+                description={guestCalcUsed ? "Create a free account to run unlimited calculations, save your own contract rules, and track every estimate." : "You can run one full reimbursement estimate as a guest. Sign up free to save rules and run unlimited calculations."}
+              />
             </div>
           )}
 
@@ -292,10 +299,9 @@ const ReimbursementCalculator = () => {
             </div>
           )}
 
-          {!user ? (
-            <LockedAccess />
-          ) : (
+          {(
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
               {/* LEFT: Calculator */}
               <div className="lg:col-span-3 space-y-6">
                 <Card>
