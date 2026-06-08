@@ -174,6 +174,10 @@ const ReimbursementCalculator = () => {
   };
 
   const handleNewRule = () => {
+    if (isGuest) {
+      setGuestGateOpen(true);
+      return;
+    }
     if (!isSubscribed && rules.length >= 1) {
       setUpgradeReason("Free accounts can save 1 reimbursement rule. Upgrade to Pro to save unlimited contract rules for different PBMs, Medicaid plans, LTC contracts, and cash pricing formulas.");
       setUpgradeOpen(true);
@@ -191,6 +195,7 @@ const ReimbursementCalculator = () => {
   };
 
   const handleSetDefault = async (id: string) => {
+    if (isGuest) { setGuestGateOpen(true); return; }
     if (!isSubscribed) {
       setUpgradeReason("Setting a default contract rule is a Pro feature.");
       setUpgradeOpen(true);
@@ -203,6 +208,7 @@ const ReimbursementCalculator = () => {
   };
 
   const handleUseTemplate = (tpl: typeof RULE_TEMPLATES[number]) => {
+    if (isGuest) { setGuestGateOpen(true); return; }
     if (!isSubscribed && rules.length >= 1) {
       setUpgradeReason("Free accounts can save 1 reimbursement rule. Upgrade to Pro to save unlimited contract rules.");
       setUpgradeOpen(true);
@@ -214,6 +220,7 @@ const ReimbursementCalculator = () => {
 
 
   const handlePrint = () => {
+    if (isGuest) { setGuestGateOpen(true); return; }
     if (!isSubscribed) {
       setUpgradeReason("Exporting and printing calculations is a Pro feature.");
       setUpgradeOpen(true);
@@ -221,6 +228,7 @@ const ReimbursementCalculator = () => {
     }
     window.print();
   };
+
 
   if (isLoading) {
     return (
