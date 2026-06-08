@@ -24,22 +24,22 @@ import { UpgradeModal } from "@/components/UpgradeModal";
 import { calculate, formatCurrency, formatFormula, formatUnitPrice, RULE_TEMPLATES, type ReimbursementRule } from "@/lib/reimbursement";
 import { useToast } from "@/hooks/use-toast";
 
-const LockedAccess = () => (
-  <Card className="max-w-xl mx-auto mt-12">
-    <CardHeader className="text-center">
-      <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-        <Calculator className="h-6 w-6 text-primary" />
+const GUEST_USED_KEY = "guest_calc_used_v1";
+
+const GuestSignupCta = ({ title, description }: { title: string; description: string }) => (
+  <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 to-background p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+    <div className="flex items-start gap-3">
+      <Sparkles className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+      <div>
+        <div className="font-medium text-sm">{title}</div>
+        <div className="text-xs text-muted-foreground mt-0.5">{description}</div>
       </div>
-      <CardTitle>Pharmacy Reimbursement Calculator</CardTitle>
-      <CardDescription>
-        Create a free account or log in to use the Pharmacy Reimbursement Calculator.
-      </CardDescription>
-    </CardHeader>
-    <CardContent className="flex flex-col sm:flex-row gap-3 justify-center">
-      <Button asChild><Link to="/auth">Log In</Link></Button>
-      <Button asChild variant="outline"><Link to="/auth?mode=signup">Create Free Account</Link></Button>
-    </CardContent>
-  </Card>
+    </div>
+    <div className="flex gap-2">
+      <Button asChild size="sm" variant="outline"><Link to="/auth">Log in</Link></Button>
+      <Button asChild size="sm"><Link to="/auth?mode=signup">Create free account</Link></Button>
+    </div>
+  </div>
 );
 
 const ReimbursementCalculator = () => {
