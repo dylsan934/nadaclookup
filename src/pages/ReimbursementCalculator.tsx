@@ -142,33 +142,6 @@ const ReimbursementCalculator = () => {
     setRuleModalOpen(true);
   };
 
-  const handleSaveCalc = async () => {
-    if (!isSubscribed) {
-      setUpgradeReason("Saving calculation history is a Pro feature. Upgrade to keep a record of every reimbursement check.");
-      setUpgradeOpen(true);
-      return;
-    }
-    if (!user || !selectedDrug || !selectedRule || !result) return;
-    const { error } = await supabase.from("reimbursement_calculations").insert({
-      user_id: user.id,
-      drug_name: selectedDrug.drugName,
-      ndc: selectedDrug.ndc,
-      nadac_unit_price: selectedDrug.nadacPerUnit,
-      nadac_effective_date: selectedDrug.effectiveDate,
-      quantity: parseFloat(quantity),
-      ingredient_cost: result.ingredientCost,
-      rule_id: selectedRule.id,
-      rule_name_snapshot: selectedRule.name,
-      estimated_reimbursement: result.estimatedReimbursement,
-      actual_reimbursement: actualReimb ? parseFloat(actualReimb) : null,
-      difference: result.difference,
-      gross_margin: result.grossMargin,
-      margin_percentage: result.marginPercentage,
-      notes: notes || null,
-    });
-    if (error) toast({ title: "Save failed", description: error.message, variant: "destructive" });
-    else toast({ title: "Calculation saved to history" });
-  };
 
   const handlePrint = () => {
     if (!isSubscribed) {
