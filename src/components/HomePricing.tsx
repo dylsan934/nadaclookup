@@ -39,7 +39,7 @@ export const HomePricing = () => {
           <p className="text-3xl font-bold text-foreground">$0<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
           <p className="text-sm text-muted-foreground mt-2 mb-6">Perfect for occasional lookups</p>
           <ul className="space-y-2.5 text-sm mb-8">
-            {["Unlimited NADAC price searches", "Search by drug name or NDC", "Side-by-side drug comparison", "Save up to 3 drugs", "Weekly updated CMS data"].map(f => (
+            {["Unlimited NADAC price searches", "1 free reimbursement calculation", "Search by drug name or NDC", "Side-by-side drug comparison", "Save up to 3 drugs", "Weekly updated CMS data"].map(f => (
               <li key={f} className="flex items-start gap-2 text-muted-foreground">
                 <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />{f}
               </li>
@@ -61,7 +61,7 @@ export const HomePricing = () => {
           <p className="text-3xl font-bold text-foreground">$29<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
           <p className="text-sm text-muted-foreground mt-2 mb-6">For serious pharmacy professionals</p>
           <ul className="space-y-2.5 text-sm mb-8">
-            {["Everything in Free", "Unlimited saved drugs", "Full NADAC price history charts", "Weekly Top 10 movers (increases & decreases)", "Weekly movers email digest", "Automated price change alerts", "Custom alert thresholds", "Drug categories & notes", "Priority support"].map(f => (
+            {["Unlimited use of reimbursement calculator", "Full NADAC price history charts", "Automated price change alerts", "Unlimited saved drugs", "Weekly Top 10 movers (increases & decreases)", "Weekly movers email digest", "Custom alert thresholds", "Drug categories & notes", "Priority support", "Everything in Free"].map(f => (
               <li key={f} className="flex items-start gap-2 text-muted-foreground">
                 <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />{f}
               </li>
