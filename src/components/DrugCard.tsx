@@ -83,7 +83,7 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
 
     // If trying to save (not unsave) and limit reached
     if (!isSaved && !isSubscribed && !canSaveDrug) {
-      setUpgradeFeatureHighlight(`You've used all ${freeSaveLimit} free saves. Unlock unlimited saves and full price history with Pro — start your 14-day free trial.`);
+      setUpgradeFeatureHighlight(`You've used all ${freeSaveLimit} free saves. Unlock unlimited saves and full price history with Pro — start your 7-day free trial.`);
       setShowUpgradeModal(true);
       return;
     }

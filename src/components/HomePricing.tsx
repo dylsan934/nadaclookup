@@ -69,11 +69,11 @@ export const HomePricing = () => {
           </ul>
           {user ? (
             <Button className="w-full" onClick={handleStartTrial} disabled={isStarting}>
-              Start 14-Day Free Trial
+              Start 7-Day Free Trial
             </Button>
           ) : (
             <Button asChild className="w-full">
-              <Link to="/auth">Start 14-Day Free Trial</Link>
+              <Link to="/auth">Start 7-Day Free Trial</Link>
             </Button>
           )}
         </div>
