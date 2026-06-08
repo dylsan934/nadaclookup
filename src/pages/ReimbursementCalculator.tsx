@@ -99,6 +99,28 @@ const ReimbursementCalculator = () => {
     setSearching(false);
   };
 
+  // Deep-link prefill: ?ndc=... or ?drug=...
+  useEffect(() => {
+    if (!user) return;
+    const ndc = searchParams.get("ndc");
+    const drug = searchParams.get("drug");
+    const term = ndc || drug;
+    if (!term || selectedDrug) return;
+    (async () => {
+      setSearching(true);
+      const res = await nadacApi.search(term, 5);
+      const list = res.data ?? [];
+      if (ndc) {
+        const exact = list.find((d) => d.ndc === ndc);
+        if (exact) { setSelectedDrug(exact); setSearching(false); return; }
+      }
+      if (list[0]) setSelectedDrug(list[0]);
+      else setSearchTerm(term);
+      setSearching(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, searchParams]);
+
   const handleEditRule = (rule: ReimbursementRule) => {
     setEditingRule(rule);
     setRuleModalOpen(true);
