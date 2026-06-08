@@ -110,19 +110,48 @@ const ReimbursementCalculator = () => {
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
+    if (isGuest && guestCalcUsed) {
+      setGuestGateOpen(true);
+      return;
+    }
     setSearching(true);
     const res = await nadacApi.search(searchTerm, 25);
     setSearchResults(res.data ?? []);
     setSearching(false);
   };
 
+  const handleSelectDrug = (d: DrugData) => {
+    if (isGuest && guestCalcUsed && selectedDrug?.ndc !== d.ndc) {
+      setGuestGateOpen(true);
+      return;
+    }
+    setSelectedDrug(d);
+    setSearchResults([]);
+  };
+
+  const handleClearDrug = () => {
+    if (isGuest && guestCalcUsed) {
+      setGuestGateOpen(true);
+      return;
+    }
+    setSelectedDrug(null);
+  };
+
+  // Mark guest's free calculation as used once they have a real result.
+  useEffect(() => {
+    if (isGuest && result && !guestCalcUsed) {
+      window.localStorage.setItem(GUEST_USED_KEY, "1");
+      setGuestCalcUsed(true);
+    }
+  }, [isGuest, result, guestCalcUsed]);
+
   // Deep-link prefill: ?ndc=... or ?drug=...
   useEffect(() => {
-    if (!user) return;
     const ndc = searchParams.get("ndc");
     const drug = searchParams.get("drug");
     const term = ndc || drug;
     if (!term || selectedDrug) return;
+    if (isGuest && guestCalcUsed) return;
     (async () => {
       setSearching(true);
       const res = await nadacApi.search(term, 5);
@@ -137,6 +166,7 @@ const ReimbursementCalculator = () => {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, searchParams]);
+
 
   const handleEditRule = (rule: ReimbursementRule) => {
     setEditingRule(rule);
