@@ -46,6 +46,7 @@ const ReimbursementCalculator = () => {
   const { user, isSubscribed, isLoading } = useAuth();
   const { toast } = useToast();
   const { rules, refresh } = useReimbursementRules();
+  const [searchParams] = useSearchParams();
 
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
