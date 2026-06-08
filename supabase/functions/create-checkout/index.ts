@@ -132,7 +132,7 @@ serve(async (req) => {
           },
         ],
         mode: "subscription",
-        payment_method_collection: "if_required",
+        payment_method_collection: "always",
         success_url: `${req.headers.get("origin")}/?subscription=success`,
         cancel_url: `${req.headers.get("origin")}/?subscription=cancelled`,
       },
