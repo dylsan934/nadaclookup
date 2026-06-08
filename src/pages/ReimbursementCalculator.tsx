@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { nadacApi } from "@/lib/nadac-api";
@@ -24,29 +25,38 @@ import { UpgradeModal } from "@/components/UpgradeModal";
 import { calculate, formatCurrency, formatFormula, formatUnitPrice, RULE_TEMPLATES, type ReimbursementRule } from "@/lib/reimbursement";
 import { useToast } from "@/hooks/use-toast";
 
-const LockedAccess = () => (
-  <Card className="max-w-xl mx-auto mt-12">
-    <CardHeader className="text-center">
-      <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-        <Calculator className="h-6 w-6 text-primary" />
+const GUEST_USED_KEY = "guest_calc_used_v1";
+
+const GuestSignupCta = ({ title, description }: { title: string; description: string }) => (
+  <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 to-background p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+    <div className="flex items-start gap-3">
+      <Sparkles className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+      <div>
+        <div className="font-medium text-sm">{title}</div>
+        <div className="text-xs text-muted-foreground mt-0.5">{description}</div>
       </div>
-      <CardTitle>Pharmacy Reimbursement Calculator</CardTitle>
-      <CardDescription>
-        Create a free account or log in to use the Pharmacy Reimbursement Calculator.
-      </CardDescription>
-    </CardHeader>
-    <CardContent className="flex flex-col sm:flex-row gap-3 justify-center">
-      <Button asChild><Link to="/auth">Log In</Link></Button>
-      <Button asChild variant="outline"><Link to="/auth?mode=signup">Create Free Account</Link></Button>
-    </CardContent>
-  </Card>
+    </div>
+    <div className="flex gap-2">
+      <Button asChild size="sm" variant="outline"><Link to="/auth">Log in</Link></Button>
+      <Button asChild size="sm"><Link to="/auth?mode=signup">Create free account</Link></Button>
+    </div>
+  </div>
 );
 
 const ReimbursementCalculator = () => {
   const { user, isSubscribed, isLoading } = useAuth();
   const { toast } = useToast();
-  const { rules, refresh } = useReimbursementRules();
+  const { rules: savedRules, refresh } = useReimbursementRules();
   const [searchParams] = useSearchParams();
+
+  const isGuest = !user;
+
+  // Guests get all templates as in-memory rules so they can try the tool.
+  const guestRules: ReimbursementRule[] = useMemo(
+    () => RULE_TEMPLATES.map((t, i) => ({ ...t, id: `guest-${i}`, is_default: i === 1 } as ReimbursementRule)),
+    []
+  );
+  const rules: ReimbursementRule[] = isGuest ? guestRules : savedRules;
 
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,10 +77,18 @@ const ReimbursementCalculator = () => {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState<string>("");
 
+  // Guest gating: allow one full calculation, then require signup for another drug.
+  const [guestCalcUsed, setGuestCalcUsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(GUEST_USED_KEY) === "1";
+  });
+  const [guestGateOpen, setGuestGateOpen] = useState(false);
+
   const selectedRule = useMemo(
     () => rules.find((r) => r.id === selectedRuleId) ?? rules.find((r) => r.is_default) ?? rules[0] ?? null,
     [rules, selectedRuleId]
   );
+
 
   const result = useMemo(() => {
     if (!selectedDrug || !selectedRule) return null;
@@ -93,19 +111,48 @@ const ReimbursementCalculator = () => {
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
+    if (isGuest && guestCalcUsed) {
+      setGuestGateOpen(true);
+      return;
+    }
     setSearching(true);
     const res = await nadacApi.search(searchTerm, 25);
     setSearchResults(res.data ?? []);
     setSearching(false);
   };
 
+  const handleSelectDrug = (d: DrugData) => {
+    if (isGuest && guestCalcUsed && selectedDrug?.ndc !== d.ndc) {
+      setGuestGateOpen(true);
+      return;
+    }
+    setSelectedDrug(d);
+    setSearchResults([]);
+  };
+
+  const handleClearDrug = () => {
+    if (isGuest && guestCalcUsed) {
+      setGuestGateOpen(true);
+      return;
+    }
+    setSelectedDrug(null);
+  };
+
+  // Mark guest's free calculation as used once they have a real result.
+  useEffect(() => {
+    if (isGuest && result && !guestCalcUsed) {
+      window.localStorage.setItem(GUEST_USED_KEY, "1");
+      setGuestCalcUsed(true);
+    }
+  }, [isGuest, result, guestCalcUsed]);
+
   // Deep-link prefill: ?ndc=... or ?drug=...
   useEffect(() => {
-    if (!user) return;
     const ndc = searchParams.get("ndc");
     const drug = searchParams.get("drug");
     const term = ndc || drug;
     if (!term || selectedDrug) return;
+    if (isGuest && guestCalcUsed) return;
     (async () => {
       setSearching(true);
       const res = await nadacApi.search(term, 5);
@@ -121,12 +168,17 @@ const ReimbursementCalculator = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, searchParams]);
 
+
   const handleEditRule = (rule: ReimbursementRule) => {
     setEditingRule(rule);
     setRuleModalOpen(true);
   };
 
   const handleNewRule = () => {
+    if (isGuest) {
+      setGuestGateOpen(true);
+      return;
+    }
     if (!isSubscribed && rules.length >= 1) {
       setUpgradeReason("Free accounts can save 1 reimbursement rule. Upgrade to Pro to save unlimited contract rules for different PBMs, Medicaid plans, LTC contracts, and cash pricing formulas.");
       setUpgradeOpen(true);
@@ -144,6 +196,7 @@ const ReimbursementCalculator = () => {
   };
 
   const handleSetDefault = async (id: string) => {
+    if (isGuest) { setGuestGateOpen(true); return; }
     if (!isSubscribed) {
       setUpgradeReason("Setting a default contract rule is a Pro feature.");
       setUpgradeOpen(true);
@@ -156,6 +209,7 @@ const ReimbursementCalculator = () => {
   };
 
   const handleUseTemplate = (tpl: typeof RULE_TEMPLATES[number]) => {
+    if (isGuest) { setGuestGateOpen(true); return; }
     if (!isSubscribed && rules.length >= 1) {
       setUpgradeReason("Free accounts can save 1 reimbursement rule. Upgrade to Pro to save unlimited contract rules.");
       setUpgradeOpen(true);
@@ -167,6 +221,7 @@ const ReimbursementCalculator = () => {
 
 
   const handlePrint = () => {
+    if (isGuest) { setGuestGateOpen(true); return; }
     if (!isSubscribed) {
       setUpgradeReason("Exporting and printing calculations is a Pro feature.");
       setUpgradeOpen(true);
@@ -174,6 +229,7 @@ const ReimbursementCalculator = () => {
     }
     window.print();
   };
+
 
   if (isLoading) {
     return (
@@ -206,19 +262,26 @@ const ReimbursementCalculator = () => {
             </p>
           </header>
 
-          {user && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-              {[
-                { icon: Zap, title: "1. Pick a drug", desc: "Search by name or NDC. NADAC unit price loads automatically." },
-                { icon: Calculator, title: "2. Apply a rule", desc: "Use your PBM, Medicaid, LTC, or cash formula — or start from a template." },
-                { icon: ShieldCheck, title: "3. See your margin", desc: "Estimated reimbursement, gross margin, and underwater alerts in real time." },
-              ].map((s) => (
-                <div key={s.title} className="rounded-lg border bg-card p-4">
-                  <s.icon className="h-5 w-5 text-primary mb-2" />
-                  <div className="font-medium text-sm">{s.title}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{s.desc}</div>
-                </div>
-              ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+            {[
+              { icon: Zap, title: "1. Pick a drug", desc: "Search by name or NDC. NADAC unit price loads automatically." },
+              { icon: Calculator, title: "2. Apply a rule", desc: "Use your PBM, Medicaid, LTC, or cash formula — or start from a template." },
+              { icon: ShieldCheck, title: "3. See your margin", desc: "Estimated reimbursement, gross margin, and underwater alerts in real time." },
+            ].map((s) => (
+              <div key={s.title} className="rounded-lg border bg-card p-4">
+                <s.icon className="h-5 w-5 text-primary mb-2" />
+                <div className="font-medium text-sm">{s.title}</div>
+                <div className="text-xs text-muted-foreground mt-1">{s.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          {isGuest && (
+            <div className="mb-6">
+              <GuestSignupCta
+                title={guestCalcUsed ? "You've used your free calculation — create an account to keep going" : "Try one calculation free — no signup required"}
+                description={guestCalcUsed ? "Create a free account to run unlimited calculations, save your own contract rules, and track every estimate." : "You can run one full reimbursement estimate as a guest. Sign up free to save rules and run unlimited calculations."}
+              />
             </div>
           )}
 
@@ -237,10 +300,9 @@ const ReimbursementCalculator = () => {
             </div>
           )}
 
-          {!user ? (
-            <LockedAccess />
-          ) : (
+          {(
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
               {/* LEFT: Calculator */}
               <div className="lg:col-span-3 space-y-6">
                 <Card>
@@ -264,7 +326,7 @@ const ReimbursementCalculator = () => {
                         {searchResults.map((d) => (
                           <button
                             key={d.ndc}
-                            onClick={() => { setSelectedDrug(d); setSearchResults([]); }}
+                            onClick={() => handleSelectDrug(d)}
                             className="w-full text-left p-3 hover:bg-accent/50 transition-colors"
                           >
                             <div className="font-medium text-sm">{d.drugName}</div>
@@ -288,7 +350,7 @@ const ReimbursementCalculator = () => {
                               Effective {selectedDrug.effectiveDate}
                             </div>
                           </div>
-                          <Button variant="ghost" size="sm" onClick={() => setSelectedDrug(null)}>Change</Button>
+                          <Button variant="ghost" size="sm" onClick={handleClearDrug}>Change</Button>
                         </div>
                         {stale && (
                           <Alert className="mt-3 border-yellow-500/40 bg-yellow-500/10">
@@ -456,69 +518,79 @@ const ReimbursementCalculator = () => {
                 </Card>
               </div>
 
-              {/* Saved rules */}
-              <div className="lg:col-span-5">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle className="text-lg">Saved contract rules</CardTitle>
-                      <CardDescription>
-                        {isSubscribed ? "Unlimited rules on Pro." : `Free plan: ${rules.length}/1 rule saved.`}
-                      </CardDescription>
-                    </div>
-                    <Button size="sm" onClick={handleNewRule}><Plus className="h-4 w-4" /> New rule</Button>
-                  </CardHeader>
-                  <CardContent>
-                    {rules.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No rules yet — create one or start from a template below.</p>
-                    ) : (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Formula</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {rules.map((r) => (
-                            <TableRow key={r.id}>
-                              <TableCell className="font-medium">
-                                {r.name}
-                                {r.is_default && <Badge variant="secondary" className="ml-2">Default</Badge>}
-                              </TableCell>
-                              <TableCell className="text-sm text-muted-foreground">{formatFormula(r)}</TableCell>
-                              <TableCell className="text-right">
-                                <Button variant="ghost" size="icon" onClick={() => handleSetDefault(r.id)} aria-label="Set default"><Star className={`h-4 w-4 ${r.is_default ? "fill-current" : ""}`} /></Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleEditRule(r)} aria-label="Edit"><Edit2 className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleDeleteRule(r.id)} aria-label="Delete"><Trash2 className="h-4 w-4" /></Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    )}
-
-                    <div className="mt-6">
-                      <h3 className="text-sm font-medium mb-2">Rule templates</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {RULE_TEMPLATES.map((tpl) => (
-                          <button
-                            key={tpl.name}
-                            onClick={() => handleUseTemplate(tpl)}
-                            className="text-left p-3 border rounded-lg hover:bg-accent/50 transition-colors"
-                          >
-                            <div className="text-sm font-medium">{tpl.name}</div>
-                            <div className="text-xs text-muted-foreground">{formatFormula(tpl)}</div>
-                          </button>
-                        ))}
+              {/* Saved rules (logged-in users only) */}
+              {!isGuest ? (
+                <div className="lg:col-span-5">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <div>
+                        <CardTitle className="text-lg">Saved contract rules</CardTitle>
+                        <CardDescription>
+                          {isSubscribed ? "Unlimited rules on Pro." : `Free plan: ${rules.length}/1 rule saved.`}
+                        </CardDescription>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                      <Button size="sm" onClick={handleNewRule}><Plus className="h-4 w-4" /> New rule</Button>
+                    </CardHeader>
+                    <CardContent>
+                      {rules.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No rules yet — create one or start from a template below.</p>
+                      ) : (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Name</TableHead>
+                              <TableHead>Formula</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {rules.map((r) => (
+                              <TableRow key={r.id}>
+                                <TableCell className="font-medium">
+                                  {r.name}
+                                  {r.is_default && <Badge variant="secondary" className="ml-2">Default</Badge>}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground">{formatFormula(r)}</TableCell>
+                                <TableCell className="text-right">
+                                  <Button variant="ghost" size="icon" onClick={() => handleSetDefault(r.id)} aria-label="Set default"><Star className={`h-4 w-4 ${r.is_default ? "fill-current" : ""}`} /></Button>
+                                  <Button variant="ghost" size="icon" onClick={() => handleEditRule(r)} aria-label="Edit"><Edit2 className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" onClick={() => handleDeleteRule(r.id)} aria-label="Delete"><Trash2 className="h-4 w-4" /></Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+
+                      <div className="mt-6">
+                        <h3 className="text-sm font-medium mb-2">Rule templates</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {RULE_TEMPLATES.map((tpl) => (
+                            <button
+                              key={tpl.name}
+                              onClick={() => handleUseTemplate(tpl)}
+                              className="text-left p-3 border rounded-lg hover:bg-accent/50 transition-colors"
+                            >
+                              <div className="text-sm font-medium">{tpl.name}</div>
+                              <div className="text-xs text-muted-foreground">{formatFormula(tpl)}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : (
+                <div className="lg:col-span-5">
+                  <GuestSignupCta
+                    title="Save your own contract rules"
+                    description="Create a free account to build PBM, Medicaid, LTC, and cash rules — and run unlimited calculations."
+                  />
+                </div>
+              )}
             </div>
           )}
+
         </div>
       </main>
 
@@ -536,6 +608,21 @@ const ReimbursementCalculator = () => {
         }}
       />
       <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} featureHighlight={upgradeReason} />
+
+      <Dialog open={guestGateOpen} onOpenChange={setGuestGateOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create a free account to keep going</DialogTitle>
+            <DialogDescription>
+              You've used your free guest calculation. Sign up free to run unlimited calculations, save your own contract rules, and track every estimate.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button asChild variant="outline"><Link to="/auth">Log in</Link></Button>
+            <Button asChild><Link to="/auth?mode=signup">Create free account</Link></Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
