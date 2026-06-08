@@ -107,7 +107,7 @@ export const HomeSEOContent = () => (
           },
           {
             q: "What's the difference between free and Pro features?",
-            a: "Free users get unlimited NADAC price lookups, drug comparison, and can save up to 3 drugs. Pro users ($29/mo) get unlimited saves, full price history charts, automated price change alerts, and priority support."
+            a: "Free users get unlimited NADAC price lookups, drug comparison, can save up to 3 drugs, and get 1 free reimbursement calculation. Pro users ($29/mo) get unlimited use of the reimbursement calculator, full price history charts, automated price change alerts, unlimited saves, and priority support."
           },
           {
             q: "How is NADAC different from AWP or WAC?",

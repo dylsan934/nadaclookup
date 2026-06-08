@@ -14,8 +14,8 @@ const freeFeatures = [
 ];
 
 const proFeatures = [
+  { icon: Calculator, label: "Unlimited reimbursement calculator" },
   { icon: Bookmark, label: "Unlimited saved drugs" },
-  { icon: Calculator, label: "Advanced pricing tools" },
   { icon: Bell, label: "Email + in-app price alerts weekly" },
 ];
 

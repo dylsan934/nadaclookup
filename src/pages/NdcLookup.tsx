@@ -37,7 +37,7 @@ const NdcLookup = () => {
         name: "Is NDC lookup free?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Yes. Searching NDCs and viewing the current NADAC price is free. A Pro plan unlocks 5-year price history, unlimited saved drugs, and weekly price-movement alerts.",
+          text: "Yes. Searching NDCs and viewing the current NADAC price is free. A Pro plan unlocks the unlimited reimbursement calculator, 5-year price history, automated price-change alerts, and unlimited saved drugs.",
         },
       },
     ],

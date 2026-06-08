@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { History, Bookmark, Bell, Check, Crown, TrendingUp } from "lucide-react";
+import { History, Bookmark, Bell, Check, Crown, TrendingUp, Calculator } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStartCheckout } from "@/hooks/useStartCheckout";
 import { Link } from "react-router-dom";
@@ -12,25 +12,30 @@ interface UpgradeModalProps {
 }
 
 const proFeatures = [
-  { 
-    icon: History, 
-    label: "Historical Price Trends",
+  {
+    icon: Calculator,
+    label: "Unlimited Reimbursement Calculator",
+    description: "Run unlimited reimbursement calculations with your contract formulas to spot underwater claims"
+  },
+  {
+    icon: History,
+    label: "Full NADAC Price History",
     description: "View years of pricing data to spot trends and predict changes"
   },
-  { 
-    icon: Bookmark, 
+  {
+    icon: Bell,
+    label: "Automated Price Change Alerts",
+    description: "Get notified via email and in-app when weekly NADAC prices change"
+  },
+  {
+    icon: Bookmark,
     label: "Unlimited Saved Drugs",
     description: "Save and organize as many drugs as you need"
   },
-  { 
-    icon: Bell, 
-    label: "Email & In-App Alerts",
-    description: "Get notified via email and in-app when weekly NADAC prices change"
-  },
-  { 
-    icon: TrendingUp, 
-    label: "Market Insights",
-    description: "Understand price fluctuations with detailed statistics"
+  {
+    icon: TrendingUp,
+    label: "Weekly Top 10 Movers",
+    description: "See the full top 10 NADAC increases and decreases every week"
   },
 ];
 

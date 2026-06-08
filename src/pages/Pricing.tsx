@@ -23,7 +23,7 @@ const Pricing = () => {
     <>
       <SEOHead
         title="NADAC Lookup Pricing — Free Search & $29/mo Pro Plan"
-        description="Free unlimited NADAC drug price searches. Upgrade to Pro for $29/mo to unlock price history charts, unlimited saved drugs, and automated price change alerts."
+        description="Free unlimited NADAC drug price searches. Upgrade to Pro for $29/mo to unlock the reimbursement calculator, full price history charts, automated alerts, and unlimited saves."
         canonical="https://nadaclookup.com/pricing"
         jsonLd={jsonLd}
       />
@@ -45,7 +45,7 @@ const Pricing = () => {
               <p className="text-3xl font-bold text-foreground">$0<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
               <p className="text-sm text-muted-foreground mt-2 mb-6">Perfect for occasional lookups</p>
               <ul className="space-y-3 text-sm">
-                {["Unlimited NADAC price searches", "Search by drug name or NDC", "Side-by-side drug comparison", "Save up to 3 drugs", "Weekly updated CMS data"].map(f => (
+                {["Unlimited NADAC price searches", "1 free reimbursement calculation", "Search by drug name or NDC", "Side-by-side drug comparison", "Save up to 3 drugs", "Weekly updated CMS data"].map(f => (
                   <li key={f} className="flex items-start gap-2 text-muted-foreground"><Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />{f}</li>
                 ))}
               </ul>
@@ -62,7 +62,7 @@ const Pricing = () => {
               <p className="text-3xl font-bold text-foreground">$29<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
               <p className="text-sm text-muted-foreground mt-2 mb-6">For serious pharmacy professionals</p>
               <ul className="space-y-3 text-sm">
-                {["Everything in Free", "Unlimited saved drugs", "Full NADAC price history charts", "Weekly Top 10 movers (increases & decreases)", "Weekly movers email digest", "Automated price change alerts", "Custom alert thresholds", "Drug categories & notes", "Priority support"].map(f => (
+                {["Unlimited use of reimbursement calculator", "Full NADAC price history charts", "Automated price change alerts", "Unlimited saved drugs", "Weekly Top 10 movers (increases & decreases)", "Weekly movers email digest", "Custom alert thresholds", "Drug categories & notes", "Priority support", "Everything in Free"].map(f => (
                   <li key={f} className="flex items-start gap-2 text-muted-foreground"><Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />{f}</li>
                 ))}
               </ul>
