@@ -349,7 +349,7 @@ const ReimbursementCalculator = () => {
                               Effective {selectedDrug.effectiveDate}
                             </div>
                           </div>
-                          <Button variant="ghost" size="sm" onClick={() => setSelectedDrug(null)}>Change</Button>
+                          <Button variant="ghost" size="sm" onClick={handleClearDrug}>Change</Button>
                         </div>
                         {stale && (
                           <Alert className="mt-3 border-yellow-500/40 bg-yellow-500/10">
