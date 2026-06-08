@@ -408,9 +408,6 @@ const ReimbursementCalculator = () => {
                         )}
 
                         <div className="flex gap-2 pt-3">
-                          <Button onClick={handleSaveCalc} className="flex-1" variant="outline" size="sm">
-                            <Save className="h-4 w-4" /> Save
-                          </Button>
                           <Button onClick={handlePrint} variant="outline" size="sm">
                             <Printer className="h-4 w-4" /> Print
                           </Button>
