@@ -10,6 +10,7 @@ import { HomeSEOContent } from "@/components/HomeSEOContent";
 import { HomePricing } from "@/components/HomePricing";
 import { PopularDrugLinks } from "@/components/PopularDrugLinks";
 import { CalculatorHeroPromo } from "@/components/CalculatorHeroPromo";
+import { HowToVideo } from "@/components/HowToVideo";
 import { DrugData } from "@/components/DrugCard";
 import { nadacApi } from "@/lib/nadac-api";
 import { useToast } from "@/hooks/use-toast";
@@ -136,6 +137,14 @@ const Index = () => {
           <section className="pt-2">
             <DrugResults drugs={results} isLoading={isLoading} hasSearched={hasSearched} searchTerm={lastSearchTerm} />
           </section>
+
+          {/* How-to walkthrough — shown before user searches */}
+          {!hasSearched && (
+            <HowToVideo
+              src="/videos/how-to-search.mp4"
+              poster="/videos/how-to-search-poster.jpg"
+            />
+          )}
 
           {/* Pricing section */}
           <HomePricing />
