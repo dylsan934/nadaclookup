@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { AlertCircle, Calculator, Edit2, Plus, Printer, Star, Trash2, Sparkles, ShieldCheck, Zap } from "lucide-react";
 import { Header } from "@/components/Header";
 import { SiteNavigation } from "@/components/SiteNavigation";
+import { HowToVideo } from "@/components/HowToVideo";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
