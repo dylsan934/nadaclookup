@@ -538,6 +538,13 @@ export default function SavedDrugs() {
             Back to Search
           </Button>
 
+          <HowToVideo
+            src="/videos/how-to-alerts.mp4"
+            poster="/videos/how-to-alerts-poster.jpg"
+            title="How saved drugs & price alerts work"
+            subtitle="A 20-second walkthrough"
+          />
+
           {/* Page header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
