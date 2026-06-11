@@ -263,7 +263,15 @@ const ReimbursementCalculator = () => {
             </p>
           </header>
 
+          <HowToVideo
+            src="/videos/how-to-calculator.mp4"
+            poster="/videos/how-to-calculator-poster.jpg"
+            title="How the reimbursement calculator works"
+            subtitle="A 20-second walkthrough"
+          />
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+
             {[
               { icon: Zap, title: "1. Pick a drug", desc: "Search by name or NDC. NADAC unit price loads automatically." },
               { icon: Calculator, title: "2. Apply a rule", desc: "Use your PBM, Medicaid, LTC, or cash formula — or start from a template." },
