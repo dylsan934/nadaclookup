@@ -69,7 +69,7 @@ const Blog = () => (
                 <h2 className="text-lg font-semibold text-foreground mt-1 group-hover:text-primary transition-colors">{a.title}</h2>
                 <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{a.excerpt}</p>
                 <span className="inline-flex items-center gap-1 text-sm text-primary mt-3 font-medium">
-                  Read more <ArrowRight className="h-3.5 w-3.5" />
+                  Read the full article: {a.title} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                 </span>
               </article>
             </Link>
