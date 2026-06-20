@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
@@ -7,10 +8,8 @@ import { SearchBar } from "@/components/SearchBar";
 import { DrugResults } from "@/components/DrugResults";
 import { DataStatus } from "@/components/DataStatus";
 import { HomeSEOContent } from "@/components/HomeSEOContent";
-import { HomePricing } from "@/components/HomePricing";
+import { HomeProUpsell } from "@/components/HomeProUpsell";
 import { PopularDrugLinks } from "@/components/PopularDrugLinks";
-import { CalculatorHeroPromo } from "@/components/CalculatorHeroPromo";
-import { HowToVideo } from "@/components/HowToVideo";
 import { DrugData } from "@/components/DrugCard";
 import { nadacApi } from "@/lib/nadac-api";
 import { useToast } from "@/hooks/use-toast";
@@ -109,9 +108,6 @@ const Index = () => {
 
       <Header />
       <SiteNavigation />
-      
-      {/* Calculator promo — primary conversion driver */}
-      <CalculatorHeroPromo />
 
       {/* Sticky Search Bar */}
       <div 
@@ -127,9 +123,12 @@ const Index = () => {
       </div>
       
       <main className="flex-1 container mx-auto px-4 py-6 md:py-8">
-        <div className="max-w-3xl mx-auto space-y-6">
+        <div className="max-w-3xl mx-auto space-y-8">
           <p className="text-center text-sm text-muted-foreground">
-            Search by drug name (e.g., "Metformin") or NDC code (e.g., "00093-7212-01")
+            Search by drug name (e.g., "Metformin") or NDC code (e.g., "00093-7212-01") ·{" "}
+            <Link to="/reimbursement-calculator" className="text-primary hover:underline">
+              Open reimbursement calculator
+            </Link>
           </p>
 
           <DataStatus hasData={dataStatus.hasData} lastUpdate={dataStatus.lastUpdate} totalRecords={dataStatus.totalRecords} isLoading={isCheckingStatus} />
@@ -138,22 +137,13 @@ const Index = () => {
             <DrugResults drugs={results} isLoading={isLoading} hasSearched={hasSearched} searchTerm={lastSearchTerm} />
           </section>
 
-          {/* How-to walkthrough — shown before user searches */}
           {!hasSearched && (
-            <HowToVideo
-              src="/videos/how-to-search.mp4"
-              poster="/videos/how-to-search-poster.jpg"
-            />
+            <>
+              <HomeSEOContent />
+              <HomeProUpsell />
+              <PopularDrugLinks />
+            </>
           )}
-
-          {/* Pricing section */}
-          <HomePricing />
-
-          {/* SEO content below search results */}
-          {!hasSearched && <HomeSEOContent />}
-
-          {/* Popular drug pages — internal linking for programmatic SEO */}
-          {!hasSearched && <PopularDrugLinks />}
         </div>
       </main>
 

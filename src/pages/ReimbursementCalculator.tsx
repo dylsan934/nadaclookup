@@ -4,7 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { AlertCircle, Calculator, Edit2, Plus, Printer, Star, Trash2, Sparkles, ShieldCheck, Zap } from "lucide-react";
 import { Header } from "@/components/Header";
 import { SiteNavigation } from "@/components/SiteNavigation";
-import { HowToVideo } from "@/components/HowToVideo";
+
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -263,12 +263,6 @@ const ReimbursementCalculator = () => {
             </p>
           </header>
 
-          <HowToVideo
-            src="/videos/how-to-calculator.mp4"
-            poster="/videos/how-to-calculator-poster.jpg"
-            title="How the reimbursement calculator works"
-            subtitle="A 20-second walkthrough"
-          />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
 

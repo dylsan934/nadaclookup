@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
-import { HowToVideo } from "@/components/HowToVideo";
+
 import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -538,12 +538,6 @@ export default function SavedDrugs() {
             Back to Search
           </Button>
 
-          <HowToVideo
-            src="/videos/how-to-alerts.mp4"
-            poster="/videos/how-to-alerts-poster.jpg"
-            title="How saved drugs & price alerts work"
-            subtitle="A 20-second walkthrough"
-          />
 
           {/* Page header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
