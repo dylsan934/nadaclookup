@@ -8,7 +8,7 @@ import { ArrowRight, ArrowLeft } from "lucide-react";
 const articles: Record<string, { title: string; description: string; content: JSX.Element }> = {
   "calculate-reimbursement-from-nadac": {
     title: "How to Calculate Reimbursement from NADAC | NADAC Lookup",
-    description: "Learn how Medicaid and other payers calculate pharmacy reimbursement using NADAC plus a professional dispensing fee. Includes the formula, examples, and tips for spotting underwater claims.",
+    description: "How Medicaid and PBMs calculate pharmacy reimbursement using NADAC plus a dispensing fee. Includes the formula, examples, and underwater-claim tips.",
     content: (
       <>
         <p className="text-muted-foreground leading-relaxed mb-4">
@@ -110,7 +110,7 @@ const articles: Record<string, { title: string; description: string; content: JS
     ),
   },
   "latest-nadac-price-changes": {
-    title: "Latest NADAC Price Changes for Independent Pharmacies | NADAC Lookup",
+    title: "Latest NADAC Price Changes for Pharmacies | NADAC Lookup",
     description: "Stay informed on recent NADAC price movements across common generics and brand-name drugs. Learn what price changes mean for your pharmacy.",
     content: (
       <>
@@ -235,7 +235,7 @@ const articles: Record<string, { title: string; description: string; content: JS
     ),
   },
   "pbm-cost-plus-dispensing-fee-audit": {
-    title: "The New PBM Cost-Plus + Dispensing Fee Model: How to Audit Your Claims | NADAC Lookup",
+    title: "Audit PBM Cost-Plus + Dispensing Fee Claims | NADAC",
     description: "A new PBM cost-plus plus professional dispensing fee reimbursement model is rolling out. Learn the formula and how to use NADAC Lookup to audit every claim for underpayment.",
     content: (
       <>

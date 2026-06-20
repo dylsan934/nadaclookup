@@ -7,7 +7,7 @@ import { ArrowRight } from "lucide-react";
 const articles = [
   {
     slug: "pbm-cost-plus-dispensing-fee-audit",
-    title: "The New PBM Cost-Plus + Dispensing Fee Model: How to Audit Your Claims",
+    title: "PBM Cost-Plus + Dispensing Fee: Auditing Your Claims",
     excerpt: "A new wave of PBM contracts pays acquisition cost plus a flat dispensing fee. Here's the formula, the most common underpayment traps, and a 5-step claim audit using NADAC Lookup.",
     date: "2026-05-16",
   },
@@ -25,7 +25,7 @@ const articles = [
   },
   {
     slug: "latest-nadac-price-changes",
-    title: "Latest NADAC Price Changes and What They Mean for Independent Pharmacies",
+    title: "Latest NADAC Price Changes for Independent Pharmacies",
     excerpt: "A breakdown of recent NADAC price movements across common generics, brand-name drugs, and specialty medications — and what pharmacies should do about it.",
     date: "2026-04-08",
   },
