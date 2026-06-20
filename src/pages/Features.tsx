@@ -8,7 +8,7 @@ import { Search, BarChart3, Bell, ArrowRight, Scale, BookmarkCheck, Mail, Trendi
 const Features = () => (
   <>
     <SEOHead
-      title="NADAC Lookup Features — Drug Price Search, Comparison & Alerts"
+      title="NADAC Lookup Features — Drug Search, Compare & Alerts"
       description="Search NADAC drug prices by name or NDC, compare up to 4 drugs side by side, track price history, and get automated alerts. Free basic plan, Pro at $29/mo."
       canonical="https://nadaclookup.com/features"
     />

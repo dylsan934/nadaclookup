@@ -106,6 +106,7 @@ export const Header = () => {
                     <Button 
                       variant="ghost" 
                       size="sm"
+                      aria-label="Saved drugs"
                       className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
                     >
                       {isSubscribed ? (
@@ -123,6 +124,7 @@ export const Header = () => {
                       <Button 
                         variant="ghost" 
                         size="sm"
+                        aria-label="Admin"
                         className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
                       >
                         <Shield className="h-4 w-4" />
@@ -136,6 +138,7 @@ export const Header = () => {
                       variant="ghost" 
                       size="sm"
                       onClick={handleManageSubscription}
+                      aria-label="Manage plan"
                       className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
                     >
                       <Crown className="h-4 w-4" />
@@ -162,6 +165,7 @@ export const Header = () => {
                     variant="ghost" 
                     size="sm" 
                     onClick={signOut}
+                    aria-label="Sign out"
                     className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
                   >
                     <LogOut className="h-4 w-4" />
@@ -189,6 +193,7 @@ export const Header = () => {
                     size="sm"
                     variant="ghost"
                     onClick={() => setShowUpgradeModal(true)}
+                    aria-label="Upgrade to Pro"
                     className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10 gap-1.5"
                   >
                     <Crown className="h-3.5 w-3.5 text-amber-400" />
