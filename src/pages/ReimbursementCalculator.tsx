@@ -113,17 +113,45 @@ const ReimbursementCalculator = () => {
     return days > 60;
   }, [selectedDrug]);
 
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) return;
+  // Debounced predictive suggestions
+  useEffect(() => {
+    if (selectedDrug) { setSuggestions([]); setShowSuggestions(false); return; }
+    const term = searchTerm.trim();
+    if (term.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
+    const t = setTimeout(async () => {
+      try {
+        const res = await nadacApi.getSuggestions(term, 8);
+        setSuggestions(res);
+        setShowSuggestions(res.length > 0);
+        setSuggestionIndex(-1);
+      } catch { /* ignore */ }
+    }, 150);
+    return () => clearTimeout(t);
+  }, [searchTerm, selectedDrug]);
+
+  const runSearch = async (termOverride?: string) => {
+    const term = (termOverride ?? searchTerm).trim();
+    if (!term) return;
     if (isGuest && guestCalcUsed) {
       setGuestGateOpen(true);
       return;
     }
+    setShowSuggestions(false);
     setSearching(true);
-    const res = await nadacApi.search(searchTerm, 25);
+    const res = await nadacApi.search(term, 25);
     setSearchResults(res.data ?? []);
     setSearching(false);
   };
+
+  const handleSearch = () => runSearch();
+
+  const handleSelectSuggestion = (s: string) => {
+    setSearchTerm(s);
+    setShowSuggestions(false);
+    setSuggestions([]);
+    runSearch(s);
+  };
+
 
   const handleSelectDrug = (d: DrugData) => {
     if (isGuest && guestCalcUsed && selectedDrug?.ndc !== d.ndc) {
