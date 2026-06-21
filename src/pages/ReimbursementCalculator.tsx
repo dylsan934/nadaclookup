@@ -64,6 +64,9 @@ const ReimbursementCalculator = () => {
   const [searchResults, setSearchResults] = useState<DrugData[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedDrug, setSelectedDrug] = useState<DrugData | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionIndex, setSuggestionIndex] = useState(-1);
 
   // Inputs
   const [quantity, setQuantity] = useState<string>("30");
@@ -110,17 +113,45 @@ const ReimbursementCalculator = () => {
     return days > 60;
   }, [selectedDrug]);
 
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) return;
+  // Debounced predictive suggestions
+  useEffect(() => {
+    if (selectedDrug) { setSuggestions([]); setShowSuggestions(false); return; }
+    const term = searchTerm.trim();
+    if (term.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
+    const t = setTimeout(async () => {
+      try {
+        const res = await nadacApi.getSuggestions(term, 8);
+        setSuggestions(res);
+        setShowSuggestions(res.length > 0);
+        setSuggestionIndex(-1);
+      } catch { /* ignore */ }
+    }, 150);
+    return () => clearTimeout(t);
+  }, [searchTerm, selectedDrug]);
+
+  const runSearch = async (termOverride?: string) => {
+    const term = (termOverride ?? searchTerm).trim();
+    if (!term) return;
     if (isGuest && guestCalcUsed) {
       setGuestGateOpen(true);
       return;
     }
+    setShowSuggestions(false);
     setSearching(true);
-    const res = await nadacApi.search(searchTerm, 25);
+    const res = await nadacApi.search(term, 25);
     setSearchResults(res.data ?? []);
     setSearching(false);
   };
+
+  const handleSearch = () => runSearch();
+
+  const handleSelectSuggestion = (s: string) => {
+    setSearchTerm(s);
+    setShowSuggestions(false);
+    setSuggestions([]);
+    runSearch(s);
+  };
+
 
   const handleSelectDrug = (d: DrugData) => {
     if (isGuest && guestCalcUsed && selectedDrug?.ndc !== d.ndc) {
@@ -314,16 +345,57 @@ const ReimbursementCalculator = () => {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex gap-2">
-                      <Input
-                        placeholder="Drug name or NDC"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                      />
+                      <div className="relative flex-1">
+                        <Input
+                          placeholder="Drug name or NDC"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+                          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                          onKeyDown={(e) => {
+                            if (e.key === "ArrowDown" && showSuggestions) {
+                              e.preventDefault();
+                              setSuggestionIndex((i) => Math.min(i + 1, suggestions.length - 1));
+                            } else if (e.key === "ArrowUp" && showSuggestions) {
+                              e.preventDefault();
+                              setSuggestionIndex((i) => Math.max(i - 1, -1));
+                            } else if (e.key === "Enter") {
+                              if (showSuggestions && suggestionIndex >= 0 && suggestions[suggestionIndex]) {
+                                e.preventDefault();
+                                handleSelectSuggestion(suggestions[suggestionIndex]);
+                              } else {
+                                handleSearch();
+                              }
+                            } else if (e.key === "Escape") {
+                              setShowSuggestions(false);
+                            }
+                          }}
+                          autoComplete="off"
+                        />
+                        {showSuggestions && suggestions.length > 0 && (
+                          <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg z-50 overflow-hidden">
+                            <ul className="py-1 max-h-72 overflow-y-auto">
+                              {suggestions.map((s, i) => (
+                                <li key={`${s}-${i}`}>
+                                  <button
+                                    type="button"
+                                    onMouseDown={(e) => { e.preventDefault(); handleSelectSuggestion(s); }}
+                                    onMouseEnter={() => setSuggestionIndex(i)}
+                                    className={`w-full px-3 py-2 text-left text-sm truncate ${suggestionIndex === i ? "bg-accent" : "hover:bg-accent/50"}`}
+                                  >
+                                    {s}
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                       <Button onClick={handleSearch} disabled={searching}>
                         {searching ? "…" : "Search"}
                       </Button>
                     </div>
+
                     {searchResults.length > 0 && !selectedDrug && (
                       <div className="border rounded-lg max-h-72 overflow-y-auto divide-y">
                         {searchResults.map((d) => (
