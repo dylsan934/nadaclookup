@@ -345,16 +345,57 @@ const ReimbursementCalculator = () => {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex gap-2">
-                      <Input
-                        placeholder="Drug name or NDC"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                      />
+                      <div className="relative flex-1">
+                        <Input
+                          placeholder="Drug name or NDC"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+                          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                          onKeyDown={(e) => {
+                            if (e.key === "ArrowDown" && showSuggestions) {
+                              e.preventDefault();
+                              setSuggestionIndex((i) => Math.min(i + 1, suggestions.length - 1));
+                            } else if (e.key === "ArrowUp" && showSuggestions) {
+                              e.preventDefault();
+                              setSuggestionIndex((i) => Math.max(i - 1, -1));
+                            } else if (e.key === "Enter") {
+                              if (showSuggestions && suggestionIndex >= 0 && suggestions[suggestionIndex]) {
+                                e.preventDefault();
+                                handleSelectSuggestion(suggestions[suggestionIndex]);
+                              } else {
+                                handleSearch();
+                              }
+                            } else if (e.key === "Escape") {
+                              setShowSuggestions(false);
+                            }
+                          }}
+                          autoComplete="off"
+                        />
+                        {showSuggestions && suggestions.length > 0 && (
+                          <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg z-50 overflow-hidden">
+                            <ul className="py-1 max-h-72 overflow-y-auto">
+                              {suggestions.map((s, i) => (
+                                <li key={`${s}-${i}`}>
+                                  <button
+                                    type="button"
+                                    onMouseDown={(e) => { e.preventDefault(); handleSelectSuggestion(s); }}
+                                    onMouseEnter={() => setSuggestionIndex(i)}
+                                    className={`w-full px-3 py-2 text-left text-sm truncate ${suggestionIndex === i ? "bg-accent" : "hover:bg-accent/50"}`}
+                                  >
+                                    {s}
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                       <Button onClick={handleSearch} disabled={searching}>
                         {searching ? "…" : "Search"}
                       </Button>
                     </div>
+
                     {searchResults.length > 0 && !selectedDrug && (
                       <div className="border rounded-lg max-h-72 overflow-y-auto divide-y">
                         {searchResults.map((d) => (
