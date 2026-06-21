@@ -64,6 +64,9 @@ const ReimbursementCalculator = () => {
   const [searchResults, setSearchResults] = useState<DrugData[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedDrug, setSelectedDrug] = useState<DrugData | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionIndex, setSuggestionIndex] = useState(-1);
 
   // Inputs
   const [quantity, setQuantity] = useState<string>("30");
