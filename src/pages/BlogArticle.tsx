@@ -173,9 +173,17 @@ const articles: Record<string, { title: string; description: string; content: JS
             </tbody>
           </table>
         </div>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">NADAC vs WAC: Which Reflects Real Pharmacy Cost?</h2>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          NADAC reflects real pharmacy cost because CMS builds it from actual invoice data submitted by retail pharmacies. WAC is a manufacturer-published list price, so it sits above what most pharmacies pay once wholesaler discounts and contract terms are applied. If your question is "what did this drug actually cost my pharmacy?", NADAC is the closer answer.
+        </p>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Is WAC Higher Than NADAC?</h2>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          For most generic drugs WAC is meaningfully higher than NADAC, since generics carry the deepest wholesaler discounts off list price. For brand drugs the two run closer together, because brand acquisition cost tends to track list price with smaller concessions. Compare both on a specific NDC rather than assuming a fixed spread.
+        </p>
         <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Which Should Pharmacies Use?</h2>
         <p className="text-muted-foreground leading-relaxed mb-4">
-          For day-to-day cost analysis, reimbursement verification, and wholesaler negotiations, <strong className="text-foreground">NADAC is the better benchmark</strong>. It reflects real market prices rather than artificial list prices. Use our free <Link to="/" className="text-primary hover:underline">NADAC lookup tool</Link> to search current prices by drug name or NDC code.
+          For day-to-day cost analysis, reimbursement verification, and wholesaler negotiations, <strong className="text-foreground">NADAC is the better benchmark</strong>. It reflects real market prices rather than artificial list prices. Use our free <Link to="/" className="text-primary hover:underline">NADAC lookup tool</Link> to search current prices by drug name or NDC code, or run a claim through the <Link to="/reimbursement-calculator" className="text-primary hover:underline">reimbursement calculator</Link>.
         </p>
       </>
     ),
