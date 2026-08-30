@@ -139,8 +139,8 @@ const articles: Record<string, { title: string; description: string; content: JS
     ),
   },
   "nadac-vs-wac-explained": {
-    title: "NADAC vs WAC (Wholesale Acquisition Cost) Explained | NADAC Lookup",
-    description: "Understand the key differences between NADAC and WAC drug pricing benchmarks. Learn which one better reflects actual pharmacy acquisition costs.",
+    title: "NADAC vs WAC: Key Differences Explained | NADAC Lookup",
+    description: "NADAC vs WAC compared: what each benchmark measures, how they differ, and which one reflects what pharmacies actually pay for drugs.",
     content: (
       <>
         <p className="text-muted-foreground leading-relaxed mb-4">
