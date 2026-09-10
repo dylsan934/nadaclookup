@@ -67,7 +67,7 @@ const Pricing = () => {
                 ))}
               </ul>
               <Button asChild className="w-full mt-8">
-                <Link to="/auth">Start 7-Day Free Trial</Link>
+                <Link to="/auth?mode=signup">Start 7-Day Free Trial</Link>
               </Button>
             </div>
           </div>
