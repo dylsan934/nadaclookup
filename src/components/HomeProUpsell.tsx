@@ -16,7 +16,7 @@ export const HomeProUpsell = () => {
           Pro · $29/mo
         </p>
         <p className="text-sm text-muted-foreground">
-          Full price history, automated alerts, unlimited saves.{" "}
+          Full price history, automated alerts, unlimited saves. 7-day free trial · Cancel anytime.{" "}
           <Link to="/pricing" className="text-primary hover:underline">
             See all features
           </Link>
@@ -28,7 +28,7 @@ export const HomeProUpsell = () => {
         </Button>
       ) : (
         <Button asChild className="shrink-0">
-          <Link to="/auth">Start 7-day trial</Link>
+          <Link to="/auth?mode=signup">Start 7-day trial</Link>
         </Button>
       )}
     </section>

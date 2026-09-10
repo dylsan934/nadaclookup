@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const [isLogin, setIsLogin] = useState(() => searchParams.get("mode") !== "signup");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -126,7 +127,7 @@ const Auth = () => {
     setIsSubmitting(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}/?welcome=1`,
       });
       if (result.error) {
         toast({
@@ -141,7 +142,7 @@ const Auth = () => {
         // Browser will navigate away to Google
         return;
       }
-      navigate("/");
+      navigate("/?welcome=1");
     } catch (err) {
       toast({
         title: "Google sign-in failed",
@@ -232,7 +233,7 @@ const Auth = () => {
             title: "Account created!",
             description: "Welcome! You can now access all features.",
           });
-          navigate("/");
+          navigate("/?welcome=1");
         } else {
           // Email confirmation required — no session until they click the link
           toast({
@@ -373,12 +374,12 @@ const Auth = () => {
         <Card>
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-xl font-semibold">
-              {isLogin ? "Welcome back" : "Create your free account"}
+              {isLogin ? "Welcome back" : "Start your 7-day free Pro trial"}
             </CardTitle>
             <CardDescription className="text-balance">
               {isLogin 
                 ? "Sign in to access your saved drugs and settings" 
-                : "Search drug pricing for free. Upgrade anytime to unlock premium features."}
+                : "Create your account, then try every Pro feature free for 7 days. No charge until day 8 · Cancel anytime."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -443,7 +444,7 @@ const Auth = () => {
                     {isLogin ? "Signing in..." : "Creating account..."}
                   </>
                 ) : (
-                  isLogin ? "Sign In" : "Create Free Account"
+                  isLogin ? "Sign In" : "Create Account & Start Trial"
                 )}
               </Button>
             </form>

@@ -687,14 +687,14 @@ const ReimbursementCalculator = () => {
       <Dialog open={guestGateOpen} onOpenChange={setGuestGateOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Create a free account to keep going</DialogTitle>
+            <DialogTitle>Create a free account to keep calculating</DialogTitle>
             <DialogDescription>
-              You've used your free guest calculation. Sign up free to run unlimited calculations, save your own contract rules, and track every estimate.
+              You've used your free guest calculation. Sign up free to run unlimited calculations, save your own contract rules, and track every estimate — and unlock 7 days of Pro free.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-2">
             <Button asChild variant="outline"><Link to="/auth">Log in</Link></Button>
-            <Button asChild><Link to="/auth?mode=signup">Create free account</Link></Button>
+            <Button asChild><Link to="/auth?mode=signup">Sign up free — get 7 days of Pro</Link></Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

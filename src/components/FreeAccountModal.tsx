@@ -60,7 +60,7 @@ export const FreeAccountModal = ({ open, onOpenChange }: FreeAccountModalProps) 
           </div>
 
           {/* CTA for free account */}
-          <Link to="/auth" className="w-full block" onClick={() => onOpenChange(false)}>
+          <Link to="/auth?mode=signup" className="w-full block" onClick={() => onOpenChange(false)}>
             <Button size="lg" className="w-full font-semibold">
               Create Free Account
             </Button>
@@ -95,16 +95,19 @@ export const FreeAccountModal = ({ open, onOpenChange }: FreeAccountModalProps) 
               </p>
             </div>
 
-            <Link to="/auth" className="w-full block" onClick={() => onOpenChange(false)}>
+            <Link to="/auth?mode=signup" className="w-full block" onClick={() => onOpenChange(false)}>
               <Button 
                 variant="outline" 
                 size="lg" 
                 className="w-full font-medium border-amber-200 dark:border-amber-800 hover:bg-amber-50 dark:hover:bg-amber-900/30"
               >
                 <Sparkles className="h-4 w-4 mr-2 text-amber-500" />
-                Get Started with Pro
+                Start 7-Day Free Trial
               </Button>
             </Link>
+            <p className="text-xs text-center text-muted-foreground">
+              7-day free trial · Cancel anytime
+            </p>
           </div>
         </div>
 

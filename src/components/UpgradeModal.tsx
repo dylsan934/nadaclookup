@@ -128,7 +128,7 @@ export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeMo
               $29<span className="text-base font-normal text-muted-foreground">/month</span>
             </p>
             <p className="text-xs text-muted-foreground mt-1.5">
-              Less than the cost of one mispriced prescription
+              7-day free trial · No charge until day 8 · Cancel anytime
             </p>
           </div>
         </div>
@@ -156,7 +156,7 @@ export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeMo
             </>
           ) : (
             <>
-              <Link to="/auth" className="w-full" onClick={() => onOpenChange(false)}>
+              <Link to="/auth?mode=signup" className="w-full" onClick={() => onOpenChange(false)}>
                 <Button 
                   size="lg" 
                   className="w-full font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md"
