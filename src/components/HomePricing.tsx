@@ -68,13 +68,23 @@ export const HomePricing = () => {
             ))}
           </ul>
           {user ? (
-            <Button className="w-full" onClick={handleStartTrial} disabled={isStarting}>
-              Start 7-Day Free Trial
-            </Button>
+            <>
+              <Button className="w-full" onClick={handleStartTrial} disabled={isStarting}>
+                Start 7-Day Free Trial
+              </Button>
+              <p className="text-xs text-center text-muted-foreground mt-3">
+                7-day free trial · No charge until day 8 · Cancel anytime
+              </p>
+            </>
           ) : (
-            <Button asChild className="w-full">
-              <Link to="/auth">Start 7-Day Free Trial</Link>
-            </Button>
+            <>
+              <Button asChild className="w-full">
+                <Link to="/auth?mode=signup">Start 7-Day Free Trial</Link>
+              </Button>
+              <p className="text-xs text-center text-muted-foreground mt-3">
+                7-day free trial · No charge until day 8 · Cancel anytime
+              </p>
+            </>
           )}
         </div>
       </div>
