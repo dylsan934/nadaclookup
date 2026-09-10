@@ -127,7 +127,7 @@ const Auth = () => {
     setIsSubmitting(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}/?welcome=1`,
       });
       if (result.error) {
         toast({
@@ -374,12 +374,12 @@ const Auth = () => {
         <Card>
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-xl font-semibold">
-              {isLogin ? "Welcome back" : "Create your free account"}
+              {isLogin ? "Welcome back" : "Start your 7-day free Pro trial"}
             </CardTitle>
             <CardDescription className="text-balance">
               {isLogin 
                 ? "Sign in to access your saved drugs and settings" 
-                : "Search drug pricing for free. Upgrade anytime to unlock premium features."}
+                : "Create your account, then try every Pro feature free for 7 days. No charge until day 8 · Cancel anytime."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
