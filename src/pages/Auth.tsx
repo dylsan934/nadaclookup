@@ -444,7 +444,7 @@ const Auth = () => {
                     {isLogin ? "Signing in..." : "Creating account..."}
                   </>
                 ) : (
-                  isLogin ? "Sign In" : "Create Free Account"
+                  isLogin ? "Sign In" : "Create Account & Start Trial"
                 )}
               </Button>
             </form>
