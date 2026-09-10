@@ -60,7 +60,7 @@ export const FreeAccountModal = ({ open, onOpenChange }: FreeAccountModalProps) 
           </div>
 
           {/* CTA for free account */}
-          <Link to="/auth" className="w-full block" onClick={() => onOpenChange(false)}>
+          <Link to="/auth?mode=signup" className="w-full block" onClick={() => onOpenChange(false)}>
             <Button size="lg" className="w-full font-semibold">
               Create Free Account
             </Button>

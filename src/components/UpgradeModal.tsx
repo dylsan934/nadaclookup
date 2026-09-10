@@ -128,7 +128,7 @@ export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeMo
               $29<span className="text-base font-normal text-muted-foreground">/month</span>
             </p>
             <p className="text-xs text-muted-foreground mt-1.5">
-              Less than the cost of one mispriced prescription
+              7-day free trial · No charge until day 8 · Cancel anytime
             </p>
           </div>
         </div>
