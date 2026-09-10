@@ -10,9 +10,11 @@ import { DataStatus } from "@/components/DataStatus";
 import { HomeSEOContent } from "@/components/HomeSEOContent";
 import { HomeProUpsell } from "@/components/HomeProUpsell";
 import { PopularDrugLinks } from "@/components/PopularDrugLinks";
+import { WelcomeTrialModal } from "@/components/WelcomeTrialModal";
 import { DrugData } from "@/components/DrugCard";
 import { nadacApi } from "@/lib/nadac-api";
 import { useToast } from "@/hooks/use-toast";
+import { useSearchParams } from "react-router-dom";
 
 const faqJsonLd = {
   "@context": "https://schema.org",
@@ -41,6 +43,21 @@ const Index = () => {
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Show a confirmation when returning from a successful checkout
+  useEffect(() => {
+    if (searchParams.get("subscription") === "success") {
+      toast({
+        title: "Your Pro trial is active!",
+        description: "Enjoy 7 days of full access. You can manage or cancel anytime from your account.",
+      });
+      const next = new URLSearchParams(searchParams);
+      next.delete("subscription");
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -148,6 +165,7 @@ const Index = () => {
       </main>
 
       <Footer />
+      <WelcomeTrialModal />
     </div>
   );
 };
