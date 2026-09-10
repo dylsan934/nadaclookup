@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const [isLogin, setIsLogin] = useState(() => searchParams.get("mode") !== "signup");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -141,7 +142,7 @@ const Auth = () => {
         // Browser will navigate away to Google
         return;
       }
-      navigate("/");
+      navigate("/?welcome=1");
     } catch (err) {
       toast({
         title: "Google sign-in failed",
@@ -232,7 +233,7 @@ const Auth = () => {
             title: "Account created!",
             description: "Welcome! You can now access all features.",
           });
-          navigate("/");
+          navigate("/?welcome=1");
         } else {
           // Email confirmation required — no session until they click the link
           toast({
