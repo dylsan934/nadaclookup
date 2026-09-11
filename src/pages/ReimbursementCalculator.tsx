@@ -355,7 +355,7 @@ const ReimbursementCalculator = () => {
             <div className="mb-6">
               <GuestSignupCta
                 title={guestCalcUsed ? "You've used your free calculation — create an account to keep going" : "Try one calculation free — no signup required"}
-                description={guestCalcUsed ? "Create a free account to run unlimited calculations, save your own contract rules, and track every estimate." : "You can run one full reimbursement estimate as a guest. Sign up free to save rules and run unlimited calculations."}
+                description={guestCalcUsed ? `Create a free account for ${FREE_MONTHLY_LIMIT} calculations a month and 1 saved contract rule — plus 7 days of Pro free.` : `You can run one full reimbursement estimate as a guest. Sign up free for ${FREE_MONTHLY_LIMIT} calculations a month and your own contract rules.`}
               />
             </div>
           )}
@@ -365,8 +365,8 @@ const ReimbursementCalculator = () => {
               <div className="flex items-start gap-3">
                 <Sparkles className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                 <div>
-                  <div className="font-medium text-sm">Unlock unlimited rules, saved calculations, and CSV export</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">Free plan saves 1 rule. Pro saves unlimited rules, full calculation history, and printable reports.</div>
+                  <div className="font-medium text-sm">Unlock unlimited calculations, rules, saved history, and CSV export</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">Free plan: {monthlyUsage}/{FREE_MONTHLY_LIMIT} calculations used this month, 1 saved rule. Pro: unlimited everything, plus printable reports.</div>
                 </div>
               </div>
               <Button asChild>
