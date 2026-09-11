@@ -25,6 +25,7 @@ import { RuleEditorModal } from "@/components/reimbursement/RuleEditorModal";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { calculate, formatCurrency, formatFormula, formatUnitPrice, RULE_TEMPLATES, type ReimbursementRule } from "@/lib/reimbursement";
 import { useToast } from "@/hooks/use-toast";
+import { formatSourceDateShort } from "@/lib/format-date";
 
 const GUEST_USED_KEY = "guest_calc_used_v1";
 const FREE_MONTHLY_LIMIT = 5;
