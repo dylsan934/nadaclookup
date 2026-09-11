@@ -244,11 +244,11 @@ export default function WeeklyMovers() {
                   <p className="font-semibold mb-1">Current weekly movers are unavailable.</p>
                   <p>
                     The newest NADAC data in our database is effective{" "}
-                    <strong>{formatDate(latestDataDate!)}</strong>, but none of the products in that release had a
-                    previously published price to compare against, so there are no week-over-week changes to report yet.
-                    Everything below is the most recent comparison we do have:{" "}
-                    <strong>{formatDate(data.previousDate)} → {formatDate(data.currentDate)}</strong>. It is historical,
-                    not this week's movement, and will be replaced as soon as CMS publishes changed prices.
+                    <strong>{formatDate(latestDataDate!)}</strong>, but none of the products in that release changed
+                    against a previously published price, so there is nothing to report for this week. Everything below
+                    comes from the most recent data that did contain changes,{" "}
+                    <strong>effective {formatDate(data.currentDate)}</strong>. It is historical, not this week's
+                    movement, and will be replaced as soon as CMS publishes changed prices.
                   </p>
                 </div>
               </Card>
