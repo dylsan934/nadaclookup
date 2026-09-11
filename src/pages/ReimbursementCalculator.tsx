@@ -207,6 +207,17 @@ const ReimbursementCalculator = () => {
     }
   }, [isGuest, result, guestCalcUsed]);
 
+  // Count each new drug calculation against the free monthly limit (once per drug).
+  useEffect(() => {
+    if (!user || isSubscribed || !result || !selectedDrug) return;
+    if (countedDrugRef.current === selectedDrug.ndc) return;
+    countedDrugRef.current = selectedDrug.ndc;
+    supabase.rpc("increment_calc_usage").then(({ data, error }) => {
+      if (!error && typeof data === "number") setMonthlyUsage(data);
+      else setMonthlyUsage((c) => c + 1);
+    });
+  }, [user, isSubscribed, result, selectedDrug]);
+
   // Deep-link prefill: ?ndc=... or ?drug=...
   useEffect(() => {
     const ndc = searchParams.get("ndc");
@@ -214,6 +225,7 @@ const ReimbursementCalculator = () => {
     const term = ndc || drug;
     if (!term || selectedDrug) return;
     if (isGuest && guestCalcUsed) return;
+    if (freeLimitReached) return;
     (async () => {
       setSearching(true);
       const res = await nadacApi.search(term, 5);
