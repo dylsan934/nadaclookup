@@ -88,6 +88,24 @@ const ReimbursementCalculator = () => {
   });
   const [guestGateOpen, setGuestGateOpen] = useState(false);
 
+  // Free plan gating: 5 calculations per calendar month. Pro is unlimited.
+  const [monthlyUsage, setMonthlyUsage] = useState(0);
+  const freeLimitReached = !!user && !isSubscribed && monthlyUsage >= FREE_MONTHLY_LIMIT;
+  const countedDrugRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!user || isSubscribed) return;
+    const month = new Date();
+    const monthStart = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}-01`;
+    supabase
+      .from("calculation_usage")
+      .select("count")
+      .eq("user_id", user.id)
+      .eq("month", monthStart)
+      .maybeSingle()
+      .then(({ data }) => setMonthlyUsage(data?.count ?? 0));
+  }, [user, isSubscribed]);
+
   const selectedRule = useMemo(
     () => rules.find((r) => r.id === selectedRuleId) ?? rules.find((r) => r.is_default) ?? rules[0] ?? null,
     [rules, selectedRuleId]
