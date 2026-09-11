@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams } from "react-router-dom";
 import { AlertCircle, Calculator, Edit2, Plus, Printer, Star, Trash2, Sparkles, ShieldCheck, Zap } from "lucide-react";
@@ -27,6 +27,7 @@ import { calculate, formatCurrency, formatFormula, formatUnitPrice, RULE_TEMPLAT
 import { useToast } from "@/hooks/use-toast";
 
 const GUEST_USED_KEY = "guest_calc_used_v1";
+const FREE_MONTHLY_LIMIT = 5;
 
 const GuestSignupCta = ({ title, description }: { title: string; description: string }) => (
   <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 to-background p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
