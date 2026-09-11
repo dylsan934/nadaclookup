@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams } from "react-router-dom";
 import { AlertCircle, Calculator, Edit2, Plus, Printer, Star, Trash2, Sparkles, ShieldCheck, Zap } from "lucide-react";
@@ -27,6 +27,7 @@ import { calculate, formatCurrency, formatFormula, formatUnitPrice, RULE_TEMPLAT
 import { useToast } from "@/hooks/use-toast";
 
 const GUEST_USED_KEY = "guest_calc_used_v1";
+const FREE_MONTHLY_LIMIT = 5;
 
 const GuestSignupCta = ({ title, description }: { title: string; description: string }) => (
   <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 to-background p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
@@ -88,6 +89,24 @@ const ReimbursementCalculator = () => {
   });
   const [guestGateOpen, setGuestGateOpen] = useState(false);
 
+  // Free plan gating: 5 calculations per calendar month. Pro is unlimited.
+  const [monthlyUsage, setMonthlyUsage] = useState(0);
+  const freeLimitReached = !!user && !isSubscribed && monthlyUsage >= FREE_MONTHLY_LIMIT;
+  const countedDrugRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!user || isSubscribed) return;
+    const month = new Date();
+    const monthStart = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}-01`;
+    supabase
+      .from("calculation_usage")
+      .select("count")
+      .eq("user_id", user.id)
+      .eq("month", monthStart)
+      .maybeSingle()
+      .then(({ data }) => setMonthlyUsage(data?.count ?? 0));
+  }, [user, isSubscribed]);
+
   const selectedRule = useMemo(
     () => rules.find((r) => r.id === selectedRuleId) ?? rules.find((r) => r.is_default) ?? rules[0] ?? null,
     [rules, selectedRuleId]
@@ -136,6 +155,11 @@ const ReimbursementCalculator = () => {
       setGuestGateOpen(true);
       return;
     }
+    if (freeLimitReached) {
+      setUpgradeReason(`You've used all ${FREE_MONTHLY_LIMIT} free calculations this month. Upgrade to Pro for unlimited calculations, unlimited contract rules, and full history.`);
+      setUpgradeOpen(true);
+      return;
+    }
     setShowSuggestions(false);
     setSearching(true);
     const res = await nadacApi.search(term, 25);
@@ -158,6 +182,11 @@ const ReimbursementCalculator = () => {
       setGuestGateOpen(true);
       return;
     }
+    if (freeLimitReached && selectedDrug?.ndc !== d.ndc) {
+      setUpgradeReason(`You've used all ${FREE_MONTHLY_LIMIT} free calculations this month. Upgrade to Pro for unlimited calculations, unlimited contract rules, and full history.`);
+      setUpgradeOpen(true);
+      return;
+    }
     setSelectedDrug(d);
     setSearchResults([]);
   };
@@ -178,6 +207,17 @@ const ReimbursementCalculator = () => {
     }
   }, [isGuest, result, guestCalcUsed]);
 
+  // Count each new drug calculation against the free monthly limit (once per drug).
+  useEffect(() => {
+    if (!user || isSubscribed || !result || !selectedDrug) return;
+    if (countedDrugRef.current === selectedDrug.ndc) return;
+    countedDrugRef.current = selectedDrug.ndc;
+    supabase.rpc("increment_calc_usage").then(({ data, error }) => {
+      if (!error && typeof data === "number") setMonthlyUsage(data);
+      else setMonthlyUsage((c) => c + 1);
+    });
+  }, [user, isSubscribed, result, selectedDrug]);
+
   // Deep-link prefill: ?ndc=... or ?drug=...
   useEffect(() => {
     const ndc = searchParams.get("ndc");
@@ -185,6 +225,7 @@ const ReimbursementCalculator = () => {
     const term = ndc || drug;
     if (!term || selectedDrug) return;
     if (isGuest && guestCalcUsed) return;
+    if (freeLimitReached) return;
     (async () => {
       setSearching(true);
       const res = await nadacApi.search(term, 5);
@@ -314,7 +355,7 @@ const ReimbursementCalculator = () => {
             <div className="mb-6">
               <GuestSignupCta
                 title={guestCalcUsed ? "You've used your free calculation — create an account to keep going" : "Try one calculation free — no signup required"}
-                description={guestCalcUsed ? "Create a free account to run unlimited calculations, save your own contract rules, and track every estimate." : "You can run one full reimbursement estimate as a guest. Sign up free to save rules and run unlimited calculations."}
+                description={guestCalcUsed ? `Create a free account for ${FREE_MONTHLY_LIMIT} calculations a month and 1 saved contract rule — plus 7 days of Pro free.` : `You can run one full reimbursement estimate as a guest. Sign up free for ${FREE_MONTHLY_LIMIT} calculations a month and your own contract rules.`}
               />
             </div>
           )}
@@ -324,8 +365,8 @@ const ReimbursementCalculator = () => {
               <div className="flex items-start gap-3">
                 <Sparkles className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                 <div>
-                  <div className="font-medium text-sm">Unlock unlimited rules, saved calculations, and CSV export</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">Free plan saves 1 rule. Pro saves unlimited rules, full calculation history, and printable reports.</div>
+                  <div className="font-medium text-sm">Unlock unlimited calculations, rules, saved history, and CSV export</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">Free plan: {monthlyUsage}/{FREE_MONTHLY_LIMIT} calculations used this month, 1 saved rule. Pro: unlimited everything, plus printable reports.</div>
                 </div>
               </div>
               <Button asChild>
@@ -659,7 +700,7 @@ const ReimbursementCalculator = () => {
                 <div className="lg:col-span-5">
                   <GuestSignupCta
                     title="Save your own contract rules"
-                    description="Create a free account to build PBM, Medicaid, LTC, and cash rules — and run unlimited calculations."
+                    description={`Create a free account to build PBM, Medicaid, LTC, and cash rules — with ${FREE_MONTHLY_LIMIT} calculations a month. Go Pro for unlimited.`}
                   />
                 </div>
               )}
@@ -689,7 +730,7 @@ const ReimbursementCalculator = () => {
           <DialogHeader>
             <DialogTitle>Create a free account to keep calculating</DialogTitle>
             <DialogDescription>
-              You've used your free guest calculation. Sign up free to run unlimited calculations, save your own contract rules, and track every estimate — and unlock 7 days of Pro free.
+              You've used your free guest calculation. Sign up free for {FREE_MONTHLY_LIMIT} calculations a month and your own contract rules — and unlock 7 days of Pro free with unlimited calculations.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-2">
