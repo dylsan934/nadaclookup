@@ -155,6 +155,11 @@ const ReimbursementCalculator = () => {
       setGuestGateOpen(true);
       return;
     }
+    if (freeLimitReached) {
+      setUpgradeReason(`You've used all ${FREE_MONTHLY_LIMIT} free calculations this month. Upgrade to Pro for unlimited calculations, unlimited contract rules, and full history.`);
+      setUpgradeOpen(true);
+      return;
+    }
     setShowSuggestions(false);
     setSearching(true);
     const res = await nadacApi.search(term, 25);
@@ -175,6 +180,11 @@ const ReimbursementCalculator = () => {
   const handleSelectDrug = (d: DrugData) => {
     if (isGuest && guestCalcUsed && selectedDrug?.ndc !== d.ndc) {
       setGuestGateOpen(true);
+      return;
+    }
+    if (freeLimitReached && selectedDrug?.ndc !== d.ndc) {
+      setUpgradeReason(`You've used all ${FREE_MONTHLY_LIMIT} free calculations this month. Upgrade to Pro for unlimited calculations, unlimited contract rules, and full history.`);
+      setUpgradeOpen(true);
       return;
     }
     setSelectedDrug(d);
