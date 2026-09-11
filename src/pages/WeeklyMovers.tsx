@@ -213,9 +213,9 @@ export default function WeeklyMovers() {
             </p>
             {data?.success && (
               <p className="text-xs text-muted-foreground mt-1">
-                {isCurrent ? "Latest comparison" : "Most recent available comparison"}:{" "}
-                {formatDate(data.previousDate)} → {formatDate(data.currentDate)} ·{" "}
-                {data.totalChanged.toLocaleString()} drugs changed
+                {isCurrent ? "Latest changes" : "Most recent available changes"}: CMS data effective{" "}
+                {formatDate(data.currentDate)}, compared with each drug's previously published price ·{" "}
+                {data.totalChanged.toLocaleString()} {data.totalChanged === 1 ? "price" : "prices"} changed
               </p>
             )}
             {latestDataDate && (
