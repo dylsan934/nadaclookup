@@ -14,6 +14,7 @@ import { UpgradeModal } from "@/components/UpgradeModal";
 import { FreeAccountModal } from "@/components/FreeAccountModal";
 import { PriceHistoryModal } from "@/components/PriceHistoryModal";
 import { cn } from "@/lib/utils";
+import { formatSourceDateShort } from "@/lib/format-date";
 
 
 export interface DrugData {
@@ -148,17 +149,7 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
     }).format(price);
   };
 
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
-    } catch {
-      return dateStr;
-    }
-  };
+  const formatDate = (dateStr: string) => formatSourceDateShort(dateStr);
 
   const parsedQuantity = parseFloat(quantity) || 0;
   const totalPrice = parsedQuantity * drug.nadacPerUnit;

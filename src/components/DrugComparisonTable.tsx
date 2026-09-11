@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatSourceDateShort } from "@/lib/format-date";
 
 interface DrugComparisonTableProps {
   drugs: DrugData[];
@@ -39,17 +40,7 @@ const formatTotalPrice = (price: number) => {
   }).format(price);
 };
 
-const formatDate = (dateStr: string) => {
-  try {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  } catch {
-    return dateStr;
-  }
-};
+const formatDate = (dateStr: string) => formatSourceDateShort(dateStr);
 
 export const DrugComparisonTable = ({ drugs, onRemove }: DrugComparisonTableProps) => {
   const [quantities, setQuantities] = useState<Record<string, string>>({});

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { drugNameToSlug } from "@/lib/drug-slug";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatSourceDate } from "@/lib/format-date";
 
 interface Mover {
   ndc: string;
@@ -35,7 +36,7 @@ const formatPrice = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 4 }).format(n);
 
 const formatDate = (d: string) =>
-  new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  formatSourceDate(d, { month: "long", day: "numeric", year: "numeric" });
 
 const MoverRow = ({ mover, rank, type }: { mover: Mover; rank: number; type: "increase" | "decrease" }) => {
   const isUp = type === "increase";
@@ -180,10 +181,10 @@ export default function WeeklyMovers() {
     load();
   }, []);
 
-  const showStaleBanner =
-    !!data?.success && !!latestDataDate && latestDataDate !== data.currentDate;
-
-  const weekLabel = data?.currentDate ? formatDate(data.currentDate) : "This Week";
+  // A stored comparison is only "current" when it was computed from the newest published
+  // NADAC data. Otherwise it is an archived comparison and must not be shown as this week's.
+  const isCurrent = !!data?.success && !!latestDataDate && latestDataDate === data.currentDate;
+  const isArchived = !!data?.success && !isCurrent;
 
   return (
     <>
@@ -203,11 +204,18 @@ export default function WeeklyMovers() {
               Weekly NADAC Price Movers
             </h1>
             <p className="text-muted-foreground">
-              Top 10 biggest price increases and decreases — week of {weekLabel}
+              Top 10 biggest NADAC price increases and decreases, ranked by percent change.
             </p>
-            {data && (
+            {data?.success && (
               <p className="text-xs text-muted-foreground mt-1">
-                Comparing {formatDate(data.previousDate)} → {formatDate(data.currentDate)} · {data.totalChanged.toLocaleString()} drugs changed
+                {isCurrent ? "Latest comparison" : "Most recent available comparison"}:{" "}
+                {formatDate(data.previousDate)} → {formatDate(data.currentDate)} ·{" "}
+                {data.totalChanged.toLocaleString()} drugs changed
+              </p>
+            )}
+            {latestDataDate && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Newest CMS data in our database: effective {formatDate(latestDataDate)}
               </p>
             )}
           </div>
@@ -224,12 +232,20 @@ export default function WeeklyMovers() {
             </Card>
           ) : (
             <>
-            {showStaleBanner && (
-              <Card className="p-4 mb-6 bg-primary/5 border-primary/20 flex gap-3 items-start">
+            {isArchived && (
+              <Card className="p-4 mb-6 bg-muted/40 border-border flex gap-3 items-start">
                 <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <p className="text-sm text-foreground leading-relaxed">
-                  New NADAC data was published on <strong>{formatDate(latestDataDate!)}</strong>, but it was a small incremental update with too few rows for week-over-week comparison. The movers below reflect the most recent full weekly snapshot ({formatDate(data.previousDate)} → {formatDate(data.currentDate)}). They'll refresh when CMS releases the next full snapshot.
-                </p>
+                <div className="text-sm text-foreground leading-relaxed">
+                  <p className="font-semibold mb-1">Current weekly movers are unavailable.</p>
+                  <p>
+                    The newest NADAC data in our database is effective{" "}
+                    <strong>{formatDate(latestDataDate!)}</strong>, but none of the products in that release had a
+                    previously published price to compare against, so there are no week-over-week changes to report yet.
+                    Everything below is the most recent comparison we do have:{" "}
+                    <strong>{formatDate(data.previousDate)} → {formatDate(data.currentDate)}</strong>. It is historical,
+                    not this week's movement, and will be replaced as soon as CMS publishes changed prices.
+                  </p>
+                </div>
               </Card>
             )}
 
@@ -237,7 +253,7 @@ export default function WeeklyMovers() {
               <Card className="p-10 text-center bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
                 <Lock className="h-10 w-10 text-primary mx-auto mb-4" />
                 <h2 className="text-xl font-bold text-foreground mb-2">
-                  Sign up to see this week's biggest NADAC movers
+                  Sign up to see the biggest NADAC movers
                 </h2>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   Create a free account to preview the top mover in each list. Upgrade to Pro to unlock all 10.
@@ -254,13 +270,13 @@ export default function WeeklyMovers() {
             ) : (
               <div className="grid md:grid-cols-2 gap-6">
                 <MoversCard
-                  title={`Top ${data.topIncreases.length} Increases`}
+                  title={`Top ${data.topIncreases.length} Increases · ${formatDate(data.currentDate)}`}
                   type="increase"
                   movers={data.topIncreases}
                   isSubscribed={isSubscribed}
                 />
                 <MoversCard
-                  title={`Top ${data.topDecreases.length} Decreases`}
+                  title={`Top ${data.topDecreases.length} Decreases · ${formatDate(data.currentDate)}`}
                   type="decrease"
                   movers={data.topDecreases}
                   isSubscribed={isSubscribed}

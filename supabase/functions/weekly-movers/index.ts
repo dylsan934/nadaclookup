@@ -20,76 +20,6 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Find the two most recent bulk snapshot dates (1000+ records).
-    // These represent the full weekly CMS NADAC releases.
-    const bulkDates: string[] = [];
-    let searchBefore: string | null = null;
-
-    for (let attempt = 0; attempt < 20 && bulkDates.length < 2; attempt++) {
-      let query = supabase
-        .from('nadac_drugs')
-        .select('effective_date')
-        .order('effective_date', { ascending: false })
-        .limit(1);
-
-      if (searchBefore) {
-        query = query.lt('effective_date', searchBefore);
-      }
-
-      const { data: row } = await query.single();
-      if (!row) break;
-
-      const { count } = await supabase
-        .from('nadac_drugs')
-        .select('*', { count: 'exact', head: true })
-        .eq('effective_date', row.effective_date);
-
-      if (count && count > 1000) {
-        bulkDates.push(row.effective_date);
-      }
-
-      searchBefore = row.effective_date;
-    }
-
-    if (bulkDates.length < 2) {
-      return new Response(JSON.stringify({ success: false, error: 'Not enough weekly data to compare' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const currentDate = bulkDates[0];
-    const previousDate = bulkDates[1];
-
-    console.log(`Comparing bulk snapshots: ${currentDate} vs ${previousDate}`);
-
-    // Paginated fetch for a given date
-    async function fetchAllForDate(date: string, columns: string) {
-      const allRows: any[] = [];
-      let from = 0;
-      const pageSize = 1000;
-      while (true) {
-        const { data, error } = await supabase
-          .from('nadac_drugs')
-          .select(columns)
-          .eq('effective_date', date)
-          .range(from, from + pageSize - 1);
-        if (error) throw new Error(`Fetch error: ${error.message}`);
-        if (!data || data.length === 0) break;
-        allRows.push(...data);
-        if (data.length < pageSize) break;
-        from += pageSize;
-      }
-      return allRows;
-    }
-
-    const currentData = await fetchAllForDate(currentDate, 'ndc, drug_name, nadac_per_unit, pricing_unit');
-    const prevData = await fetchAllForDate(previousDate, 'ndc, nadac_per_unit');
-
-    const prevMap = new Map<string, number>();
-    for (const d of prevData) {
-      prevMap.set(d.ndc, d.nadac_per_unit);
-    }
-
     interface Mover {
       ndc: string;
       drugName: string;
@@ -99,22 +29,48 @@ Deno.serve(async (req) => {
       pricingUnit: string;
     }
 
-    const movers: Mover[] = [];
+    // CMS publishes both full weekly snapshots and small incremental corrections. Rather than
+    // discarding small files, compare every NDC in the newest published file against that same
+    // NDC's own previous published price. The DB function does this with DISTINCT ON.
+    const { data: rpcRows, error: rpcError } = await supabase.rpc('compute_weekly_movers');
 
-    for (const drug of currentData) {
-      const oldPrice = prevMap.get(drug.ndc);
-      if (oldPrice === undefined || oldPrice === 0 || oldPrice === drug.nadac_per_unit) continue;
+    if (rpcError) {
+      throw new Error(`compute_weekly_movers failed: ${rpcError.message}`);
+    }
 
-      const pctChange = ((drug.nadac_per_unit - oldPrice) / oldPrice) * 100;
-      movers.push({
-        ndc: drug.ndc,
-        drugName: drug.drug_name,
-        oldPrice,
-        newPrice: drug.nadac_per_unit,
-        pctChange: Math.round(pctChange * 100) / 100,
-        pricingUnit: drug.pricing_unit || 'EA',
+    const rows = (rpcRows || []) as Array<{
+      cur_date: string;
+      prev_date: string;
+      ndc: string;
+      drug_name: string;
+      old_price: number;
+      new_price: number;
+      pct_change: number;
+      pricing_unit: string;
+    }>;
+
+    if (rows.length === 0) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'No price changes found between the latest published data and the previous prices',
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    const currentDate = rows[0].cur_date;
+    const previousDate = rows[0].prev_date;
+
+    console.log(`Comparing latest published data ${currentDate} against prior prices (through ${previousDate})`);
+
+    const movers: Mover[] = rows.map((r) => ({
+      ndc: r.ndc,
+      drugName: r.drug_name,
+      oldPrice: Number(r.old_price),
+      newPrice: Number(r.new_price),
+      pctChange: Number(r.pct_change),
+      pricingUnit: r.pricing_unit || 'EA',
+    }));
 
     // Deduplicate by drug name (keep largest absolute change)
     const deduped = new Map<string, Mover>();
@@ -126,8 +82,8 @@ Deno.serve(async (req) => {
     }
     const uniqueMovers = Array.from(deduped.values());
 
-    const topIncreases = [...uniqueMovers].sort((a, b) => b.pctChange - a.pctChange).slice(0, 10);
-    const topDecreases = [...uniqueMovers].sort((a, b) => a.pctChange - b.pctChange).slice(0, 10);
+    const topIncreases = uniqueMovers.filter((m) => m.pctChange > 0).sort((a, b) => b.pctChange - a.pctChange).slice(0, 10);
+    const topDecreases = uniqueMovers.filter((m) => m.pctChange < 0).sort((a, b) => a.pctChange - b.pctChange).slice(0, 10);
 
     // Upsert into weekly_movers table
     const { error: upsertError } = await supabase

@@ -126,11 +126,9 @@ const ReimbursementCalculator = () => {
     });
   }, [selectedDrug, selectedRule, quantity, manualCost, actualReimb]);
 
-  const stale = useMemo(() => {
-    if (!selectedDrug?.effectiveDate) return false;
-    const days = (Date.now() - new Date(selectedDrug.effectiveDate).getTime()) / 86400000;
-    return days > 60;
-  }, [selectedDrug]);
+  // NADAC prices carry forward: CMS only republishes a rate when it changes, so an older
+  // effective date does not mean the price is out of date. We show the effective date as
+  // neutral context instead of flagging it as stale.
 
   // Debounced predictive suggestions
   useEffect(() => {
@@ -463,19 +461,12 @@ const ReimbursementCalculator = () => {
                               NDC {selectedDrug.ndc} · NADAC {formatUnitPrice(selectedDrug.nadacPerUnit)} / {selectedDrug.pricingUnit}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              Effective {selectedDrug.effectiveDate}
+                              CMS effective date {formatSourceDateShort(selectedDrug.effectiveDate)} — NADAC rates carry
+                              forward until CMS publishes a change
                             </div>
                           </div>
                           <Button variant="ghost" size="sm" onClick={handleClearDrug}>Change</Button>
                         </div>
-                        {stale && (
-                          <Alert className="mt-3 border-yellow-500/40 bg-yellow-500/10">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertDescription className="text-xs">
-                              This NADAC entry is more than 60 days old. CMS may have published newer pricing.
-                            </AlertDescription>
-                          </Alert>
-                        )}
                       </div>
                     )}
                   </CardContent>
