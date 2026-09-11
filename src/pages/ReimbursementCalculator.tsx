@@ -700,7 +700,7 @@ const ReimbursementCalculator = () => {
                 <div className="lg:col-span-5">
                   <GuestSignupCta
                     title="Save your own contract rules"
-                    description="Create a free account to build PBM, Medicaid, LTC, and cash rules — and run unlimited calculations."
+                    description={`Create a free account to build PBM, Medicaid, LTC, and cash rules — with ${FREE_MONTHLY_LIMIT} calculations a month. Go Pro for unlimited.`}
                   />
                 </div>
               )}
@@ -730,7 +730,7 @@ const ReimbursementCalculator = () => {
           <DialogHeader>
             <DialogTitle>Create a free account to keep calculating</DialogTitle>
             <DialogDescription>
-              You've used your free guest calculation. Sign up free to run unlimited calculations, save your own contract rules, and track every estimate — and unlock 7 days of Pro free.
+              You've used your free guest calculation. Sign up free for {FREE_MONTHLY_LIMIT} calculations a month and your own contract rules — and unlock 7 days of Pro free with unlimited calculations.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-2">
