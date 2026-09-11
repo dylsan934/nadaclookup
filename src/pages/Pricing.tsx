@@ -45,7 +45,7 @@ const Pricing = () => {
               <p className="text-3xl font-bold text-foreground">$0<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
               <p className="text-sm text-muted-foreground mt-2 mb-6">Perfect for occasional lookups</p>
               <ul className="space-y-3 text-sm">
-                {["Unlimited NADAC price searches", "1 free reimbursement calculation", "Search by drug name or NDC", "Side-by-side drug comparison", "Save up to 3 drugs", "Weekly updated CMS data"].map(f => (
+                {["Unlimited NADAC price searches", "5 reimbursement calculations/month", "Search by drug name or NDC", "Side-by-side drug comparison", "Save up to 3 drugs", "Weekly updated CMS data"].map(f => (
                   <li key={f} className="flex items-start gap-2 text-muted-foreground"><Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />{f}</li>
                 ))}
               </ul>
