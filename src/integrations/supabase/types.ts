@@ -586,6 +586,19 @@ export type Database = {
     }
     Functions: {
       can_save_drug: { Args: { p_user_id: string }; Returns: boolean }
+      compute_weekly_movers: {
+        Args: never
+        Returns: {
+          cur_date: string
+          drug_name: string
+          ndc: string
+          new_price: number
+          old_price: number
+          pct_change: number
+          prev_date: string
+          pricing_unit: string
+        }[]
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean

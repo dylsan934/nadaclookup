@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { drugNameToSlug, slugToSearchTerm, drugNameRoot } from "@/lib/drug-slug";
+import { formatSourceDate } from "@/lib/format-date";
 
 interface NadacRow {
   ndc: string;
@@ -29,8 +30,24 @@ interface RelatedDrug {
 const formatPrice = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 4 }).format(n);
 
-const formatDate = (d: string) =>
-  new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+const formatDate = (d: string) => formatSourceDate(d);
+
+/**
+ * NADAC stores one row per NDC per effective date. The "current" price for an NDC is the
+ * row with the newest effective date within its pricing category (pharmacy type). Older rows
+ * are kept in the database for price history and must never appear in the current-price list.
+ */
+const latestPerNdc = (rows: NadacRow[]): NadacRow[] => {
+  const byKey = new Map<string, NadacRow>();
+  for (const r of rows) {
+    const key = `${r.ndc}|${r.pharmacy_type ?? ""}`;
+    const existing = byKey.get(key);
+    if (!existing || r.effective_date > existing.effective_date) byKey.set(key, r);
+  }
+  return Array.from(byKey.values()).sort((a, b) =>
+    b.effective_date === a.effective_date ? a.ndc.localeCompare(b.ndc) : b.effective_date.localeCompare(a.effective_date)
+  );
+};
 
 const DrugPage = () => {
   const { slug = "" } = useParams<{ slug: string }>();
@@ -51,9 +68,9 @@ const DrugPage = () => {
         .select("ndc, drug_name, nadac_per_unit, effective_date, pricing_unit, pharmacy_type")
         .ilike("drug_name", searchTerm)
         .order("effective_date", { ascending: false })
-        .limit(25);
+        .limit(500);
 
-      let resolved = (matches || []) as NadacRow[];
+      let resolved = latestPerNdc((matches || []) as NadacRow[]);
 
       // Fallback: if exact ilike yields nothing, try a looser prefix match
       if (resolved.length === 0) {
@@ -62,8 +79,8 @@ const DrugPage = () => {
           .select("ndc, drug_name, nadac_per_unit, effective_date, pricing_unit, pharmacy_type")
           .ilike("drug_name", `${searchTerm}%`)
           .order("effective_date", { ascending: false })
-          .limit(25);
-        resolved = (loose || []) as NadacRow[];
+          .limit(500);
+        resolved = latestPerNdc((loose || []) as NadacRow[]);
       }
 
       if (cancelled) return;
@@ -80,7 +97,7 @@ const DrugPage = () => {
           .select("drug_name, nadac_per_unit, pricing_unit, effective_date")
           .ilike("drug_name", `${root}%`)
           .order("effective_date", { ascending: false })
-          .limit(60);
+          .limit(200);
 
         const seen = new Set<string>([canonicalName.toUpperCase()]);
         const distinct: RelatedDrug[] = [];
@@ -104,7 +121,10 @@ const DrugPage = () => {
   }, [slug]);
 
   const canonical = `https://nadaclookup.com/drug/${slug}`;
-  const displayName = resolvedName || slugToSearchTerm(slug).toUpperCase();
+  // While loading we only have the URL slug, whose wildcard form ("METFORMIN%ER%1%000%MG")
+  // is not presentable. Fall back to a readable label instead.
+  const slugLabel = slugToSearchTerm(slug).replace(/%/g, " ").replace(/\s+/g, " ").trim().toUpperCase();
+  const displayName = resolvedName || slugLabel;
   const pageTitle = `${displayName} NADAC Price | NADAC Lookup`.slice(0, 60);
   const pageDesc = `Check the latest NADAC price for ${displayName}. Updated weekly. Built for independent pharmacies to compare acquisition costs.`;
 
@@ -173,13 +193,17 @@ const DrugPage = () => {
             <ChevronRight className="h-3 w-3" />
             <Link to="/" className="hover:text-foreground">Drugs</Link>
             <ChevronRight className="h-3 w-3" />
-            <span className="text-foreground truncate">{displayName}</span>
+            <span className="text-foreground truncate">{loading && !resolvedName ? "Loading…" : displayName}</span>
           </nav>
 
           {/* H1 */}
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-            {displayName} NADAC Price (Updated Weekly)
-          </h1>
+          {loading && !resolvedName ? (
+            <div className="h-9 md:h-10 w-3/4 rounded-md bg-muted animate-pulse mb-3" aria-label="Loading drug name" />
+          ) : (
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+              {displayName} NADAC Price (Updated Weekly)
+            </h1>
+          )}
 
           {/* Intro */}
           <p className="text-muted-foreground leading-relaxed mb-8">
@@ -217,14 +241,25 @@ const DrugPage = () => {
                   </p>
                   <div className="space-y-2">
                     {rows.slice(0, 10).map((r) => (
-                      <div key={r.ndc} className="flex items-center justify-between text-sm py-1.5 border-b border-border/50 last:border-0">
-                        <span className="font-mono text-xs text-muted-foreground">{r.ndc}</span>
-                        <span className="font-semibold tabular-nums text-foreground">
+                      <div
+                        key={`${r.ndc}-${r.pharmacy_type ?? ""}`}
+                        className="flex items-center justify-between gap-3 text-sm py-1.5 border-b border-border/50 last:border-0"
+                      >
+                        <div className="min-w-0">
+                          <span className="font-mono text-xs text-muted-foreground">{r.ndc}</span>
+                          <p className="text-[11px] text-muted-foreground/80">
+                            {r.pharmacy_type || "Pharmacy"} · effective {formatDate(r.effective_date)}
+                          </p>
+                        </div>
+                        <span className="font-semibold tabular-nums text-foreground shrink-0">
                           {formatPrice(r.nadac_per_unit)} <span className="text-xs font-normal text-muted-foreground">/ {r.pricing_unit?.toLowerCase()}</span>
                         </span>
                       </div>
                     ))}
                   </div>
+                  <p className="text-[11px] text-muted-foreground mt-3">
+                    Each NDC shows its most recent effective NADAC record. Earlier records are kept for price history only.
+                  </p>
                 </div>
               )}
 
@@ -256,10 +291,13 @@ const DrugPage = () => {
             </p>
             <p className="text-muted-foreground leading-relaxed mb-4">
               Independent pharmacies use the {displayName} NADAC price to evaluate whether reimbursement from Medicaid,
-              Medicare Part D, and commercial PBMs covers their cost plus a fair professional dispensing fee. When the
-              reimbursement rate falls below NADAC, the claim is "underwater" — and the pharmacy loses money on that
-              prescription. Tracking weekly NADAC updates for {displayName} helps owners spot these losses early and
-              dispute them with payers.
+              Medicare Part D, and commercial PBMs is in line with the national benchmark. When the ingredient-cost
+              reimbursement falls below NADAC, the claim is paying <em>below the NADAC benchmark</em>. That is a warning
+              sign worth reviewing — but it does not by itself mean the pharmacy lost money. Actual acquisition margin
+              depends on what that pharmacy really paid its wholesaler (which can be above or below NADAC) and on the
+              total payment received, including any dispensing fee. Overall profitability also depends on labor, rent,
+              and other operating expenses. Tracking weekly NADAC updates for {displayName} helps owners spot
+              below-benchmark claims early and raise them with payers.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               NADAC pricing for {displayName} updates every Wednesday. Pharmacies that monitor these changes can

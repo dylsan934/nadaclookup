@@ -34,7 +34,11 @@ Deno.serve(async (req) => {
     // Determine if searching by NDC or drug name
     // NDC can be digits only or digits with dashes
     const isNDC = /^[\d-]+$/.test(term);
-    
+
+    // The table keeps one row per NDC per effective date (history). Over-fetch so that after
+    // collapsing to the latest record per NDC + pricing category we can still return `limit` drugs.
+    const fetchLimit = Math.min(Math.max(limit, 1) * 12, 2000);
+
     let query;
     
     if (isNDC) {
@@ -49,7 +53,7 @@ Deno.serve(async (req) => {
         .select('*')
         .or(`ndc.ilike.%${term}%,ndc.ilike.%${normalizedTerm}%`)
         .order('effective_date', { ascending: false })
-        .limit(limit);
+        .limit(fetchLimit);
     } else {
       // Search by drug name using case-insensitive pattern matching
       query = supabase
@@ -57,7 +61,7 @@ Deno.serve(async (req) => {
         .select('*')
         .ilike('drug_name', `%${term}%`)
         .order('effective_date', { ascending: false })
-        .limit(limit);
+        .limit(fetchLimit);
     }
 
     const { data, error } = await query;
@@ -72,15 +76,24 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${data?.length || 0} results`);
 
-    // Get unique drugs by NDC, keeping only the most recent price for each
-    const uniqueDrugs = new Map();
+    // Collapse to the current record per NDC + pricing category (latest effective_date).
+    // Historical rows stay in the database for price history but must not appear as current prices.
+    const uniqueDrugs = new Map<string, any>();
     for (const drug of data || []) {
-      if (!uniqueDrugs.has(drug.ndc)) {
-        uniqueDrugs.set(drug.ndc, drug);
+      const key = `${drug.ndc}|${drug.pharmacy_type ?? ''}`;
+      const existing = uniqueDrugs.get(key);
+      if (!existing || drug.effective_date > existing.effective_date) {
+        uniqueDrugs.set(key, drug);
       }
     }
 
-    const results = Array.from(uniqueDrugs.values());
+    const results = Array.from(uniqueDrugs.values())
+      .sort((a, b) =>
+        a.effective_date === b.effective_date
+          ? String(a.ndc).localeCompare(String(b.ndc))
+          : String(b.effective_date).localeCompare(String(a.effective_date))
+      )
+      .slice(0, limit);
 
     return new Response(
       JSON.stringify({ 

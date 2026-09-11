@@ -1,5 +1,6 @@
 import { Database, Calendar, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { formatSourceDateShort } from "@/lib/format-date";
 
 interface DataStatusProps {
   hasData: boolean;
@@ -14,18 +15,8 @@ export const DataStatus = ({
   totalRecords, 
   isLoading, 
 }: DataStatusProps) => {
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return 'Never';
-    try {
-      return new Date(dateStr).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
-    } catch {
-      return dateStr;
-    }
-  };
+  const formatDate = (dateStr?: string) => (dateStr ? formatSourceDateShort(dateStr) : 'Never');
+
 
   if (isLoading) {
     return (
@@ -62,7 +53,7 @@ export const DataStatus = ({
           </span>
           <span className="flex items-center gap-1.5">
             <Calendar className="h-3.5 w-3.5" />
-            Updated <span className="font-medium text-foreground">{formatDate(lastUpdate)}</span>
+            CMS data effective <span className="font-medium text-foreground">{formatDate(lastUpdate)}</span>
           </span>
           <span className="text-xs">• Auto-syncs weekly</span>
         </div>

@@ -13,6 +13,7 @@ import { Trash2, Calculator, Tag, StickyNote, Check, X, Plus, Lock, Crown, Histo
 import { Category, getCategoryColors } from "./CategoryManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { PriceHistoryModal } from "@/components/PriceHistoryModal";
+import { formatSourceDateShort } from "@/lib/format-date";
 
 interface DrugPrice {
   nadac_per_unit: number;
@@ -89,13 +90,7 @@ export const SavedDrugCard = ({
     }).format(priceVal);
   };
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  const formatDate = (dateStr: string) => formatSourceDateShort(dateStr);
 
   const parsedQuantity = parseFloat(quantity) || 0;
   const totalPrice = parsedQuantity * (price?.nadac_per_unit || 0);

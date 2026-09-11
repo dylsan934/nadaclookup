@@ -40,9 +40,9 @@ const proFeatures = [
 ];
 
 const freeFeatures = [
-  "Search all NADAC drug prices",
-  "View current pricing data",
-  "Calculate total costs",
+  "Unlimited NADAC drug price search",
+  "5 reimbursement calculations per month (resets on the 1st)",
+  "1 saved contract rule",
   "Save up to 3 drugs",
 ];
 
