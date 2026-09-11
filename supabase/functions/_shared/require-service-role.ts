@@ -19,6 +19,11 @@ export function requireServiceRole(
   req: Request,
   corsHeaders: Record<string, string> = {}
 ): Response | null {
+  // Allow scheduled cron jobs to authenticate with a shared secret header.
+  const cronSecret = Deno.env.get('CRON_SECRET') || ''
+  const cronHeader = req.headers.get('x-cron-secret') || ''
+  if (cronSecret && cronHeader && cronHeader === cronSecret) return null
+
   const authHeader = req.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
