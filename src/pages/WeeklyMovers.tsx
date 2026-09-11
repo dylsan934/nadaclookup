@@ -181,9 +181,14 @@ export default function WeeklyMovers() {
     load();
   }, []);
 
-  // A stored comparison is only "current" when it was computed from the newest published
-  // NADAC data. Otherwise it is an archived comparison and must not be shown as this week's.
-  const isCurrent = !!data?.success && !!latestDataDate && latestDataDate === data.currentDate;
+  // CMS publishes small incremental files as well as full snapshots, so the newest published
+  // effective date often contains no price changes at all. A stored comparison counts as current
+  // when it comes from data published within two weeks of the newest data we hold; anything older
+  // is clearly labelled as historical rather than presented as this week's movement.
+  const daysBetween = (a: string, b: string) =>
+    Math.abs(new Date(a + "T00:00:00Z").getTime() - new Date(b + "T00:00:00Z").getTime()) / 86400000;
+  const isCurrent =
+    !!data?.success && !!latestDataDate && daysBetween(latestDataDate, data.currentDate) <= 14;
   const isArchived = !!data?.success && !isCurrent;
 
   return (
