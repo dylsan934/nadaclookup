@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      calculation_usage: {
+        Row: {
+          count: number
+          created_at: string
+          month: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          month: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          month?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       drug_categories: {
         Row: {
           color: string | null
@@ -578,6 +602,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_calc_usage: { Args: never; Returns: number }
       move_to_dlq: {
         Args: {
           dlq_name: string
