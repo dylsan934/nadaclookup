@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -362,6 +363,11 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
+      <Helmet>
+        <title>Sign In or Create Account — NADAC Lookup</title>
+        <meta name="robots" content="noindex,nofollow" />
+        <meta name="description" content="Sign in or create a free NADAC Lookup account to save drugs, set price alerts, and use the reimbursement calculator." />
+      </Helmet>
       <div className="w-full max-w-md space-y-6">
         {/* Value Proposition */}
         <div className="text-center space-y-2">
