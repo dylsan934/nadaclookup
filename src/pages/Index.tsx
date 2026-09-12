@@ -120,6 +120,12 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Helmet>
+        <title>NADAC Lookup — Free Drug Price Search by Name or NDC</title>
+        <meta name="description" content="Search current NADAC drug prices free by name or NDC. Weekly CMS data, price history, and a pharmacy reimbursement calculator." />
+        <link rel="canonical" href="https://nadaclookup.com/" />
+        <meta property="og:title" content="NADAC Lookup — Free Drug Price Search by Name or NDC" />
+        <meta property="og:description" content="Search current NADAC drug prices free by name or NDC. Weekly CMS data, price history, and a pharmacy reimbursement calculator." />
+        <meta property="og:url" content="https://nadaclookup.com/" />
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
       </Helmet>
 

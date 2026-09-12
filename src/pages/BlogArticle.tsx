@@ -139,13 +139,19 @@ const articles: Record<string, { title: string; description: string; content: JS
     ),
   },
   "nadac-vs-wac-explained": {
-    title: "NADAC vs WAC: Key Differences Explained | NADAC Lookup",
-    description: "NADAC vs WAC compared: what each benchmark measures, how they differ, and which one reflects what pharmacies actually pay for drugs.",
+    title: "NADAC vs WAC: What's the Difference? | NADAC Lookup",
+    description: "NADAC vs WAC explained: how each drug price benchmark is calculated, why WAC usually runs higher, and which one reflects what pharmacies actually pay.",
     content: (
       <>
         <p className="text-muted-foreground leading-relaxed mb-4">
           The pharmaceutical industry uses several pricing benchmarks, but they're not all created equal. Understanding the difference between NADAC and WAC is essential for any pharmacy professional managing drug costs.
         </p>
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-5 mb-6">
+          <p className="font-semibold text-foreground mb-2">The short answer</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            <strong className="text-foreground">NADAC</strong> is built from actual pharmacy invoice data collected weekly by CMS, so it reflects what pharmacies really pay after discounts. <strong className="text-foreground">WAC</strong> is the manufacturer's list price before discounts — a "sticker price" that typically runs higher, especially for generics. For reimbursement checks, purchasing decisions, and PBM negotiations, NADAC is the more accurate benchmark.
+          </p>
+        </div>
         <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">What Is WAC (Wholesale Acquisition Cost)?</h2>
         <p className="text-muted-foreground leading-relaxed mb-4">
           WAC is the manufacturer's list price to wholesalers <em>before</em> any discounts, rebates, or other price concessions. Think of it as the "sticker price" — it rarely reflects what pharmacies actually pay.

@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -524,6 +525,11 @@ export default function SavedDrugs() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <Helmet>
+        <title>Saved Drugs — NADAC Lookup</title>
+        <meta name="robots" content="noindex,nofollow" />
+        <meta name="description" content="Your saved drugs with NADAC price change alerts." />
+      </Helmet>
       <Header />
       <main className="flex-1 container mx-auto px-4 py-6 md:py-8">
         <div className="max-w-3xl mx-auto space-y-6">
