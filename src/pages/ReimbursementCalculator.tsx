@@ -318,6 +318,8 @@ const ReimbursementCalculator = () => {
         <title>Pharmacy Reimbursement Calculator — NADAC Lookup</title>
         <meta name="robots" content="noindex,nofollow" />
         <meta name="description" content="Estimate pharmacy reimbursement using NADAC ingredient cost, contract formulas, and dispensing fees." />
+        <link rel="canonical" href="https://nadaclookup.com/reimbursement-calculator" />
+        <meta property="og:url" content="https://nadaclookup.com/reimbursement-calculator" />
       </Helmet>
       <Header />
       <SiteNavigation />
@@ -334,7 +336,7 @@ const ReimbursementCalculator = () => {
             </p>
           </header>
 
-
+          <h2 className="sr-only">How the reimbursement calculator works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
 
             {[

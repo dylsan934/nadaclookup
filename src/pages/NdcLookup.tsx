@@ -100,6 +100,7 @@ const NdcLookup = () => {
         {/* Differentiator strip */}
         <section className="py-10 border-b border-border bg-card/30">
           <div className="container mx-auto px-4 max-w-5xl grid md:grid-cols-3 gap-6 text-center">
+            <h2 className="sr-only">Why use this NDC lookup</h2>
             <div>
               <DollarSign className="w-8 h-8 mx-auto mb-3 text-primary" />
               <h3 className="font-semibold text-foreground mb-1">Real acquisition cost</h3>
