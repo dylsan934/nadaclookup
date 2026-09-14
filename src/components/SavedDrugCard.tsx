@@ -33,7 +33,7 @@ interface SavedDrug {
 
 interface SavedDrugCardProps {
   drug: SavedDrug;
-  price?: DrugPrice;
+  price?: DrugPrice | undefined;
   categories: Category[];
   drugCategories: string[];
   allCategories: Category[];
@@ -62,7 +62,7 @@ export const SavedDrugCard = ({
   const [notes, setNotes] = useState(drug.notes || "");
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [showPriceHistory, setShowPriceHistory] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     setQuantity(drug.calculator_qty?.toString() || "");

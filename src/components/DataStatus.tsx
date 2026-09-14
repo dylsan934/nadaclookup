@@ -4,7 +4,7 @@ import { formatSourceDateShort } from "@/lib/format-date";
 
 interface DataStatusProps {
   hasData: boolean;
-  lastUpdate?: string;
+  lastUpdate?: string | undefined;
   totalRecords: number;
   isLoading: boolean;
 }

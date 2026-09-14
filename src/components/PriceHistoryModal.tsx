@@ -127,12 +127,12 @@ export const PriceHistoryModal = ({
             ...response,
             history: filteredHistory,
             stats: {
-              currentPrice: prices.length > 0 ? prices[prices.length - 1] : 0,
+              currentPrice: prices.length > 0 ? prices[prices.length - 1]! : 0,
               highestPrice: prices.length > 0 ? Math.max(...prices) : 0,
               lowestPrice: prices.length > 0 ? Math.min(...prices) : 0,
               percentChange:
                 prices.length >= 2
-                  ? ((prices[prices.length - 1] - prices[0]) / prices[0]) * 100
+                  ? ((prices[prices.length - 1]! - prices[0]!) / prices[0]!) * 100
                   : 0,
               dataPoints: filteredHistory.length,
             },

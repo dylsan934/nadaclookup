@@ -142,7 +142,6 @@ const Admin = () => {
       try {
         const { data, error } = await supabase.functions.invoke("admin-dashboard", {
           headers: { Authorization: `Bearer ${session.access_token}` },
-          body: null,
         });
         if (error) throw error;
         setStats(data);

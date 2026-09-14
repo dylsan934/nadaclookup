@@ -197,9 +197,9 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
                 )}
               >
                 <Checkbox
-                  checked={isSelected}
-                  onCheckedChange={() => onToggleSelect?.()}
-                  disabled={selectionDisabled}
+                  checked={isSelected ?? false}
+                  onCheckedChange={() => { onToggleSelect?.(); }}
+                  disabled={selectionDisabled ?? false}
                   className={cn(
                     "data-[state=checked]:bg-primary data-[state=checked]:border-primary",
                     selectionDisabled && !isSelected && "cursor-not-allowed"

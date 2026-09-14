@@ -48,8 +48,8 @@ export const PriceHistoryChart = ({ history, stats, drugName }: PriceHistoryChar
   // Get first and last dates for display
   const dateRange = useMemo(() => {
     if (history.length === 0) return { first: "", last: "" };
-    const firstDate = new Date(history[0].date);
-    const lastDate = new Date(history[history.length - 1].date);
+    const firstDate = new Date(history[0]!.date);
+    const lastDate = new Date(history[history.length - 1]!.date);
     return {
       first: firstDate.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
       last: lastDate.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
@@ -186,11 +186,11 @@ export const PriceHistoryChart = ({ history, stats, drugName }: PriceHistoryChar
               tickLine={false}
               axisLine={false}
               className="fill-muted-foreground"
-              ticks={chartData.length > 0 ? [
+              ticks={[
                 chartData[0]?.formattedDate,
                 ...(chartData.length > 4 ? [chartData[Math.floor(chartData.length / 2)]?.formattedDate] : []),
                 chartData[chartData.length - 1]?.formattedDate,
-              ].filter(Boolean) : undefined}
+              ].filter((t): t is string => Boolean(t))}
             />
             <YAxis
               tickFormatter={(value) => `$${value.toFixed(2)}`}
