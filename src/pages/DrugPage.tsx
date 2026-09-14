@@ -48,12 +48,12 @@ const latestPerNdc = (rows: NadacRow[]): NadacRow[] => {
   );
 };
 
-const DrugPage = () => {
+const DrugPage = ({ initialName = "" }: { initialName?: string }) => {
   const { slug = "" } = useParams<{ slug: string }>();
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<NadacRow[]>([]);
   const [related, setRelated] = useState<RelatedDrug[]>([]);
-  const [resolvedName, setResolvedName] = useState<string>("");
+  const [resolvedName, setResolvedName] = useState<string>(initialName);
 
   useEffect(() => {
     let cancelled = false;
