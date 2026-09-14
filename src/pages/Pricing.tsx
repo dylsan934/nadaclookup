@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import { SEOHead } from "@/components/SEOHead";
+import { Link } from "@/lib/router-compat";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -21,12 +20,6 @@ const Pricing = () => {
 
   return (
     <>
-      <SEOHead
-        title="NADAC Lookup Pricing — Free Search & $29/mo Pro Plan"
-        description="Free unlimited NADAC drug price searches. Upgrade to Pro for $29/mo to unlock the reimbursement calculator, full price history charts, automated alerts, and unlimited saves."
-        canonical="https://nadaclookup.com/pricing"
-        jsonLd={jsonLd}
-      />
       <div className="min-h-screen flex flex-col bg-background">
         <SiteNavigation />
         <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">

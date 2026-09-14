@@ -1,11 +1,10 @@
-import { useParams, Link, Navigate } from "react-router-dom";
-import { SEOHead } from "@/components/SEOHead";
+import { useParams, Link, Navigate } from "@/lib/router-compat";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 
-const articles: Record<string, { title: string; description: string; content: JSX.Element }> = {
+export const articles: Record<string, { title: string; description: string; content: JSX.Element }> = {
   "calculate-reimbursement-from-nadac": {
     title: "How to Calculate Reimbursement from NADAC | NADAC Lookup",
     description: "How Medicaid and PBMs calculate pharmacy reimbursement using NADAC plus a dispensing fee. Includes the formula, examples, and underwater-claim tips.",
@@ -139,8 +138,8 @@ const articles: Record<string, { title: string; description: string; content: JS
     ),
   },
   "nadac-vs-wac-explained": {
-    title: "NADAC vs WAC: What's the Difference? | NADAC Lookup",
-    description: "NADAC vs WAC explained: how each drug price benchmark is calculated, why WAC usually runs higher, and which one reflects what pharmacies actually pay.",
+    title: "NADAC vs WAC vs AWP: Drug Pricing Explained",
+    description: "Compare NADAC, WAC, and AWP drug-pricing benchmarks and understand how independent pharmacies use them to evaluate reimbursement.",
     content: (
       <>
         <p className="text-muted-foreground leading-relaxed mb-4">
@@ -371,13 +370,6 @@ const BlogArticle = () => {
 
   return (
     <>
-      <SEOHead
-        title={article.title}
-        description={article.description}
-        canonical={canonical}
-        type="article"
-        jsonLd={articleJsonLd}
-      />
       <div className="min-h-screen flex flex-col bg-background">
         <SiteNavigation />
         <main className="flex-1 container mx-auto px-4 py-12 max-w-3xl">

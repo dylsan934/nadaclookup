@@ -1,5 +1,4 @@
-import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
 import { Search, ArrowRight, CheckCircle2 } from "lucide-react";
 
@@ -65,25 +64,6 @@ const CompareDrugPrices = () => {
 
   return (
     <>
-      <Helmet>
-        <title>How to Compare Prescription Drug Prices (NADAC Guide)</title>
-        <meta
-          name="description"
-          content="Compare prescription drug prices using NADAC — the government's actual acquisition cost data. A neutral alternative to coupon apps and insurer pricing tools."
-        />
-        <link rel="canonical" href={canonical} />
-        <meta name="robots" content="index, follow" />
-        <meta property="og:title" content="How to Compare Prescription Drug Prices" />
-        <meta
-          property="og:description"
-          content="A neutral, NADAC-based guide to comparing prescription drug prices."
-        />
-        <meta property="og:url" content={canonical} />
-        <meta property="og:type" content="article" />
-        <script type="application/ld+json">{JSON.stringify(articleLd)}</script>
-        <script type="application/ld+json">{JSON.stringify(faqLd)}</script>
-        <script type="application/ld+json">{JSON.stringify(breadcrumbLd)}</script>
-      </Helmet>
 
       <div className="min-h-screen bg-background">
         {/* Header */}

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Helmet } from "react-helmet-async";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "@/lib/router-compat";
 import { AlertCircle, Calculator, Edit2, Plus, Printer, Star, Trash2, Sparkles, ShieldCheck, Zap } from "lucide-react";
 import { Header } from "@/components/Header";
 import { SiteNavigation } from "@/components/SiteNavigation";
@@ -314,13 +313,6 @@ const ReimbursementCalculator = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Helmet>
-        <title>Pharmacy Reimbursement Calculator — NADAC Lookup</title>
-        <meta name="robots" content="noindex,nofollow" />
-        <meta name="description" content="Estimate pharmacy reimbursement using NADAC ingredient cost, contract formulas, and dispensing fees." />
-        <link rel="canonical" href="https://nadaclookup.com/reimbursement-calculator" />
-        <meta property="og:url" content="https://nadaclookup.com/reimbursement-calculator" />
-      </Helmet>
       <Header />
       <SiteNavigation />
 

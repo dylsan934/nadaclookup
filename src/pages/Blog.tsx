@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import { SEOHead } from "@/components/SEOHead";
+import { Link } from "@/lib/router-compat";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { ArrowRight } from "lucide-react";
@@ -51,11 +50,6 @@ const articles = [
 
 const Blog = () => (
   <>
-    <SEOHead
-      title="NADAC Pricing Resources & Blog | Pharmacy Drug Cost Insights"
-      description="Expert articles on NADAC drug pricing, pharmacy margin improvement, PBM negotiations, and acquisition cost trends for independent pharmacies."
-      canonical="https://nadaclookup.com/blog"
-    />
     <div className="min-h-screen flex flex-col bg-background">
       <SiteNavigation />
       <main className="flex-1 container mx-auto px-4 py-12 max-w-3xl">

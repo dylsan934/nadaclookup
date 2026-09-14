@@ -1,20 +1,10 @@
-import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
 import { Search, ArrowRight } from "lucide-react";
 
 const WhatIsNadac = () => {
   return (
     <>
-      <Helmet>
-        <title>What Is NADAC? | National Average Drug Acquisition Cost Explained</title>
-        <meta 
-          name="description" 
-          content="Learn what NADAC pricing is, how it is calculated, and why pharmacies use it. Includes a free NADAC lookup tool." 
-        />
-        <link rel="canonical" href="https://nadaclookup.com/what-is-nadac" />
-        <meta name="robots" content="index, follow" />
-      </Helmet>
 
       <div className="min-h-screen bg-background">
         {/* Header */}

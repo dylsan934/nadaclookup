@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import { SEOHead } from "@/components/SEOHead";
+import { Link } from "@/lib/router-compat";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,11 +6,6 @@ import { Search, BarChart3, Bell, ArrowRight, Scale, BookmarkCheck, Mail, Trendi
 
 const Features = () => (
   <>
-    <SEOHead
-      title="NADAC Lookup Features — Drug Search, Compare & Alerts"
-      description="Search NADAC drug prices by name or NDC, compare up to 4 drugs side by side, track price history, and get automated alerts. Free basic plan, Pro at $29/mo."
-      canonical="https://nadaclookup.com/features"
-    />
     <div className="min-h-screen flex flex-col bg-background">
       <SiteNavigation />
       <main className="flex-1 container mx-auto px-4 py-12 max-w-3xl">

@@ -1,0 +1,19 @@
+{"functions": [
+  {"name": "admin-dashboard", "classification": "internal-only", "signal": "called from src/pages/Admin.tsx but requires SUPABASE_SERVICE_ROLE_KEY + STRIPE_SECRET_KEY from Supabase runtime", "outcome": "left"},
+  {"name": "check-price-alerts", "classification": "cron target", "signal": "no src call sites; RESEND_API_KEY; scheduled alert job", "outcome": "left"},
+  {"name": "check-subscription", "classification": "internal-only", "signal": "called from AuthContext.tsx but requires STRIPE_SECRET_KEY + service role from Supabase runtime", "outcome": "left"},
+  {"name": "create-checkout", "classification": "internal-only", "signal": "called from useStartCheckout.ts but requires STRIPE_SECRET_KEY from Supabase runtime", "outcome": "left"},
+  {"name": "customer-portal", "classification": "internal-only", "signal": "called from Header.tsx but requires STRIPE_SECRET_KEY from Supabase runtime", "outcome": "left"},
+  {"name": "get-price-history", "classification": "internal-only", "signal": "called from src/lib/nadac-api.ts; no secrets, public CMS API only", "outcome": "migrated"},
+  {"name": "handle-email-suppression", "classification": "webhook receiver", "signal": "no src call sites; email-provider suppression callback with fixed URL", "outcome": "left"},
+  {"name": "handle-email-unsubscribe", "classification": "custom response / external URL", "signal": "called from Unsubscribe.tsx AND from unsubscribe links in sent emails (fixed URL)", "outcome": "left"},
+  {"name": "preview-transactional-email", "classification": "unknown", "signal": "no internal call sites; admin/testing endpoint", "outcome": "left"},
+  {"name": "process-email-queue", "classification": "cron target", "signal": "pg_cron job in supabase/migrations/20260515152520_email_infra.sql via net.http_post", "outcome": "left"},
+  {"name": "search-nadac", "classification": "internal-only", "signal": "called from src/lib/nadac-api.ts; anon-key DB read only", "outcome": "migrated"},
+  {"name": "send-movers-digest", "classification": "cron target", "signal": "no src call sites; scheduled weekly digest email", "outcome": "left"},
+  {"name": "send-transactional-email", "classification": "internal service", "signal": "invoked by other edge functions, not from src/", "outcome": "left"},
+  {"name": "sitemap-drugs", "classification": "unknown", "signal": "no internal call sites; requires service role; URL may be fetched externally", "outcome": "left"},
+  {"name": "sync-ful", "classification": "cron target", "signal": "CRON_SECRET + Wednesday pg_cron schedule (recreated Sept 2026)", "outcome": "left"},
+  {"name": "sync-nadac", "classification": "cron target", "signal": "cron.schedule with x-cron-secret in supabase/migrations/20260911043443 (also invoked from nadac-api.ts admin sync)", "outcome": "left"},
+  {"name": "weekly-movers", "classification": "cron target", "signal": "no src call sites; scheduled weekly computation with CRON_SECRET", "outcome": "left"}
+]}

@@ -1,5 +1,4 @@
-import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
 import { Search, ArrowRight, CheckCircle2, DollarSign } from "lucide-react";
 
@@ -45,23 +44,6 @@ const NdcLookup = () => {
 
   return (
     <>
-      <Helmet>
-        <title>NDC Lookup with NADAC Acquisition Cost | Free Tool</title>
-        <meta
-          name="description"
-          content="Free NDC lookup with real pharmacy acquisition cost. Search any 11-digit NDC and instantly see the current NADAC price, pricing unit, and effective date."
-        />
-        <link rel="canonical" href="https://nadaclookup.com/ndc-lookup" />
-        <meta name="robots" content="index, follow" />
-        <meta property="og:title" content="NDC Lookup with NADAC Acquisition Cost" />
-        <meta
-          property="og:description"
-          content="Free NDC lookup that also shows the real pharmacy acquisition cost (NADAC) for every drug. Search by NDC or drug name."
-        />
-        <meta property="og:url" content="https://nadaclookup.com/ndc-lookup" />
-        <meta property="og:type" content="website" />
-        <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
-      </Helmet>
 
       <div className="min-h-screen bg-background">
         {/* Header */}

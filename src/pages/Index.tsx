@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Header } from "@/components/Header";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
@@ -14,9 +13,9 @@ import { WelcomeTrialModal } from "@/components/WelcomeTrialModal";
 import { DrugData } from "@/components/DrugCard";
 import { nadacApi } from "@/lib/nadac-api";
 import { useToast } from "@/hooks/use-toast";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "@/lib/router-compat";
 
-const faqJsonLd = {
+export const faqJsonLd = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   mainEntity: [
@@ -119,15 +118,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>NADAC Lookup — Free Drug Price Search by Name or NDC</title>
-        <meta name="description" content="Search current NADAC drug prices free by name or NDC. Weekly CMS data, price history, and a pharmacy reimbursement calculator." />
-        <link rel="canonical" href="https://nadaclookup.com/" />
-        <meta property="og:title" content="NADAC Lookup — Free Drug Price Search by Name or NDC" />
-        <meta property="og:description" content="Search current NADAC drug prices free by name or NDC. Weekly CMS data, price history, and a pharmacy reimbursement calculator." />
-        <meta property="og:url" content="https://nadaclookup.com/" />
-        <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
-      </Helmet>
 
       <Header />
       <SiteNavigation />
