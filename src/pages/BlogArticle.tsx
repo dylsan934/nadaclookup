@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 
-const articles: Record<string, { title: string; description: string; content: JSX.Element }> = {
+export const articles: Record<string, { title: string; description: string; content: JSX.Element }> = {
   "calculate-reimbursement-from-nadac": {
     title: "How to Calculate Reimbursement from NADAC | NADAC Lookup",
     description: "How Medicaid and PBMs calculate pharmacy reimbursement using NADAC plus a dispensing fee. Includes the formula, examples, and underwater-claim tips.",

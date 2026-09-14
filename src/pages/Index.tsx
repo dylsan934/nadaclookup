@@ -15,7 +15,7 @@ import { nadacApi } from "@/lib/nadac-api";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "react-router-dom";
 
-const faqJsonLd = {
+export const faqJsonLd = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   mainEntity: [
