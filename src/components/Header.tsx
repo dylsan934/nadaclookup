@@ -11,7 +11,7 @@ import { UpgradeModal } from "@/components/UpgradeModal";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
 import { LockedNotificationDropdown } from "@/components/LockedNotificationDropdown";
 
-export const Header = () => {
+export const Header = ({ heroTitleAsH1 = false }: { heroTitleAsH1?: boolean }) => {
   const { user, isSubscribed, isAdmin, signOut } = useAuth();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -223,9 +223,15 @@ export const Header = () => {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             Updated weekly with official CMS data
           </div>
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 text-balance">
-            NADAC Pricing Lookup for Independent Pharmacies
-          </h1>
+          {heroTitleAsH1 ? (
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 text-balance">
+              NADAC Pricing Lookup for Independent Pharmacies
+            </h1>
+          ) : (
+            <p className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 text-balance">
+              NADAC Pricing Lookup for Independent Pharmacies
+            </p>
+          )}
           <p className="text-base md:text-lg text-primary-foreground/85 max-w-xl mx-auto leading-relaxed">
             Free NADAC drug pricing lookup with weekly CMS updates. Search the National Average Drug Acquisition Cost by drug name or NDC code.
           </p>

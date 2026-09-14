@@ -119,7 +119,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
 
-      <Header />
+      <Header heroTitleAsH1 />
       <SiteNavigation />
 
       {/* Sticky Search Bar */}
