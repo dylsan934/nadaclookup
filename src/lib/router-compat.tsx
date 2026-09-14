@@ -136,7 +136,7 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
   return (
     <TSLink
       ref={ref as never}
-      {...(linkProps as never as Record<string, unknown>)}
+      {...(linkProps as unknown as ComponentProps<typeof TSLink>)}
       {...((rest ?? {}) as Record<string, unknown>)}
     >
       {children}
@@ -156,7 +156,7 @@ export function Navigate({ to, replace, state }: { to: string; replace?: boolean
     ...(replace !== undefined ? { replace } : {}),
     state: state as never,
   };
-  return <TSNavigate {...(navProps as never as Record<string, unknown>)} />;
+  return <TSNavigate {...(navProps as unknown as ComponentProps<typeof TSNavigate>)} />;
 }
 
 // ---------- Outlet ----------
