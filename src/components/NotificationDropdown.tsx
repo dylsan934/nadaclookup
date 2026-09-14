@@ -107,7 +107,7 @@ export const NotificationDropdown = ({
     }
     setIsOpen(false);
     // Navigate to home with search query for the drug
-    navigate(`/?search=${encodeURIComponent(alert.drug_name.split(' ')[0])}`);
+    navigate(`/?search=${encodeURIComponent(alert.drug_name.split(' ')[0] ?? alert.drug_name)}`);
   };
 
   const formatPriceChange = (alert: PriceAlert) => {

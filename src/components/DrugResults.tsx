@@ -15,7 +15,7 @@ interface DrugResultsProps {
 // Helper to extract strength from drug name (e.g., "METFORMIN HCL 500 MG TABLET" -> "500 MG")
 const extractStrength = (drugName: string): string => {
   const match = drugName.match(/(\d+(?:\.\d+)?(?:\s*\/\s*\d+(?:\.\d+)?)?)\s*(MG|MCG|ML|G|%|UNIT|IU)/i);
-  return match ? `${match[1]} ${match[2].toUpperCase()}` : "";
+  return match ? `${match[1]!} ${match[2]!.toUpperCase()}` : "";
 };
 
 // Helper to detect dosage form

@@ -56,7 +56,7 @@ export const NotificationSettings = ({ userId }: NotificationSettingsProps) => {
 
     const { error } = await supabase
       .from('profiles')
-      .update({ [key]: value })
+      .update({ [key]: value } as never)
       .eq('user_id', userId);
 
     setIsLoading(false);

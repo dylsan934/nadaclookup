@@ -38,7 +38,7 @@ const CATEGORY_COLORS = [
 ];
 
 export const getCategoryColors = (colorName: string) => {
-  return CATEGORY_COLORS.find(c => c.name === colorName) || CATEGORY_COLORS[0];
+  return CATEGORY_COLORS.find(c => c.name === colorName) || CATEGORY_COLORS[0]!;
 };
 
 interface CategoryManagerProps {

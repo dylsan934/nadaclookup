@@ -142,7 +142,6 @@ const Admin = () => {
       try {
         const { data, error } = await supabase.functions.invoke("admin-dashboard", {
           headers: { Authorization: `Bearer ${session.access_token}` },
-          body: null,
         });
         if (error) throw error;
         setStats(data);
@@ -170,7 +169,7 @@ const Admin = () => {
         order,
       });
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-dashboard?${params}`,
+        `${import.meta.env['VITE_SUPABASE_URL']}/functions/v1/admin-dashboard?${params}`,
         {
           headers: {
             Authorization: `Bearer ${session.access_token}`,

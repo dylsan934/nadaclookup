@@ -1,4 +1,5 @@
 import { useParams, Link, Navigate } from "@/lib/router-compat";
+import type { JSX } from "react";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";

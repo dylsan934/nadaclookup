@@ -50,7 +50,7 @@ export const nadacApi = {
     }
 
     if (!data.success) {
-      return { success: false, error: data.error };
+      return { success: false, error: data.error ?? 'Search failed' };
     }
 
     // Transform the response to match our DrugData interface
@@ -163,10 +163,10 @@ export const nadacApi = {
 
     return {
       success: data?.success ?? false,
-      ndc: data?.ndc,
+      ndc: data?.ndc ?? ndc,
       history: data?.history || [],
       stats: data?.stats || { currentPrice: 0, highestPrice: 0, lowestPrice: 0, percentChange: 0, dataPoints: 0 },
-      error: data?.error,
+      ...(data?.error !== undefined ? { error: data.error } : {}),
     };
   },
 };

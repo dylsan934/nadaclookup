@@ -306,7 +306,15 @@ const ReimbursementCalculator = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header /><SiteNavigation />
-        <div className="container py-12 text-center text-muted-foreground">Loading…</div>
+        <main className="container py-6 md:py-10">
+          <div className="max-w-6xl mx-auto">
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Pharmacy Reimbursement Calculator</h1>
+            <p className="text-muted-foreground mt-3 max-w-3xl text-base">
+              Estimate reimbursement and margin using real NADAC ingredient cost, your contract formulas, dispensing fees, and optional paid-claim amounts. Built for independent pharmacies.
+            </p>
+            <div className="py-12 text-center text-muted-foreground">Loading…</div>
+          </div>
+        </main>
       </div>
     );
   }

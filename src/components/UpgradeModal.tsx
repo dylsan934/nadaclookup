@@ -8,7 +8,7 @@ import { Link } from "@/lib/router-compat";
 interface UpgradeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  featureHighlight?: string;
+  featureHighlight?: string | undefined;
 }
 
 const proFeatures = [
