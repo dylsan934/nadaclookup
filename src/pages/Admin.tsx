@@ -169,7 +169,7 @@ const Admin = () => {
         order,
       });
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-dashboard?${params}`,
+        `${import.meta.env['VITE_SUPABASE_URL']}/functions/v1/admin-dashboard?${params}`,
         {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
