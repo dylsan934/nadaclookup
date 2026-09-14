@@ -188,7 +188,7 @@ export const SearchBar = ({
                     onMouseEnter={() => setSelectedIndex(index)}
                     className={cn(
                       "w-full px-4 py-3 text-left text-sm transition-colors flex items-center gap-3",
-                      "hover:bg-accent/50 focus:bg-accent/50 focus:outline-none",
+                      "hover:bg-accent/50 focus:bg-accent/50 focus:outline-hidden",
                       selectedIndex === index && "bg-accent"
                     )}
                   >
