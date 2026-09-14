@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { DrugData } from "@/components/DrugCard";
+import { searchNadac } from "@/lib/search-nadac.functions";
+import { getPriceHistory } from "@/lib/price-history.functions";
 
 export interface SearchResponse {
   success: boolean;
@@ -39,13 +41,16 @@ export interface PriceHistoryResponse {
 
 export const nadacApi = {
   async search(searchTerm: string, limit = 50): Promise<SearchResponse> {
-    const { data, error } = await supabase.functions.invoke('search-nadac', {
-      body: { searchTerm, limit },
-    });
-
-    if (error) {
+    let data: Awaited<ReturnType<typeof searchNadac>>;
+    try {
+      data = await searchNadac({ data: { searchTerm, limit } });
+    } catch (error) {
       console.error('Search error:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: error instanceof Error ? error.message : 'Search failed' };
+    }
+
+    if (!data.success) {
+      return { success: false, error: data.error };
     }
 
     // Transform the response to match our DrugData interface
@@ -143,15 +148,14 @@ export const nadacApi = {
   },
 
   async getPriceHistory(ndc: string, years: number = 2): Promise<PriceHistoryResponse> {
-    const { data, error } = await supabase.functions.invoke('get-price-history', {
-      body: { ndc, years },
-    });
-
-    if (error) {
+    let data: Awaited<ReturnType<typeof getPriceHistory>>;
+    try {
+      data = await getPriceHistory({ data: { ndc, years } });
+    } catch (error) {
       console.error('Price history error:', error);
       return { 
         success: false, 
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Failed to fetch price history',
         history: [],
         stats: { currentPrice: 0, highestPrice: 0, lowestPrice: 0, percentChange: 0, dataPoints: 0 }
       };
