@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Pill, LogIn, LogOut, User, BookmarkCheck, Crown, Heart, Bell, Shield } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

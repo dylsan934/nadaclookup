@@ -1,5 +1,5 @@
 import { ExternalLink, Mail, Shield } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { drugNameToSlug } from "@/lib/drug-slug";
 
 const FOOTER_POPULAR_DRUGS = [

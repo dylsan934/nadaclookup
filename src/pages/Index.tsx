@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Header } from "@/components/Header";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
@@ -13,7 +13,7 @@ import { WelcomeTrialModal } from "@/components/WelcomeTrialModal";
 import { DrugData } from "@/components/DrugCard";
 import { nadacApi } from "@/lib/nadac-api";
 import { useToast } from "@/hooks/use-toast";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "@/lib/router-compat";
 
 export const faqJsonLd = {
   "@context": "https://schema.org",

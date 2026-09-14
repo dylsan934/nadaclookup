@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "@/lib/router-compat";
 import { ArrowRight, Search, Calendar, DollarSign, Pill, ChevronRight, Calculator } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteNavigation } from "@/components/SiteNavigation";

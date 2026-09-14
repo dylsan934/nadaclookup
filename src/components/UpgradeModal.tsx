@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { History, Bookmark, Bell, Check, Crown, TrendingUp, Calculator } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStartCheckout } from "@/hooks/useStartCheckout";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 
 interface UpgradeModalProps {
   open: boolean;

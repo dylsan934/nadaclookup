@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { drugNameToSlug } from "@/lib/drug-slug";
 
 // Hand-picked top generics commonly searched by pharmacies.

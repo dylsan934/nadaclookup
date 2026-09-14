@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "@/lib/router-compat";
 import { Calculator, Download, Search, Trash2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { SiteNavigation } from "@/components/SiteNavigation";
