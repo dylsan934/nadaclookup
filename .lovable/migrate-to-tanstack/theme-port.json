@@ -1,0 +1,21 @@
+{
+  "customizations": [
+    { "token": ":root + .dark HSL palette (background, foreground, card, popover, primary, secondary, muted, accent, destructive, border, input, ring)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--success / --success-foreground", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--info / --info-foreground", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--warning / --warning-foreground", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--sidebar-* palette (light + dark)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--shadow-xs/sm/md/lg/xl", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--gradient-hero / --gradient-subtle / --gradient-card", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--shadow-soft / --shadow-card / --shadow-glow", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "gradient-hero / gradient-subtle / gradient-card utilities", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "shadow-xs / shadow-soft / shadow-card / shadow-glow utilities", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "transition-smooth / text-balance utilities", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "animate-fade-in / animate-slide-up / animate-pulse-slow / animate-scale-in utilities + keyframes", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "accordion-down / accordion-up / fade-in / slide-up keyframes and animations", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "Inter font import + body font stack + font-feature-settings", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "heading typography (font-semibold tracking-tight)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "webkit scrollbar styling", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--radius 0.625rem", "source": "src/index.css", "reappliedIn": "src/styles.css" }
+  ]
+}
