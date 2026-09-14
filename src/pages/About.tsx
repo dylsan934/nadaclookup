@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { SEOHead } from "@/components/SEOHead";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,11 +6,6 @@ import { ArrowRight } from "lucide-react";
 
 const About = () => (
   <>
-    <SEOHead
-      title="About NADAC Lookup — Pharmacy Pricing Transparency"
-      description="NADAC Lookup helps independent pharmacists access current drug acquisition costs from official CMS data. Learn about our mission to bring pricing transparency to pharmacy."
-      canonical="https://nadaclookup.com/about"
-    />
     <div className="min-h-screen flex flex-col bg-background">
       <SiteNavigation />
       <main className="flex-1 container mx-auto px-4 py-12 max-w-3xl">

@@ -72,8 +72,7 @@
     "@lovable.dev/cloud-auth-js": "^1.1.2",
     "@radix-ui/react-toast": "^1.2.14",
     "@supabase/supabase-js": "^2.89.0",
-    "next-themes": "^0.3.0",
-    "react-helmet-async": "^2.0.5"
+    "next-themes": "^0.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",

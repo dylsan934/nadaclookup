@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { SEOHead } from "@/components/SEOHead";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
@@ -64,7 +63,6 @@ export default function Unsubscribe() {
 
   return (
     <>
-      <SEOHead title="Unsubscribe — NADAC Lookup" description="Manage your email preferences." canonical="https://nadaclookup.com/unsubscribe" />
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 container mx-auto px-4 py-16 max-w-md">

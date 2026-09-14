@@ -1,5 +1,4 @@
 import { useParams, Link, Navigate } from "react-router-dom";
-import { SEOHead } from "@/components/SEOHead";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -371,13 +370,6 @@ const BlogArticle = () => {
 
   return (
     <>
-      <SEOHead
-        title={article.title}
-        description={article.description}
-        canonical={canonical}
-        type="article"
-        jsonLd={articleJsonLd}
-      />
       <div className="min-h-screen flex flex-col bg-background">
         <SiteNavigation />
         <main className="flex-1 container mx-auto px-4 py-12 max-w-3xl">

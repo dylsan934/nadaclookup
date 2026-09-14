@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowRight, Search, Calendar, DollarSign, Pill, ChevronRight, Calculator } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { SEOHead } from "@/components/SEOHead";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
@@ -156,11 +155,6 @@ const DrugPage = () => {
   if (!loading && rows.length === 0) {
     return (
       <>
-        <SEOHead
-          title={`Drug Not Found | NADAC Lookup`}
-          description="We couldn't find NADAC pricing for that drug. Search any drug by name or NDC."
-          canonical={canonical}
-        />
         <div className="min-h-screen flex flex-col bg-background">
           <SiteNavigation />
           <main className="flex-1 container mx-auto px-4 py-16 max-w-2xl text-center">
@@ -182,7 +176,6 @@ const DrugPage = () => {
 
   return (
     <>
-      <SEOHead title={pageTitle} description={pageDesc} canonical={canonical} jsonLd={jsonLd} />
       <div className="min-h-screen flex flex-col bg-background">
         <SiteNavigation />
 

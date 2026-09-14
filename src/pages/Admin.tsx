@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -261,10 +260,6 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>Admin Dashboard — NADAC Lookup</title>
-        <meta name="robots" content="noindex,nofollow" />
-      </Helmet>
       <Header />
 
       <main className="flex-1 container mx-auto px-4 py-8">

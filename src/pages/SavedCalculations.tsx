@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import { Calculator, Download, Search, Trash2 } from "lucide-react";
 import { Header } from "@/components/Header";
@@ -122,11 +121,6 @@ const SavedCalculations = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>Saved Calculations | NADAC Lookup</title>
-        <meta name="description" content="View, search, and export your saved pharmacy reimbursement calculations." />
-        <link rel="canonical" href="https://nadaclookup.com/saved-calculations" />
-      </Helmet>
       <Header />
       <SiteNavigation />
       <main className="flex-1 container mx-auto px-3 md:px-4 py-6">
