@@ -153,7 +153,7 @@ export default function SavedDrugs() {
         .order("name");
 
       if (error) throw error;
-      setCategories(data || []);
+      setCategories((data || []) as Category[]);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
@@ -186,7 +186,7 @@ export default function SavedDrugs() {
           .maybeSingle();
 
         if (!error && data) {
-          prices[ndc] = data;
+          prices[ndc] = data as DrugPrice;
         }
       } catch (error) {
         console.error(`Error fetching price for NDC ${ndc}:`, error);
@@ -206,7 +206,7 @@ export default function SavedDrugs() {
       .single();
 
     if (error) throw error;
-    setCategories((prev) => [...prev, data]);
+    setCategories((prev) => [...prev, data as Category]);
   };
 
   const handleUpdateCategory = async (id: string, name: string, color: string) => {
@@ -679,8 +679,8 @@ export default function SavedDrugs() {
                     </div>
                     <Slider
                       value={[alertThreshold]}
-                      onValueChange={([value]) => setAlertThreshold(value)}
-                      onValueCommit={([value]) => updateAlertThreshold(value)}
+                      onValueChange={(vals) => setAlertThreshold(vals[0] ?? alertThreshold)}
+                      onValueCommit={(vals) => updateAlertThreshold(vals[0] ?? alertThreshold)}
                       min={1}
                       max={20}
                       step={1}
