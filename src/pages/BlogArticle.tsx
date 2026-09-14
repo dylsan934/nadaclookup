@@ -138,8 +138,8 @@ export const articles: Record<string, { title: string; description: string; cont
     ),
   },
   "nadac-vs-wac-explained": {
-    title: "NADAC vs WAC: What's the Difference? | NADAC Lookup",
-    description: "NADAC vs WAC explained: how each drug price benchmark is calculated, why WAC usually runs higher, and which one reflects what pharmacies actually pay.",
+    title: "NADAC vs WAC vs AWP: Drug Pricing Explained",
+    description: "Compare NADAC, WAC, and AWP drug-pricing benchmarks and understand how independent pharmacies use them to evaluate reimbursement.",
     content: (
       <>
         <p className="text-muted-foreground leading-relaxed mb-4">
