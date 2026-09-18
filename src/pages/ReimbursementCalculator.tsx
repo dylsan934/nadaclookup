@@ -59,6 +59,7 @@ const ReimbursementCalculator = () => {
   const { toast } = useToast();
   const { rules: savedRules, refresh } = useReimbursementRules();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
 
   const isGuest = !user;
 
@@ -414,6 +415,7 @@ const ReimbursementCalculator = () => {
               <GuestSignupCta
                 title={guestCalcUsed ? "You've used your free calculation — create an account to keep going" : "Try one calculation free — no signup required"}
                 description={guestCalcUsed ? `Create a free account for ${FREE_MONTHLY_LIMIT} calculations a month and 1 saved contract rule — plus 7 days of Pro free.` : `You can run one full reimbursement estimate as a guest. Sign up free for ${FREE_MONTHLY_LIMIT} calculations a month and your own contract rules.`}
+                returnTo={returnTo}
               />
             </div>
           )}
@@ -766,6 +768,7 @@ const ReimbursementCalculator = () => {
                   <GuestSignupCta
                     title="Save your own contract rules"
                     description={`Create a free account to build PBM, Medicaid, LTC, and cash rules — with ${FREE_MONTHLY_LIMIT} calculations a month. Go Pro for unlimited.`}
+                    returnTo={returnTo}
                   />
                 </div>
               )}
@@ -799,8 +802,8 @@ const ReimbursementCalculator = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-2">
-            <Button asChild variant="outline"><Link to="/auth">Log in</Link></Button>
-            <Button asChild><Link to="/auth?mode=signup">Sign up free — get 7 days of Pro</Link></Button>
+            <Button asChild variant="outline"><Link to={authLink("login", returnTo)}>Log in</Link></Button>
+            <Button asChild><Link to={authLink("signup", returnTo)}>Sign up free — get 7 days of Pro</Link></Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
