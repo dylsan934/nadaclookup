@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "@/lib/router-compat";
-import { AlertCircle, Calculator, Edit2, Plus, Printer, Star, Trash2, Sparkles, ShieldCheck, Zap } from "lucide-react";
+import { Link, useLocation, useSearchParams } from "@/lib/router-compat";
+import { AlertCircle, Calculator, Edit2, Loader2, Plus, Printer, Star, Trash2, Sparkles, ShieldCheck, Zap } from "lucide-react";
 import { Header } from "@/components/Header";
 import { SiteNavigation } from "@/components/SiteNavigation";
 
@@ -29,7 +29,16 @@ import { formatSourceDateShort } from "@/lib/format-date";
 const GUEST_USED_KEY = "guest_calc_used_v1";
 const FREE_MONTHLY_LIMIT = 5;
 
-const GuestSignupCta = ({ title, description }: { title: string; description: string }) => (
+// Send users back to the calculator (with the drug and quantity they chose) after auth.
+const authLink = (mode: "login" | "signup", returnTo?: string) => {
+  const params = new URLSearchParams();
+  if (mode === "signup") params.set("mode", "signup");
+  if (returnTo) params.set("redirect", returnTo);
+  const qs = params.toString();
+  return qs ? `/auth?${qs}` : "/auth";
+};
+
+const GuestSignupCta = ({ title, description, returnTo }: { title: string; description: string; returnTo?: string }) => (
   <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 to-background p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
     <div className="flex items-start gap-3">
       <Sparkles className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
@@ -39,8 +48,8 @@ const GuestSignupCta = ({ title, description }: { title: string; description: st
       </div>
     </div>
     <div className="flex gap-2">
-      <Button asChild size="sm" variant="outline"><Link to="/auth">Log in</Link></Button>
-      <Button asChild size="sm"><Link to="/auth?mode=signup">Create free account</Link></Button>
+      <Button asChild size="sm" variant="outline"><Link to={authLink("login", returnTo)}>Log in</Link></Button>
+      <Button asChild size="sm"><Link to={authLink("signup", returnTo)}>Create free account</Link></Button>
     </div>
   </div>
 );
