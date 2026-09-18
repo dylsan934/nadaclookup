@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+
 import { Link, useLocation, useSearchParams } from "@/lib/router-compat";
 import { AlertCircle, Calculator, Edit2, Loader2, Plus, Printer, Star, Trash2, Sparkles, ShieldCheck, Zap } from "lucide-react";
 import { Header } from "@/components/Header";
@@ -112,7 +113,6 @@ const ReimbursementCalculator = () => {
   const [prefillError, setPrefillError] = useState<string | null>(null);
   const prefillKeyRef = useRef<string | null>(null);
   const freeLimitReached = !!user && !isSubscribed && monthlyUsage >= FREE_MONTHLY_LIMIT;
-  const countedDrugRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!user || isSubscribed) return;
@@ -133,18 +133,69 @@ const ReimbursementCalculator = () => {
   );
 
 
+  // A calculation only exists after an explicit click on "Calculate reimbursement".
+  // Prefilling or editing inputs never produces a result or consumes an allowance.
+  const [submittedCalc, setSubmittedCalc] = useState<{
+    drug: DrugData;
+    rule: ReimbursementRule;
+    qty: number;
+    manualCost: number | null;
+    actualReimb: number | null;
+  } | null>(null);
+
   const result = useMemo(() => {
-    if (!selectedDrug || !selectedRule) return null;
-    const qty = parseFloat(quantity);
-    if (!qty || qty < 0) return null;
+    if (!submittedCalc) return null;
     return calculate({
-      unitPrice: selectedDrug.nadacPerUnit,
-      quantity: qty,
-      manualIngredientCost: manualCost ? parseFloat(manualCost) : null,
-      actualReimbursement: actualReimb ? parseFloat(actualReimb) : null,
-      rule: selectedRule,
+      unitPrice: submittedCalc.drug.nadacPerUnit,
+      quantity: submittedCalc.qty,
+      manualIngredientCost: submittedCalc.manualCost,
+      actualReimbursement: submittedCalc.actualReimb,
+      rule: submittedCalc.rule,
     });
-  }, [selectedDrug, selectedRule, quantity, manualCost, actualReimb]);
+  }, [submittedCalc]);
+
+  // Live ingredient-cost preview (price × quantity). Display only — not a calculation.
+  const ingredientCostPreview = useMemo(() => {
+    if (!selectedDrug) return null;
+    const qty = parseFloat(quantity);
+    if (!Number.isFinite(qty) || qty <= 0) return null;
+    return selectedDrug.nadacPerUnit * qty;
+  }, [selectedDrug, quantity]);
+
+  // Submitting a valid calculation consumes the allowance exactly once per click.
+  const handleCalculate = () => {
+    if (!selectedDrug || !selectedRule) return;
+    const qty = parseFloat(quantity);
+    if (!Number.isFinite(qty) || qty <= 0) {
+      toast({ title: "Enter a quantity", description: "Quantity dispensed must be a positive number.", variant: "destructive" });
+      return;
+    }
+    if (isGuest && guestCalcUsed) {
+      setGuestGateOpen(true);
+      return;
+    }
+    if (freeLimitReached) {
+      setUpgradeReason(`You've used all ${FREE_MONTHLY_LIMIT} free calculations this month. Upgrade to Pro for unlimited calculations, unlimited contract rules, and full history.`);
+      setUpgradeOpen(true);
+      return;
+    }
+    setSubmittedCalc({
+      drug: selectedDrug,
+      rule: selectedRule,
+      qty,
+      manualCost: manualCost ? parseFloat(manualCost) : null,
+      actualReimb: actualReimb ? parseFloat(actualReimb) : null,
+    });
+    if (isGuest) {
+      window.localStorage.setItem(GUEST_USED_KEY, "1");
+      setGuestCalcUsed(true);
+    } else if (user && !isSubscribed) {
+      supabase.rpc("increment_calc_usage").then(({ data, error }) => {
+        if (!error && typeof data === "number") setMonthlyUsage(data);
+        else setMonthlyUsage((c) => c + 1);
+      });
+    }
+  };
 
   // NADAC prices carry forward: CMS only republishes a rate when it changes, so an older
   // effective date does not mean the price is out of date. We show the effective date as
@@ -196,45 +247,15 @@ const ReimbursementCalculator = () => {
 
 
   const handleSelectDrug = (d: DrugData) => {
-    if (isGuest && guestCalcUsed && selectedDrug?.ndc !== d.ndc) {
-      setGuestGateOpen(true);
-      return;
-    }
-    if (freeLimitReached && selectedDrug?.ndc !== d.ndc) {
-      setUpgradeReason(`You've used all ${FREE_MONTHLY_LIMIT} free calculations this month. Upgrade to Pro for unlimited calculations, unlimited contract rules, and full history.`);
-      setUpgradeOpen(true);
-      return;
-    }
     setSelectedDrug(d);
     setSearchResults([]);
+    setSubmittedCalc(null);
   };
 
   const handleClearDrug = () => {
-    if (isGuest && guestCalcUsed) {
-      setGuestGateOpen(true);
-      return;
-    }
     setSelectedDrug(null);
+    setSubmittedCalc(null);
   };
-
-  // Mark guest's free calculation as used once they have a real result.
-  useEffect(() => {
-    if (isGuest && result && !guestCalcUsed) {
-      window.localStorage.setItem(GUEST_USED_KEY, "1");
-      setGuestCalcUsed(true);
-    }
-  }, [isGuest, result, guestCalcUsed]);
-
-  // Count each new drug calculation against the free monthly limit (once per drug).
-  useEffect(() => {
-    if (!user || isSubscribed || !result || !selectedDrug) return;
-    if (countedDrugRef.current === selectedDrug.ndc) return;
-    countedDrugRef.current = selectedDrug.ndc;
-    supabase.rpc("increment_calc_usage").then(({ data, error }) => {
-      if (!error && typeof data === "number") setMonthlyUsage(data);
-      else setMonthlyUsage((c) => c + 1);
-    });
-  }, [user, isSubscribed, result, selectedDrug]);
 
   // Deep-link prefill: ?ndc=... (&drug=... &qty=...). The price is always refetched
   // from NADAC — nothing about the price is trusted from the URL.
@@ -254,6 +275,7 @@ const ReimbursementCalculator = () => {
     // Never keep a previously selected drug's data around.
     setSelectedDrug(null);
     setSearchResults([]);
+    setSubmittedCalc(null);
     setActualReimb("");
     setManualCost("");
     setPrefillError(null);
@@ -599,14 +621,14 @@ const ReimbursementCalculator = () => {
                           step="0.001"
                           min="0"
                           value={quantity}
-                          onChange={(e) => setQuantity(e.target.value)}
+                          onChange={(e) => { setQuantity(e.target.value); setSubmittedCalc(null); }}
                         />
                       </div>
                       <div>
                         <Label>Ingredient cost (auto)</Label>
                         <Input
                           readOnly
-                          value={result ? formatCurrency(result.ingredientCost) : "—"}
+                          value={ingredientCostPreview !== null ? formatCurrency(ingredientCostPreview) : "—"}
                           className="bg-muted"
                         />
                       </div>
@@ -620,7 +642,7 @@ const ReimbursementCalculator = () => {
                           step="0.01"
                           min="0"
                           value={manualCost}
-                          onChange={(e) => setManualCost(e.target.value)}
+                          onChange={(e) => { setManualCost(e.target.value); setSubmittedCalc(null); }}
                           placeholder="Your acquisition cost"
                         />
                       </div>
@@ -629,7 +651,7 @@ const ReimbursementCalculator = () => {
                     <div>
                       <Label>Contract rule</Label>
                       <div className="flex gap-2">
-                        <Select value={selectedRule?.id ?? ""} onValueChange={setSelectedRuleId}>
+                        <Select value={selectedRule?.id ?? ""} onValueChange={(v) => { setSelectedRuleId(v); setSubmittedCalc(null); }}>
                           <SelectTrigger className="flex-1">
                             <SelectValue placeholder="Select a saved rule…" />
                           </SelectTrigger>
@@ -649,18 +671,35 @@ const ReimbursementCalculator = () => {
                     <div>
                       <Label>Actual reimbursement received (optional)</Label>
                       <Input
-                        type="number"
-                        step="0.01"
-                        value={actualReimb}
-                        onChange={(e) => setActualReimb(e.target.value)}
-                        placeholder="From paid claim"
-                      />
+                          type="number"
+                          step="0.01"
+                          value={actualReimb}
+                          onChange={(e) => { setActualReimb(e.target.value); setSubmittedCalc(null); }}
+                          placeholder="From paid claim"
+                        />
                     </div>
 
                     <div>
                       <Label>Notes (optional)</Label>
                       <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={500} />
                     </div>
+
+                    <Button
+                      className="w-full"
+                      size="lg"
+                      onClick={handleCalculate}
+                      disabled={!selectedDrug || prefilling}
+                    >
+                      <Calculator className="h-4 w-4 mr-2" />
+                      Calculate reimbursement
+                    </Button>
+                    <p className="text-xs text-muted-foreground text-center">
+                      {isGuest
+                        ? "Guests get one calculation — it's counted only when you click Calculate."
+                        : !isSubscribed
+                          ? `Free plan: each calculation counts toward your ${FREE_MONTHLY_LIMIT}/month.`
+                          : "Pro: unlimited calculations."}
+                    </p>
                   </CardContent>
                 </Card>
               </div>
@@ -673,7 +712,11 @@ const ReimbursementCalculator = () => {
                   </CardHeader>
                   <CardContent>
                     {!selectedDrug || !selectedRule || !result ? (
-                      <p className="text-sm text-muted-foreground">Search for a drug and pick a contract rule to see the estimate.</p>
+                      <p className="text-sm text-muted-foreground">
+                        {!selectedDrug
+                          ? "Search for a drug and pick a contract rule to see the estimate."
+                          : "Inputs ready — click “Calculate reimbursement” to see the estimate."}
+                      </p>
                     ) : (
                       <div className="space-y-3 text-sm">
                         <Row label="Drug" value={selectedDrug.drugName} />
