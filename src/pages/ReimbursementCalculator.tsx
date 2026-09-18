@@ -261,19 +261,24 @@ const ReimbursementCalculator = () => {
 
     (async () => {
       setPrefilling(true);
-      const res = await nadacApi.search(term, 50);
+      // Some CMS rows store the NDC with stray quote characters; search on digits only.
+      const digitsOnly = (v: string) => v.replace(/\D/g, "");
+      const fetchTerm = ndcParam ? (digitsOnly(ndcParam) || ndcParam) : term;
+      const res = await nadacApi.search(fetchTerm, 50);
       setPrefilling(false);
       if (!res.success) {
         setPrefillError("We couldn't load NADAC pricing just now. Try again, or search for a drug below.");
         return;
       }
       const list = res.data ?? [];
-      const normalize = (v: string) => v.replace(/-/g, "").replace(/^0+/, "");
+      // Compare on digits only, but never drop leading zeros from what we display.
+      const normalize = (v: string) => v.replace(/\D/g, "");
       let match: DrugData | null = null;
       if (ndcParam) {
         match =
           list.find((d) => d.ndc === ndcParam) ??
           list.find((d) => normalize(d.ndc) === normalize(ndcParam)) ??
+          list.find((d) => normalize(d.ndc).replace(/^0+/, "") === normalize(ndcParam).replace(/^0+/, "")) ??
           null;
       } else {
         match = list[0] ?? null;
