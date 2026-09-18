@@ -298,6 +298,19 @@ const ReimbursementCalculator = () => {
   }, [searchParams, isGuest, guestCalcUsed, freeLimitReached]);
 
 
+  // Where auth should send the user back to: this page, with their drug and quantity.
+  const returnTo = useMemo(() => {
+    const params = new URLSearchParams();
+    const ndc = selectedDrug?.ndc ?? searchParams.get("ndc");
+    const drug = selectedDrug?.drugName ?? searchParams.get("drug");
+    if (ndc) params.set("ndc", ndc);
+    if (drug) params.set("drug", drug);
+    const qty = parseFloat(quantity);
+    if (Number.isFinite(qty) && qty > 0) params.set("qty", String(qty));
+    const qs = params.toString();
+    return qs ? `/reimbursement-calculator?${qs}` : `/reimbursement-calculator${location.search ?? ""}`;
+  }, [selectedDrug, quantity, searchParams, location.search]);
+
   const handleEditRule = (rule: ReimbursementRule) => {
     setEditingRule(rule);
     setRuleModalOpen(true);

@@ -9,9 +9,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Search, Bookmark, Calculator, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { sanitizeInternalPath } from "@/lib/safe-redirect";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
+  // Optional internal return destination (e.g. the calculator with a drug preselected).
+  const redirectTo = sanitizeInternalPath(searchParams.get("redirect"));
+  const afterAuthPath = redirectTo ?? "/";
+  const afterSignupPath = redirectTo ?? "/?welcome=1";
   const [isLogin, setIsLogin] = useState(() => searchParams.get("mode") !== "signup");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
