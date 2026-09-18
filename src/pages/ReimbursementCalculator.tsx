@@ -620,14 +620,14 @@ const ReimbursementCalculator = () => {
                           step="0.001"
                           min="0"
                           value={quantity}
-                          onChange={(e) => setQuantity(e.target.value)}
+                          onChange={(e) => { setQuantity(e.target.value); setSubmittedCalc(null); }}
                         />
                       </div>
                       <div>
                         <Label>Ingredient cost (auto)</Label>
                         <Input
                           readOnly
-                          value={result ? formatCurrency(result.ingredientCost) : "—"}
+                          value={ingredientCostPreview !== null ? formatCurrency(ingredientCostPreview) : "—"}
                           className="bg-muted"
                         />
                       </div>
@@ -641,7 +641,7 @@ const ReimbursementCalculator = () => {
                           step="0.01"
                           min="0"
                           value={manualCost}
-                          onChange={(e) => setManualCost(e.target.value)}
+                          onChange={(e) => { setManualCost(e.target.value); setSubmittedCalc(null); }}
                           placeholder="Your acquisition cost"
                         />
                       </div>
@@ -650,7 +650,7 @@ const ReimbursementCalculator = () => {
                     <div>
                       <Label>Contract rule</Label>
                       <div className="flex gap-2">
-                        <Select value={selectedRule?.id ?? ""} onValueChange={setSelectedRuleId}>
+                        <Select value={selectedRule?.id ?? ""} onValueChange={(v) => { setSelectedRuleId(v); setSubmittedCalc(null); }}>
                           <SelectTrigger className="flex-1">
                             <SelectValue placeholder="Select a saved rule…" />
                           </SelectTrigger>
