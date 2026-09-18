@@ -31,9 +31,9 @@ const Auth = () => {
   // Only redirect if not in password reset mode
   useEffect(() => {
     if (user && !isLoading && !isPasswordRecovery) {
-      navigate("/");
+      navigate(afterAuthPath);
     }
-  }, [user, isLoading, navigate, isPasswordRecovery]);
+  }, [user, isLoading, navigate, isPasswordRecovery, afterAuthPath]);
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +132,7 @@ const Auth = () => {
     setIsSubmitting(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/?welcome=1`,
+        redirect_uri: `${window.location.origin}${afterSignupPath}`,
       });
       if (result.error) {
         toast({
@@ -147,7 +147,7 @@ const Auth = () => {
         // Browser will navigate away to Google
         return;
       }
-      navigate("/?welcome=1");
+      navigate(afterSignupPath);
     } catch (err) {
       toast({
         title: "Google sign-in failed",
@@ -197,7 +197,7 @@ const Auth = () => {
             title: "Welcome back!",
             description: "You have successfully logged in.",
           });
-          navigate("/");
+          navigate(afterAuthPath);
         }
       } else {
         const { data, error } = await signUp(email, password);
@@ -238,7 +238,7 @@ const Auth = () => {
             title: "Account created!",
             description: "Welcome! You can now access all features.",
           });
-          navigate("/?welcome=1");
+          navigate(afterSignupPath);
         } else {
           // Email confirmation required — no session until they click the link
           toast({
