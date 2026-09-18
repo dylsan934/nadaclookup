@@ -133,18 +133,69 @@ const ReimbursementCalculator = () => {
   );
 
 
+  // A calculation only exists after an explicit click on "Calculate reimbursement".
+  // Prefilling or editing inputs never produces a result or consumes an allowance.
+  const [submittedCalc, setSubmittedCalc] = useState<{
+    drug: DrugData;
+    rule: ReimbursementRule;
+    qty: number;
+    manualCost: number | null;
+    actualReimb: number | null;
+  } | null>(null);
+
   const result = useMemo(() => {
-    if (!selectedDrug || !selectedRule) return null;
-    const qty = parseFloat(quantity);
-    if (!qty || qty < 0) return null;
+    if (!submittedCalc) return null;
     return calculate({
-      unitPrice: selectedDrug.nadacPerUnit,
-      quantity: qty,
-      manualIngredientCost: manualCost ? parseFloat(manualCost) : null,
-      actualReimbursement: actualReimb ? parseFloat(actualReimb) : null,
-      rule: selectedRule,
+      unitPrice: submittedCalc.drug.nadacPerUnit,
+      quantity: submittedCalc.qty,
+      manualIngredientCost: submittedCalc.manualCost,
+      actualReimbursement: submittedCalc.actualReimb,
+      rule: submittedCalc.rule,
     });
-  }, [selectedDrug, selectedRule, quantity, manualCost, actualReimb]);
+  }, [submittedCalc]);
+
+  // Live ingredient-cost preview (price × quantity). Display only — not a calculation.
+  const ingredientCostPreview = useMemo(() => {
+    if (!selectedDrug) return null;
+    const qty = parseFloat(quantity);
+    if (!Number.isFinite(qty) || qty <= 0) return null;
+    return selectedDrug.nadacPerUnit * qty;
+  }, [selectedDrug, quantity]);
+
+  // Submitting a valid calculation consumes the allowance exactly once per click.
+  const handleCalculate = () => {
+    if (!selectedDrug || !selectedRule) return;
+    const qty = parseFloat(quantity);
+    if (!Number.isFinite(qty) || qty <= 0) {
+      toast({ title: "Enter a quantity", description: "Quantity dispensed must be a positive number.", variant: "destructive" });
+      return;
+    }
+    if (isGuest && guestCalcUsed) {
+      setGuestGateOpen(true);
+      return;
+    }
+    if (freeLimitReached) {
+      setUpgradeReason(`You've used all ${FREE_MONTHLY_LIMIT} free calculations this month. Upgrade to Pro for unlimited calculations, unlimited contract rules, and full history.`);
+      setUpgradeOpen(true);
+      return;
+    }
+    setSubmittedCalc({
+      drug: selectedDrug,
+      rule: selectedRule,
+      qty,
+      manualCost: manualCost ? parseFloat(manualCost) : null,
+      actualReimb: actualReimb ? parseFloat(actualReimb) : null,
+    });
+    if (isGuest) {
+      window.localStorage.setItem(GUEST_USED_KEY, "1");
+      setGuestCalcUsed(true);
+    } else if (user && !isSubscribed) {
+      supabase.rpc("increment_calc_usage").then(({ data, error }) => {
+        if (!error && typeof data === "number") setMonthlyUsage(data);
+        else setMonthlyUsage((c) => c + 1);
+      });
+    }
+  };
 
   // NADAC prices carry forward: CMS only republishes a rate when it changes, so an older
   // effective date does not mean the price is out of date. We show the effective date as
