@@ -115,8 +115,15 @@ export const formatUnitPrice = (n: number) =>
   `$${n.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
 
 export const RULE_TEMPLATES: Array<Omit<ReimbursementRule, "id" | "is_default">> = [
-  { name: "NADAC + dispensing fee only", cost_basis: "nadac", adjustment_type: "none", percentage_value: 0, multiplier: 1, dispensing_fee: 10.65, flat_adjustment: 0, minimum_reimbursement: null, maximum_reimbursement: null, notes: "Example template" },
+  { name: "NADAC + $10.00 dispensing fee", cost_basis: "nadac", adjustment_type: "none", percentage_value: 0, multiplier: 1, dispensing_fee: 10, flat_adjustment: 0, minimum_reimbursement: null, maximum_reimbursement: null, notes: "Default starting point" },
   { name: "NADAC + 10% + $10.65 fee", cost_basis: "nadac", adjustment_type: "plus_pct", percentage_value: 10, multiplier: 1.1, dispensing_fee: 10.65, flat_adjustment: 0, minimum_reimbursement: null, maximum_reimbursement: null, notes: "Example template" },
   { name: "NADAC - 2% + $8.00 fee", cost_basis: "nadac", adjustment_type: "minus_pct", percentage_value: 2, multiplier: 0.98, dispensing_fee: 8.0, flat_adjustment: 0, minimum_reimbursement: null, maximum_reimbursement: null, notes: "Example template" },
   { name: "Manual cost + 10% + $10.65 fee", cost_basis: "manual", adjustment_type: "plus_pct", percentage_value: 10, multiplier: 1.1, dispensing_fee: 10.65, flat_adjustment: 0, minimum_reimbursement: null, maximum_reimbursement: null, notes: "Example template" },
 ];
+
+// Built-in starting rule used when nobody has picked or saved a rule yet.
+export const DEFAULT_RULE: ReimbursementRule = {
+  ...RULE_TEMPLATES[0]!,
+  id: "default-nadac-plus-10",
+  is_default: true,
+};
