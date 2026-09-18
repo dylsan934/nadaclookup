@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "@/lib/router-compat";
 import { AlertCircle, Calculator, Edit2, Loader2, Plus, Printer, Star, Trash2, Sparkles, ShieldCheck, Zap } from "lucide-react";
 import { Header } from "@/components/Header";
@@ -274,6 +274,7 @@ const ReimbursementCalculator = () => {
     // Never keep a previously selected drug's data around.
     setSelectedDrug(null);
     setSearchResults([]);
+    setSubmittedCalc(null);
     setActualReimb("");
     setManualCost("");
     setPrefillError(null);
