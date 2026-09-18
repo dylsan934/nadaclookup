@@ -15,7 +15,7 @@ const proFeatures = [
   {
     icon: Calculator,
     label: "Unlimited Reimbursement Calculator",
-    description: "Run unlimited reimbursement calculations with your contract formulas to spot underwater claims"
+    description: "Unlimited calculations and unlimited custom contract rules to spot underwater claims"
   },
   {
     icon: History,
@@ -42,7 +42,7 @@ const proFeatures = [
 const freeFeatures = [
   "Unlimited NADAC drug price search",
   "5 reimbursement calculations per month (resets on the 1st)",
-  "1 saved contract rule",
+  "1 custom contract rule",
   "Save up to 3 drugs",
 ];
 
