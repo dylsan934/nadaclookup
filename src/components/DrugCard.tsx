@@ -154,6 +154,10 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
   const parsedQuantity = parseFloat(quantity) || 0;
   const totalPrice = parsedQuantity * drug.nadacPerUnit;
 
+  // Deep link to the existing calculator. The NDC is sent verbatim so leading
+  // zeros survive; the calculator refetches current NADAC data itself.
+  const calculatorHref = `/reimbursement-calculator?ndc=${encodeURIComponent(drug.ndc)}&drug=${encodeURIComponent(drug.drugName)}${parsedQuantity > 0 ? `&qty=${encodeURIComponent(String(parsedQuantity))}` : ""}`;
+
   // Example preview values for blurred state
   const previewQuantity = 90;
   const previewTotal = previewQuantity * drug.nadacPerUnit;
