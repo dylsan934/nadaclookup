@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "@/lib/router-compat";
 import { Header } from "@/components/Header";
 import { SiteNavigation } from "@/components/SiteNavigation";
@@ -78,7 +78,7 @@ const Index = () => {
     }
   };
 
-  const handleSearch = async (overrideSearchTerm?: string) => {
+  const handleSearch = useCallback(async (overrideSearchTerm?: string) => {
     const termToSearch = overrideSearchTerm ?? searchTerm;
     
     if (!termToSearch.trim()) {
@@ -114,6 +114,38 @@ const Index = () => {
     } finally {
       setIsLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, dataStatus.hasData, toast]);
+
+  // The query lives in the URL (?q=...) so browser Back restores the results.
+  const runSearchRef = useRef(handleSearch);
+  runSearchRef.current = handleSearch;
+  const restoredRef = useRef<string | null>(null);
+  const urlQuery = searchParams.get("q") ?? "";
+
+  useEffect(() => {
+    if (!dataStatus.hasData) return;
+    if (restoredRef.current === urlQuery) return;
+    restoredRef.current = urlQuery;
+    if (!urlQuery) {
+      setSearchTerm("");
+      setResults([]);
+      setHasSearched(false);
+      setLastSearchTerm("");
+      return;
+    }
+    setSearchTerm(urlQuery);
+    void runSearchRef.current(urlQuery);
+  }, [urlQuery, dataStatus.hasData]);
+
+  const handleSearchAndSync = (overrideSearchTerm?: string) => {
+    const term = (overrideSearchTerm ?? searchTerm).trim();
+    if (!term) { void handleSearch(overrideSearchTerm); return; }
+    if (term === urlQuery) { void handleSearch(term); return; }
+    // Pushes a history entry so Back returns to the previous search.
+    const next = new URLSearchParams(searchParams);
+    next.set("q", term);
+    setSearchParams(next);
   };
 
   return (
@@ -130,7 +162,7 @@ const Index = () => {
       >
         <div className="container mx-auto px-4 py-4">
           <div className="max-w-2xl mx-auto">
-            <SearchBar value={searchTerm} onChange={setSearchTerm} onSearch={handleSearch} isLoading={isLoading} />
+            <SearchBar value={searchTerm} onChange={setSearchTerm} onSearch={handleSearchAndSync} isLoading={isLoading} />
           </div>
         </div>
       </div>
