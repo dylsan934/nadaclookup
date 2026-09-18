@@ -712,7 +712,11 @@ const ReimbursementCalculator = () => {
                   </CardHeader>
                   <CardContent>
                     {!selectedDrug || !selectedRule || !result ? (
-                      <p className="text-sm text-muted-foreground">Search for a drug and pick a contract rule to see the estimate.</p>
+                      <p className="text-sm text-muted-foreground">
+                        {!selectedDrug
+                          ? "Search for a drug and pick a contract rule to see the estimate."
+                          : "Inputs ready — click “Calculate reimbursement” to see the estimate."}
+                      </p>
                     ) : (
                       <div className="space-y-3 text-sm">
                         <Row label="Drug" value={selectedDrug.drugName} />
