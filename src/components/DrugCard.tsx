@@ -251,6 +251,24 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
 
           {/* Always-visible: Price History + Calculator */}
           <div className="pt-3 border-t border-border/50 flex flex-col sm:flex-row gap-3 sm:items-start">
+            {/* Reimbursement calculator deep link */}
+            <div className="sm:w-auto">
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto justify-center gap-2 min-h-10"
+              >
+                <Link
+                  to={calculatorHref}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Calculator className="h-4 w-4" />
+                  Calculate reimbursement
+                </Link>
+              </Button>
+            </div>
+
             {/* Price History Button */}
             <div className="sm:w-auto">
               {canAccessPriceHistory ? (
