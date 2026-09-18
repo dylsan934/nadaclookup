@@ -9,9 +9,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Search, Bookmark, Calculator, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { sanitizeInternalPath } from "@/lib/safe-redirect";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
+  // Optional internal return destination (e.g. the calculator with a drug preselected).
+  const redirectTo = sanitizeInternalPath(searchParams.get("redirect"));
+  const afterAuthPath = redirectTo ?? "/";
+  const afterSignupPath = redirectTo ?? "/?welcome=1";
   const [isLogin, setIsLogin] = useState(() => searchParams.get("mode") !== "signup");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -26,9 +31,9 @@ const Auth = () => {
   // Only redirect if not in password reset mode
   useEffect(() => {
     if (user && !isLoading && !isPasswordRecovery) {
-      navigate("/");
+      navigate(afterAuthPath);
     }
-  }, [user, isLoading, navigate, isPasswordRecovery]);
+  }, [user, isLoading, navigate, isPasswordRecovery, afterAuthPath]);
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,7 +132,7 @@ const Auth = () => {
     setIsSubmitting(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/?welcome=1`,
+        redirect_uri: `${window.location.origin}${afterSignupPath}`,
       });
       if (result.error) {
         toast({
@@ -142,7 +147,7 @@ const Auth = () => {
         // Browser will navigate away to Google
         return;
       }
-      navigate("/?welcome=1");
+      navigate(afterSignupPath);
     } catch (err) {
       toast({
         title: "Google sign-in failed",
@@ -192,7 +197,7 @@ const Auth = () => {
             title: "Welcome back!",
             description: "You have successfully logged in.",
           });
-          navigate("/");
+          navigate(afterAuthPath);
         }
       } else {
         const { data, error } = await signUp(email, password);
@@ -233,7 +238,7 @@ const Auth = () => {
             title: "Account created!",
             description: "Welcome! You can now access all features.",
           });
-          navigate("/?welcome=1");
+          navigate(afterSignupPath);
         } else {
           // Email confirmation required — no session until they click the link
           toast({

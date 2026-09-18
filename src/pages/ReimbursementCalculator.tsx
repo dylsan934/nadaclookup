@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "@/lib/router-compat";
-import { AlertCircle, Calculator, Edit2, Plus, Printer, Star, Trash2, Sparkles, ShieldCheck, Zap } from "lucide-react";
+import { Link, useLocation, useSearchParams } from "@/lib/router-compat";
+import { AlertCircle, Calculator, Edit2, Loader2, Plus, Printer, Star, Trash2, Sparkles, ShieldCheck, Zap } from "lucide-react";
 import { Header } from "@/components/Header";
 import { SiteNavigation } from "@/components/SiteNavigation";
 
@@ -29,7 +29,16 @@ import { formatSourceDateShort } from "@/lib/format-date";
 const GUEST_USED_KEY = "guest_calc_used_v1";
 const FREE_MONTHLY_LIMIT = 5;
 
-const GuestSignupCta = ({ title, description }: { title: string; description: string }) => (
+// Send users back to the calculator (with the drug and quantity they chose) after auth.
+const authLink = (mode: "login" | "signup", returnTo?: string) => {
+  const params = new URLSearchParams();
+  if (mode === "signup") params.set("mode", "signup");
+  if (returnTo) params.set("redirect", returnTo);
+  const qs = params.toString();
+  return qs ? `/auth?${qs}` : "/auth";
+};
+
+const GuestSignupCta = ({ title, description, returnTo }: { title: string; description: string; returnTo?: string }) => (
   <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 to-background p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
     <div className="flex items-start gap-3">
       <Sparkles className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
@@ -39,8 +48,8 @@ const GuestSignupCta = ({ title, description }: { title: string; description: st
       </div>
     </div>
     <div className="flex gap-2">
-      <Button asChild size="sm" variant="outline"><Link to="/auth">Log in</Link></Button>
-      <Button asChild size="sm"><Link to="/auth?mode=signup">Create free account</Link></Button>
+      <Button asChild size="sm" variant="outline"><Link to={authLink("login", returnTo)}>Log in</Link></Button>
+      <Button asChild size="sm"><Link to={authLink("signup", returnTo)}>Create free account</Link></Button>
     </div>
   </div>
 );
@@ -50,6 +59,7 @@ const ReimbursementCalculator = () => {
   const { toast } = useToast();
   const { rules: savedRules, refresh } = useReimbursementRules();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
 
   const isGuest = !user;
 
@@ -91,6 +101,10 @@ const ReimbursementCalculator = () => {
 
   // Free plan gating: 5 calculations per calendar month. Pro is unlimited.
   const [monthlyUsage, setMonthlyUsage] = useState(0);
+  // Deep-link prefill state
+  const [prefilling, setPrefilling] = useState(false);
+  const [prefillError, setPrefillError] = useState<string | null>(null);
+  const prefillKeyRef = useRef<string | null>(null);
   const freeLimitReached = !!user && !isSubscribed && monthlyUsage >= FREE_MONTHLY_LIMIT;
   const countedDrugRef = useRef<string | null>(null);
 
@@ -216,29 +230,91 @@ const ReimbursementCalculator = () => {
     });
   }, [user, isSubscribed, result, selectedDrug]);
 
-  // Deep-link prefill: ?ndc=... or ?drug=...
+  // Deep-link prefill: ?ndc=... (&drug=... &qty=...). The price is always refetched
+  // from NADAC — nothing about the price is trusted from the URL.
   useEffect(() => {
-    const ndc = searchParams.get("ndc");
-    const drug = searchParams.get("drug");
-    const term = ndc || drug;
-    if (!term || selectedDrug) return;
-    if (isGuest && guestCalcUsed) return;
-    if (freeLimitReached) return;
+    const ndcParam = searchParams.get("ndc");
+    const drugParam = searchParams.get("drug");
+    const qtyParam = searchParams.get("qty");
+    const term = ndcParam || drugParam;
+    if (!term) return;
+    const key = `${ndcParam ?? ""}|${drugParam ?? ""}|${qtyParam ?? ""}`;
+    if (prefillKeyRef.current === key) return;
+    prefillKeyRef.current = key;
+
+    // Never keep a previously selected drug's data around.
+    setSelectedDrug(null);
+    setSearchResults([]);
+    setActualReimb("");
+    setManualCost("");
+    setPrefillError(null);
+    const parsedQty = qtyParam ? parseFloat(qtyParam) : NaN;
+    setQuantity(Number.isFinite(parsedQty) && parsedQty > 0 ? String(parsedQty) : "");
+
+    // Prefilling itself never consumes an allowance, but respect the gates.
+    if (isGuest && guestCalcUsed) { setGuestGateOpen(true); return; }
+    if (freeLimitReached) {
+      setUpgradeReason(`You've used all ${FREE_MONTHLY_LIMIT} free calculations this month. Upgrade to Pro for unlimited calculations, unlimited contract rules, and full history.`);
+      setUpgradeOpen(true);
+      return;
+    }
+
     (async () => {
-      setSearching(true);
-      const res = await nadacApi.search(term, 5);
-      const list = res.data ?? [];
-      if (ndc) {
-        const exact = list.find((d) => d.ndc === ndc);
-        if (exact) { setSelectedDrug(exact); setSearching(false); return; }
+      setPrefilling(true);
+      // Some CMS rows store the NDC with stray quote characters; search on digits only.
+      const digitsOnly = (v: string) => v.replace(/\D/g, "");
+      const fetchTerm = ndcParam ? (digitsOnly(ndcParam) || ndcParam) : term;
+      const res = await nadacApi.search(fetchTerm, 50);
+      setPrefilling(false);
+      if (!res.success) {
+        setPrefillError("We couldn't load NADAC pricing just now. Try again, or search for a drug below.");
+        return;
       }
-      if (list[0]) setSelectedDrug(list[0]);
-      else setSearchTerm(term);
-      setSearching(false);
+      const list = res.data ?? [];
+      // Compare on digits only, but never drop leading zeros from what we display.
+      const normalize = (v: string) => v.replace(/\D/g, "");
+      let match: DrugData | null = null;
+      if (ndcParam) {
+        match =
+          list.find((d) => d.ndc === ndcParam) ??
+          list.find((d) => normalize(d.ndc) === normalize(ndcParam)) ??
+          list.find((d) => normalize(d.ndc).replace(/^0+/, "") === normalize(ndcParam).replace(/^0+/, "")) ??
+          null;
+      } else {
+        match = list[0] ?? null;
+      }
+      if (!match) {
+        setSearchTerm(drugParam ?? term);
+        setPrefillError(
+          ndcParam
+            ? `We couldn't find current NADAC pricing for NDC ${ndcParam}. Search for another drug below.`
+            : `We couldn't find current NADAC pricing for "${term}". Search for another drug below.`
+        );
+        return;
+      }
+      if (!Number.isFinite(match.nadacPerUnit) || match.nadacPerUnit <= 0) {
+        setSearchTerm(match.drugName);
+        setPrefillError(`NADAC doesn't publish a unit price for ${match.drugName} right now, so it can't be calculated. Choose another drug below.`);
+        return;
+      }
+      setSelectedDrug(match);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, searchParams]);
+  }, [searchParams, isGuest, guestCalcUsed, freeLimitReached]);
 
+
+  // Where auth should send the user back to: this page, with their drug and quantity.
+  const returnTo = useMemo(() => {
+    const params = new URLSearchParams();
+    const ndc = selectedDrug?.ndc ?? searchParams.get("ndc");
+    const drug = selectedDrug?.drugName ?? searchParams.get("drug");
+    if (ndc) params.set("ndc", ndc);
+    if (drug) params.set("drug", drug);
+    const qty = parseFloat(quantity);
+    if (Number.isFinite(qty) && qty > 0) params.set("qty", String(qty));
+    const qs = params.toString();
+    return qs ? `/reimbursement-calculator?${qs}` : `/reimbursement-calculator${location.search ?? ""}`;
+  }, [selectedDrug, quantity, searchParams, location.search]);
 
   const handleEditRule = (rule: ReimbursementRule) => {
     setEditingRule(rule);
@@ -357,6 +433,7 @@ const ReimbursementCalculator = () => {
               <GuestSignupCta
                 title={guestCalcUsed ? "You've used your free calculation — create an account to keep going" : "Try one calculation free — no signup required"}
                 description={guestCalcUsed ? `Create a free account for ${FREE_MONTHLY_LIMIT} calculations a month and 1 saved contract rule — plus 7 days of Pro free.` : `You can run one full reimbursement estimate as a guest. Sign up free for ${FREE_MONTHLY_LIMIT} calculations a month and your own contract rules.`}
+                returnTo={returnTo}
               />
             </div>
           )}
@@ -437,6 +514,20 @@ const ReimbursementCalculator = () => {
                         {searching ? "…" : "Search"}
                       </Button>
                     </div>
+
+                    {prefilling && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading current NADAC pricing for your selected drug…
+                      </div>
+                    )}
+
+                    {prefillError && !prefilling && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>{prefillError}</AlertDescription>
+                      </Alert>
+                    )}
 
                     {searchResults.length > 0 && !selectedDrug && (
                       <div className="border rounded-lg max-h-72 overflow-y-auto divide-y">
@@ -695,6 +786,7 @@ const ReimbursementCalculator = () => {
                   <GuestSignupCta
                     title="Save your own contract rules"
                     description={`Create a free account to build PBM, Medicaid, LTC, and cash rules — with ${FREE_MONTHLY_LIMIT} calculations a month. Go Pro for unlimited.`}
+                    returnTo={returnTo}
                   />
                 </div>
               )}
@@ -728,8 +820,8 @@ const ReimbursementCalculator = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-2">
-            <Button asChild variant="outline"><Link to="/auth">Log in</Link></Button>
-            <Button asChild><Link to="/auth?mode=signup">Sign up free — get 7 days of Pro</Link></Button>
+            <Button asChild variant="outline"><Link to={authLink("login", returnTo)}>Log in</Link></Button>
+            <Button asChild><Link to={authLink("signup", returnTo)}>Sign up free — get 7 days of Pro</Link></Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

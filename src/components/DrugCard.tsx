@@ -154,6 +154,10 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
   const parsedQuantity = parseFloat(quantity) || 0;
   const totalPrice = parsedQuantity * drug.nadacPerUnit;
 
+  // Deep link to the existing calculator. The NDC is sent verbatim so leading
+  // zeros survive; the calculator refetches current NADAC data itself.
+  const calculatorHref = `/reimbursement-calculator?ndc=${encodeURIComponent(drug.ndc)}&drug=${encodeURIComponent(drug.drugName)}${parsedQuantity > 0 ? `&qty=${encodeURIComponent(String(parsedQuantity))}` : ""}`;
+
   // Example preview values for blurred state
   const previewQuantity = 90;
   const previewTotal = previewQuantity * drug.nadacPerUnit;
@@ -251,6 +255,24 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
 
           {/* Always-visible: Price History + Calculator */}
           <div className="pt-3 border-t border-border/50 flex flex-col sm:flex-row gap-3 sm:items-start">
+            {/* Reimbursement calculator deep link */}
+            <div className="sm:w-auto">
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto justify-center gap-2 min-h-10"
+              >
+                <Link
+                  to={calculatorHref}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Calculator className="h-4 w-4" />
+                  Calculate reimbursement
+                </Link>
+              </Button>
+            </div>
+
             {/* Price History Button */}
             <div className="sm:w-auto">
               {canAccessPriceHistory ? (
