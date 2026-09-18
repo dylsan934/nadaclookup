@@ -10,6 +10,7 @@ interface FreeAccountModalProps {
 
 const freeFeatures = [
   { icon: Calculator, label: "5 reimbursement calculations per month" },
+  { icon: Calculator, label: "1 custom contract rule (unlimited on Pro)" },
   { icon: Heart, label: "Save up to 3 drugs" },
   { icon: Bell, label: "In-app alerts when prices change" },
 ];

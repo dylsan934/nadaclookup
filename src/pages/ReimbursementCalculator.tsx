@@ -22,7 +22,7 @@ import { DrugData } from "@/components/DrugCard";
 import { useReimbursementRules } from "@/hooks/useReimbursementRules";
 import { RuleEditorModal } from "@/components/reimbursement/RuleEditorModal";
 import { UpgradeModal } from "@/components/UpgradeModal";
-import { calculate, formatCurrency, formatFormula, formatUnitPrice, RULE_TEMPLATES, type ReimbursementRule } from "@/lib/reimbursement";
+import { calculate, DEFAULT_RULE, formatCurrency, formatFormula, formatUnitPrice, RULE_TEMPLATES, type ReimbursementRule } from "@/lib/reimbursement";
 import { useToast } from "@/hooks/use-toast";
 import { formatSourceDateShort } from "@/lib/format-date";
 
@@ -65,10 +65,15 @@ const ReimbursementCalculator = () => {
 
   // Guests get all templates as in-memory rules so they can try the tool.
   const guestRules: ReimbursementRule[] = useMemo(
-    () => RULE_TEMPLATES.map((t, i) => ({ ...t, id: `guest-${i}`, is_default: i === 1 } as ReimbursementRule)),
+    () => RULE_TEMPLATES.map((t, i) => ({ ...t, id: `guest-${i}`, is_default: i === 0 } as ReimbursementRule)),
     []
   );
-  const rules: ReimbursementRule[] = isGuest ? guestRules : savedRules;
+  // Everyone starts on NADAC + $10.00 dispensing fee until they pick or save their own.
+  const rules: ReimbursementRule[] = isGuest
+    ? guestRules
+    : savedRules.length > 0
+      ? savedRules
+      : [DEFAULT_RULE];
 
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
@@ -122,7 +127,7 @@ const ReimbursementCalculator = () => {
   }, [user, isSubscribed]);
 
   const selectedRule = useMemo(
-    () => rules.find((r) => r.id === selectedRuleId) ?? rules.find((r) => r.is_default) ?? rules[0] ?? null,
+    () => rules.find((r) => r.id === selectedRuleId) ?? rules.find((r) => r.is_default) ?? rules[0] ?? DEFAULT_RULE,
     [rules, selectedRuleId]
   );
 
@@ -327,7 +332,7 @@ const ReimbursementCalculator = () => {
       return;
     }
     if (!isSubscribed && rules.length >= 1) {
-      setUpgradeReason("Free accounts can save 1 reimbursement rule. Upgrade to Pro to save unlimited contract rules for different PBMs, Medicaid plans, LTC contracts, and cash pricing formulas.");
+      setUpgradeReason("Free accounts can create 1 custom contract rule. Upgrade to Pro to save unlimited contract rules for different PBMs, Medicaid plans, LTC contracts, and cash pricing formulas.");
       setUpgradeOpen(true);
       return;
     }
@@ -358,7 +363,7 @@ const ReimbursementCalculator = () => {
   const handleUseTemplate = (tpl: typeof RULE_TEMPLATES[number]) => {
     if (isGuest) { setGuestGateOpen(true); return; }
     if (!isSubscribed && rules.length >= 1) {
-      setUpgradeReason("Free accounts can save 1 reimbursement rule. Upgrade to Pro to save unlimited contract rules.");
+      setUpgradeReason("Free accounts can create 1 custom contract rule. Upgrade to Pro to save unlimited contract rules.");
       setUpgradeOpen(true);
       return;
     }
@@ -432,7 +437,7 @@ const ReimbursementCalculator = () => {
             <div className="mb-6">
               <GuestSignupCta
                 title={guestCalcUsed ? "You've used your free calculation — create an account to keep going" : "Try one calculation free — no signup required"}
-                description={guestCalcUsed ? `Create a free account for ${FREE_MONTHLY_LIMIT} calculations a month and 1 saved contract rule — plus 7 days of Pro free.` : `You can run one full reimbursement estimate as a guest. Sign up free for ${FREE_MONTHLY_LIMIT} calculations a month and your own contract rules.`}
+                description={guestCalcUsed ? `Create a free account for ${FREE_MONTHLY_LIMIT} calculations a month and 1 custom contract rule — plus 7 days of Pro free.` : `You can run one full reimbursement estimate as a guest. Sign up free for ${FREE_MONTHLY_LIMIT} calculations a month and your own contract rules.`}
                 returnTo={returnTo}
               />
             </div>
@@ -444,7 +449,7 @@ const ReimbursementCalculator = () => {
                 <Sparkles className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="font-medium text-sm">Unlock unlimited calculations, rules, saved history, and CSV export</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">Free plan: {monthlyUsage}/{FREE_MONTHLY_LIMIT} calculations used this month, 1 saved rule. Pro: unlimited everything, plus printable reports.</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">Free plan: {monthlyUsage}/{FREE_MONTHLY_LIMIT} calculations used this month, 1 custom contract rule. Pro: unlimited everything, plus printable reports.</div>
                 </div>
               </div>
               <Button asChild>
@@ -727,7 +732,7 @@ const ReimbursementCalculator = () => {
                       <div>
                         <CardTitle className="text-lg">Saved contract rules</CardTitle>
                         <CardDescription>
-                          {isSubscribed ? "Unlimited rules on Pro." : `Free plan: ${rules.length}/1 rule saved.`}
+                          {isSubscribed ? "Unlimited rules on Pro." : `Free plan: 1 custom contract rule. You have ${savedRules.length}/1.`}
                         </CardDescription>
                       </div>
                       <Button size="sm" onClick={handleNewRule}><Plus className="h-4 w-4" /> New rule</Button>
@@ -805,7 +810,7 @@ const ReimbursementCalculator = () => {
         onSaved={refresh}
         existingRulesCount={rules.length}
         onUpgradeRequired={() => {
-          setUpgradeReason("Free accounts can save 1 reimbursement rule. Upgrade to Pro to save unlimited contract rules for different PBMs, Medicaid plans, LTC contracts, and cash pricing formulas.");
+          setUpgradeReason("Free accounts can create 1 custom contract rule. Upgrade to Pro to save unlimited contract rules for different PBMs, Medicaid plans, LTC contracts, and cash pricing formulas.");
           setUpgradeOpen(true);
         }}
       />

@@ -17,7 +17,7 @@ const Features = () => (
         </p>
         <div className="space-y-8">
           {[
-            { icon: Calculator, title: "Unlimited Reimbursement Calculator (Pro)", desc: "Estimate reimbursement and margin on every prescription using NADAC plus your own PBM, Medicaid, or LTC contract formulas. Save rules per payer. Free accounts get 5 calculations per month." },
+            { icon: Calculator, title: "Unlimited Reimbursement Calculator (Pro)", desc: "Estimate reimbursement and margin on every prescription using NADAC plus your own PBM, Medicaid, or LTC contract formulas. Save unlimited contract rules per payer on Pro. Free accounts get 5 calculations per month and 1 custom contract rule." },
             { icon: BarChart3, title: "Full Price History Charts (Pro)", desc: "Visualize NADAC price trends over time for any saved drug. Spot seasonality, generic entry price drops, and manufacturer increases." },
             { icon: Bell, title: "Automated Price Change Alerts (Pro)", desc: "Get notified when NADAC prices change significantly on your saved drugs. Set custom thresholds for large-change-only alerts." },
             { icon: BookmarkCheck, title: "Unlimited Saved Drugs (Pro)", desc: "Free users can save up to 3 drugs. Pro users get unlimited saves with notes and category organization." },
