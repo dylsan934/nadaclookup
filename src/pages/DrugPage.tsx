@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { ArrowRight, Search, Calendar, DollarSign, Pill, ChevronRight, Calculator } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { buildCalculatorHref } from "@/lib/drug-params";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
@@ -258,7 +259,7 @@ const DrugPage = ({ initialName = "" }: { initialName?: string }) => {
 
               <div className="mt-6 flex flex-wrap gap-2">
                 <Button asChild variant="default">
-                  <Link to={`/reimbursement-calculator?ndc=${encodeURIComponent(primary.ndc)}&drug=${encodeURIComponent(displayName)}`}>
+                  <Link to={buildCalculatorHref({ ndc: primary.ndc, drugName: displayName })}>
                     <Calculator className="h-4 w-4 mr-2" /> Calculate reimbursement for this NDC
                   </Link>
                 </Button>

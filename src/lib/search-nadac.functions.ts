@@ -37,7 +37,9 @@ export const searchNadac = createServerFn({ method: "POST" })
   .handler(async ({ data: input }): Promise<SearchNadacResult> => {
     try {
       const supabase = getSupabase();
-      const term = input.searchTerm.trim();
+      // Some CMS rows arrived with stray surrounding quotes; clean the boundary.
+      const unquote = (v: string) => v.replace(/^"+|"+$/g, "").trim();
+      const term = unquote(input.searchTerm.trim());
       const limit = input.limit ?? 50;
       if (!term) return { success: false, error: "Search term is required" };
 
@@ -82,7 +84,13 @@ export const searchNadac = createServerFn({ method: "POST" })
         }
       }
 
-      const results = Array.from(uniqueDrugs.values())
+      const cleaned = Array.from(uniqueDrugs.values()).map((d) => ({
+        ...d,
+        ndc: unquote(String(d.ndc)),
+        drug_name: unquote(String(d.drug_name)),
+      }));
+
+      const results = cleaned
         .sort((a, b) =>
           a.effective_date === b.effective_date
             ? String(a.ndc).localeCompare(String(b.ndc))

@@ -22,6 +22,7 @@ import { DrugData } from "@/components/DrugCard";
 import { useReimbursementRules } from "@/hooks/useReimbursementRules";
 import { RuleEditorModal } from "@/components/reimbursement/RuleEditorModal";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { parseNdcParam, parseQtyParam } from "@/lib/drug-params";
 import { calculate, DEFAULT_RULE, formatCurrency, formatFormula, formatUnitPrice, RULE_TEMPLATES, type ReimbursementRule } from "@/lib/reimbursement";
 import { useToast } from "@/hooks/use-toast";
 import { formatSourceDateShort } from "@/lib/format-date";
@@ -238,12 +239,15 @@ const ReimbursementCalculator = () => {
   // Deep-link prefill: ?ndc=... (&drug=... &qty=...). The price is always refetched
   // from NADAC — nothing about the price is trusted from the URL.
   useEffect(() => {
-    const ndcParam = searchParams.get("ndc");
-    const drugParam = searchParams.get("drug");
+    const rawNdc = searchParams.get("ndc");
+    const rawDrug = searchParams.get("drug");
     const qtyParam = searchParams.get("qty");
+    // Accept legacy links wrapped in a single pair of quotes, then validate.
+    const ndcParam = parseNdcParam(rawNdc);
+    const drugParam = rawDrug ? rawDrug.replace(/^"([^"]*)"$/, "$1").trim() : null;
     const term = ndcParam || drugParam;
-    if (!term) return;
-    const key = `${ndcParam ?? ""}|${drugParam ?? ""}|${qtyParam ?? ""}`;
+    if (!rawNdc && !drugParam) return;
+    const key = `${rawNdc ?? ""}|${rawDrug ?? ""}|${qtyParam ?? ""}`;
     if (prefillKeyRef.current === key) return;
     prefillKeyRef.current = key;
 
@@ -253,8 +257,16 @@ const ReimbursementCalculator = () => {
     setActualReimb("");
     setManualCost("");
     setPrefillError(null);
-    const parsedQty = qtyParam ? parseFloat(qtyParam) : NaN;
-    setQuantity(Number.isFinite(parsedQty) && parsedQty > 0 ? String(parsedQty) : "");
+    // Quantity must be a finite, positive number (decimals allowed for mL/g).
+    const parsedQty = parseQtyParam(qtyParam);
+    setQuantity(parsedQty !== null ? String(parsedQty) : "");
+    const qtyProblem = qtyParam !== null && parsedQty === null;
+
+    if (rawNdc && !ndcParam) {
+      setPrefillError("That drug link isn't valid, so nothing was pre-filled. Search for a drug below.");
+      return;
+    }
+    if (!term) return;
 
     // Prefilling itself never consumes an allowance, but respect the gates.
     if (isGuest && guestCalcUsed) { setGuestGateOpen(true); return; }
@@ -303,6 +315,9 @@ const ReimbursementCalculator = () => {
         return;
       }
       setSelectedDrug(match);
+      if (qtyProblem) {
+        setPrefillError("We couldn't read the quantity from that link, so enter it below.");
+      }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, isGuest, guestCalcUsed, freeLimitReached]);

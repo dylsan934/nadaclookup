@@ -15,6 +15,7 @@ import { FreeAccountModal } from "@/components/FreeAccountModal";
 import { PriceHistoryModal } from "@/components/PriceHistoryModal";
 import { cn } from "@/lib/utils";
 import { formatSourceDateShort } from "@/lib/format-date";
+import { buildCalculatorHref } from "@/lib/drug-params";
 
 
 export interface DrugData {
@@ -36,7 +37,11 @@ interface DrugCardProps {
 }
 
 export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDisabled }: DrugCardProps) => {
-  const [quantity, setQuantity] = useState<string>("");
+  const qtyStorageKey = `nadac_qty_${drug.ndc}`;
+  const [quantity, setQuantity] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return window.sessionStorage.getItem(qtyStorageKey) ?? "";
+  });
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -156,7 +161,11 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
 
   // Deep link to the existing calculator. The NDC is sent verbatim so leading
   // zeros survive; the calculator refetches current NADAC data itself.
-  const calculatorHref = `/reimbursement-calculator?ndc=${encodeURIComponent(drug.ndc)}&drug=${encodeURIComponent(drug.drugName)}${parsedQuantity > 0 ? `&qty=${encodeURIComponent(String(parsedQuantity))}` : ""}`;
+  const calculatorHref = buildCalculatorHref({
+    ndc: drug.ndc,
+    drugName: drug.drugName,
+    quantity: parsedQuantity > 0 ? parsedQuantity : null,
+  });
 
   // Example preview values for blurred state
   const previewQuantity = 90;
@@ -303,7 +312,13 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
                 type="number"
                 placeholder="Qty"
                 value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
+                onChange={(e) => {
+                  setQuantity(e.target.value);
+                  if (typeof window !== "undefined") {
+                    if (e.target.value) window.sessionStorage.setItem(qtyStorageKey, e.target.value);
+                    else window.sessionStorage.removeItem(qtyStorageKey);
+                  }
+                }}
                 className="h-9 w-20"
                 min="0"
                 step="any"

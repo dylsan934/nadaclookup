@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useSearchParams } from "@/lib/router-compat";
 import { DrugCard, DrugData } from "./DrugCard";
 import { ResultsFilters, SortOption, DosageFilter } from "./ResultsFilters";
 import { CompareButton } from "./CompareButton";
@@ -30,9 +31,20 @@ const detectDosageForm = (drugName: string): DosageFilter => {
 };
 
 export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugResultsProps) => {
-  const [sortBy, setSortBy] = useState<SortOption>("relevance");
-  const [dosageFilter, setDosageFilter] = useState<DosageFilter>("all");
-  const [strengthFilter, setStrengthFilter] = useState<string>("all");
+  // Sort/filter state lives in the URL so browser Back restores the same view.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const sortBy = (searchParams.get("sort") ?? "relevance") as SortOption;
+  const dosageFilter = (searchParams.get("form") ?? "all") as DosageFilter;
+  const strengthFilter = searchParams.get("strength") ?? "all";
+  const setParam = (key: string, value: string, defaultValue: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (!value || value === defaultValue) next.delete(key);
+    else next.set(key, value);
+    setSearchParams(next, { replace: true });
+  };
+  const setSortBy = (v: SortOption) => setParam("sort", v, "relevance");
+  const setDosageFilter = (v: DosageFilter) => setParam("form", v, "all");
+  const setStrengthFilter = (v: string) => setParam("strength", v, "all");
   const [selectedForCompare, setSelectedForCompare] = useState<DrugData[]>([]);
   const [showComparison, setShowComparison] = useState(false);
 
