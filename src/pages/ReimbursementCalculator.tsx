@@ -670,18 +670,35 @@ const ReimbursementCalculator = () => {
                     <div>
                       <Label>Actual reimbursement received (optional)</Label>
                       <Input
-                        type="number"
-                        step="0.01"
-                        value={actualReimb}
-                        onChange={(e) => setActualReimb(e.target.value)}
-                        placeholder="From paid claim"
-                      />
+                          type="number"
+                          step="0.01"
+                          value={actualReimb}
+                          onChange={(e) => { setActualReimb(e.target.value); setSubmittedCalc(null); }}
+                          placeholder="From paid claim"
+                        />
                     </div>
 
                     <div>
                       <Label>Notes (optional)</Label>
                       <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={500} />
                     </div>
+
+                    <Button
+                      className="w-full"
+                      size="lg"
+                      onClick={handleCalculate}
+                      disabled={!selectedDrug || prefilling}
+                    >
+                      <Calculator className="h-4 w-4 mr-2" />
+                      Calculate reimbursement
+                    </Button>
+                    <p className="text-xs text-muted-foreground text-center">
+                      {isGuest
+                        ? "Guests get one calculation — it's counted only when you click Calculate."
+                        : !isSubscribed
+                          ? `Free plan: each calculation counts toward your ${FREE_MONTHLY_LIMIT}/month.`
+                          : "Pro: unlimited calculations."}
+                    </p>
                   </CardContent>
                 </Card>
               </div>
