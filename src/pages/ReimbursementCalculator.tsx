@@ -486,6 +486,20 @@ const ReimbursementCalculator = () => {
                       </Button>
                     </div>
 
+                    {prefilling && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading current NADAC pricing for your selected drug…
+                      </div>
+                    )}
+
+                    {prefillError && !prefilling && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>{prefillError}</AlertDescription>
+                      </Alert>
+                    )}
+
                     {searchResults.length > 0 && !selectedDrug && (
                       <div className="border rounded-lg max-h-72 overflow-y-auto divide-y">
                         {searchResults.map((d) => (
