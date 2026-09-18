@@ -247,45 +247,15 @@ const ReimbursementCalculator = () => {
 
 
   const handleSelectDrug = (d: DrugData) => {
-    if (isGuest && guestCalcUsed && selectedDrug?.ndc !== d.ndc) {
-      setGuestGateOpen(true);
-      return;
-    }
-    if (freeLimitReached && selectedDrug?.ndc !== d.ndc) {
-      setUpgradeReason(`You've used all ${FREE_MONTHLY_LIMIT} free calculations this month. Upgrade to Pro for unlimited calculations, unlimited contract rules, and full history.`);
-      setUpgradeOpen(true);
-      return;
-    }
     setSelectedDrug(d);
     setSearchResults([]);
+    setSubmittedCalc(null);
   };
 
   const handleClearDrug = () => {
-    if (isGuest && guestCalcUsed) {
-      setGuestGateOpen(true);
-      return;
-    }
     setSelectedDrug(null);
+    setSubmittedCalc(null);
   };
-
-  // Mark guest's free calculation as used once they have a real result.
-  useEffect(() => {
-    if (isGuest && result && !guestCalcUsed) {
-      window.localStorage.setItem(GUEST_USED_KEY, "1");
-      setGuestCalcUsed(true);
-    }
-  }, [isGuest, result, guestCalcUsed]);
-
-  // Count each new drug calculation against the free monthly limit (once per drug).
-  useEffect(() => {
-    if (!user || isSubscribed || !result || !selectedDrug) return;
-    if (countedDrugRef.current === selectedDrug.ndc) return;
-    countedDrugRef.current = selectedDrug.ndc;
-    supabase.rpc("increment_calc_usage").then(({ data, error }) => {
-      if (!error && typeof data === "number") setMonthlyUsage(data);
-      else setMonthlyUsage((c) => c + 1);
-    });
-  }, [user, isSubscribed, result, selectedDrug]);
 
   // Deep-link prefill: ?ndc=... (&drug=... &qty=...). The price is always refetched
   // from NADAC — nothing about the price is trusted from the URL.
