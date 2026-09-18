@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useSearchParams } from "@/lib/router-compat";
 import { AlertCircle, Calculator, Edit2, Loader2, Plus, Printer, Star, Trash2, Sparkles, ShieldCheck, Zap } from "lucide-react";
 import { Header } from "@/components/Header";
@@ -112,7 +112,6 @@ const ReimbursementCalculator = () => {
   const [prefillError, setPrefillError] = useState<string | null>(null);
   const prefillKeyRef = useRef<string | null>(null);
   const freeLimitReached = !!user && !isSubscribed && monthlyUsage >= FREE_MONTHLY_LIMIT;
-  const countedDrugRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!user || isSubscribed) return;
