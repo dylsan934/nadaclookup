@@ -7,6 +7,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
+import { rankDrugs } from "@/lib/search-ranking";
 
 const InputSchema = z.object({
   searchTerm: z.string().min(1),
@@ -90,13 +91,26 @@ export const searchNadac = createServerFn({ method: "POST" })
         drug_name: unquote(String(d.drug_name)),
       }));
 
-      const results = cleaned
-        .sort((a, b) =>
-          a.effective_date === b.effective_date
-            ? String(a.ndc).localeCompare(String(b.ndc))
-            : String(b.effective_date ?? "").localeCompare(String(a.effective_date ?? "")),
-        )
-        .slice(0, limit);
+      const dated = cleaned.sort((a, b) =>
+        a.effective_date === b.effective_date
+          ? String(a.ndc).localeCompare(String(b.ndc))
+          : String(b.effective_date ?? "").localeCompare(String(a.effective_date ?? "")),
+      );
+      // Relevance ranking before truncation so standalone products are not
+      // crowded out by combinations. Prices are untouched.
+      const ranked = rankDrugs(
+        dated.map((d) => ({
+          row: d,
+          ndc: String(d.ndc),
+          drugName: String(d.drug_name),
+          nadacPerUnit: Number(d.nadac_per_unit),
+          effectiveDate: String(d.effective_date ?? ""),
+          pricingUnit: String(d.pricing_unit ?? ""),
+          pharmacyType: String(d.pharmacy_type ?? ""),
+        })),
+        term,
+      );
+      const results = ranked.slice(0, limit).map((r) => r.row);
 
       return { success: true, data: results, total: results.length };
     } catch (error) {

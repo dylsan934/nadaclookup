@@ -16,6 +16,7 @@ import { PriceHistoryModal } from "@/components/PriceHistoryModal";
 import { cn } from "@/lib/utils";
 import { formatSourceDateShort } from "@/lib/format-date";
 import { buildCalculatorHref } from "@/lib/drug-params";
+import { GroupedNdcList } from "@/components/GroupedNdcList";
 
 
 export interface DrugData {
@@ -34,9 +35,11 @@ interface DrugCardProps {
   isSelected?: boolean;
   onToggleSelect?: () => void;
   selectionDisabled?: boolean;
+  /** All package NDCs grouped into this card (representative first). */
+  groupNdcs?: string[];
 }
 
-export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDisabled }: DrugCardProps) => {
+export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDisabled, groupNdcs }: DrugCardProps) => {
   const qtyStorageKey = `nadac_qty_${drug.ndc}`;
   const [quantity, setQuantity] = useState<string>(() => {
     if (typeof window === "undefined") return "";
@@ -189,9 +192,7 @@ export const DrugCard = ({ drug, index, isSelected, onToggleSelect, selectionDis
               <h3 className="font-semibold text-sm sm:text-base text-foreground leading-snug">
                 {drug.drugName}
               </h3>
-              <p className="text-muted-foreground text-xs mt-1">
-                NDC: <span className="font-mono">{drug.ndc}</span>
-              </p>
+              <GroupedNdcList representativeNdc={drug.ndc} ndcs={groupNdcs ?? [drug.ndc]} />
               <Link
                 to={`/drug/${drugNameToSlug(drug.drugName)}`}
                 className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1.5"

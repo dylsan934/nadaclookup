@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { extractStrength, detectDosageForm, toResultGroups } from "@/lib/search-ranking";
+import { Button } from "@/components/ui/button";
 import { useSearchParams } from "@/lib/router-compat";
 import { DrugCard, DrugData } from "./DrugCard";
 import { ResultsFilters, SortOption, DosageFilter } from "./ResultsFilters";
@@ -13,22 +15,7 @@ interface DrugResultsProps {
   searchTerm: string;
 }
 
-// Helper to extract strength from drug name (e.g., "METFORMIN HCL 500 MG TABLET" -> "500 MG")
-const extractStrength = (drugName: string): string => {
-  const match = drugName.match(/(\d+(?:\.\d+)?(?:\s*\/\s*\d+(?:\.\d+)?)?)\s*(MG|MCG|ML|G|%|UNIT|IU)/i);
-  return match ? `${match[1]!} ${match[2]!.toUpperCase()}` : "";
-};
-
-// Helper to detect dosage form
-const detectDosageForm = (drugName: string): DosageFilter => {
-  const name = drugName.toUpperCase();
-  if (name.includes("TABLET") || name.includes("TAB ")) return "tablet";
-  if (name.includes("CAPSULE") || name.includes("CAP ")) return "capsule";
-  if (name.includes("SOLUTION") || name.includes("SOLN") || name.includes("SYRUP") || name.includes("SUSPENSION") || name.includes("ORAL LIQUID")) return "solution";
-  if (name.includes("INJECTION") || name.includes("INJ ") || name.includes("VIAL") || name.includes("SYRINGE")) return "injection";
-  if (name.includes("CREAM") || name.includes("OINTMENT") || name.includes("GEL") || name.includes("TOPICAL")) return "cream";
-  return "other";
-};
+export const PAGE_SIZE = 20;
 
 export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugResultsProps) => {
   // Sort/filter state lives in the URL so browser Back restores the same view.
@@ -83,41 +70,30 @@ export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugR
     });
   }, [drugs]);
 
-  // Filter and sort drugs
-  const filteredAndSortedDrugs = useMemo(() => {
-    let result = [...drugs];
-
-    // Apply dosage form filter
+  // Rank, then group package NDCs, then filter and sort the groups.
+  const filteredAndSortedGroups = useMemo(() => {
+    let result = toResultGroups(drugs, searchTerm);
     if (dosageFilter !== "all") {
-      result = result.filter(drug => detectDosageForm(drug.drugName) === dosageFilter);
+      result = result.filter(g => detectDosageForm(g.representative.drugName) === dosageFilter);
     }
-
-    // Apply strength filter
     if (strengthFilter !== "all") {
-      result = result.filter(drug => extractStrength(drug.drugName) === strengthFilter);
+      result = result.filter(g => extractStrength(g.representative.drugName) === strengthFilter);
     }
-
-    // Apply sorting
+    const r = (g: (typeof result)[number]) => g.representative;
     switch (sortBy) {
-      case "price-asc":
-        result.sort((a, b) => a.nadacPerUnit - b.nadacPerUnit);
-        break;
-      case "price-desc":
-        result.sort((a, b) => b.nadacPerUnit - a.nadacPerUnit);
-        break;
-      case "name-asc":
-        result.sort((a, b) => a.drugName.localeCompare(b.drugName));
-        break;
-      case "name-desc":
-        result.sort((a, b) => b.drugName.localeCompare(a.drugName));
-        break;
-      default:
-        // relevance - keep original order
-        break;
+      case "price-asc": result.sort((a, b) => r(a).nadacPerUnit - r(b).nadacPerUnit); break;
+      case "price-desc": result.sort((a, b) => r(b).nadacPerUnit - r(a).nadacPerUnit); break;
+      case "name-asc": result.sort((a, b) => r(a).drugName.localeCompare(r(b).drugName)); break;
+      case "name-desc": result.sort((a, b) => r(b).drugName.localeCompare(r(a).drugName)); break;
+      default: break; // relevance — keep ranked order
     }
-
     return result;
-  }, [drugs, sortBy, dosageFilter, strengthFilter]);
+  }, [drugs, searchTerm, sortBy, dosageFilter, strengthFilter]);
+
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [drugs, sortBy, dosageFilter, strengthFilter]);
+  const visibleGroups = filteredAndSortedGroups.slice(0, visibleCount);
+  const remaining = filteredAndSortedGroups.length - visibleGroups.length;
 
   if (isLoading) {
     return (
@@ -166,9 +142,9 @@ export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugR
       <div className="flex items-center justify-between">
         <p className="text-muted-foreground">
           Found <span className="font-semibold text-foreground">{drugs.length}</span> result{drugs.length !== 1 ? 's' : ''} for "{searchTerm}"
-          {filteredAndSortedDrugs.length !== drugs.length && (
+          {filteredAndSortedGroups.length !== drugs.length && (
             <span className="ml-1">
-              (showing <span className="font-semibold text-foreground">{filteredAndSortedDrugs.length}</span>)
+              (<span className="font-semibold text-foreground">{filteredAndSortedGroups.length}</span> product{filteredAndSortedGroups.length !== 1 ? "s" : ""})
             </span>
           )}
         </p>
@@ -183,28 +159,42 @@ export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugR
         strengthFilter={strengthFilter}
         onStrengthFilterChange={setStrengthFilter}
         availableStrengths={availableStrengths}
-        totalResults={filteredAndSortedDrugs.length}
+        totalResults={filteredAndSortedGroups.length}
       />
 
       {/* Results list */}
-      {filteredAndSortedDrugs.length === 0 ? (
+      {filteredAndSortedGroups.length === 0 ? (
         <div className="py-8 text-center">
           <p className="text-muted-foreground">No results match your filters.</p>
           <p className="text-sm text-muted-foreground mt-1">Try adjusting your filter criteria.</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {filteredAndSortedDrugs.map((drug, index) => (
-            <DrugCard 
-              key={`${drug.ndc}-${index}`} 
-              drug={drug} 
-              index={index}
-              isSelected={selectedForCompare.some(d => d.ndc === drug.ndc)}
-              onToggleSelect={() => toggleDrugSelection(drug)}
-              selectionDisabled={selectedForCompare.length >= 4 && !selectedForCompare.some(d => d.ndc === drug.ndc)}
-            />
-          ))}
-        </div>
+        <>
+          <ul className="space-y-3" aria-label="Search results">
+            {visibleGroups.map((group, index) => {
+              const drug = group.representative;
+              return (
+                <li key={group.key}>
+                  <DrugCard
+                    drug={drug}
+                    index={index % PAGE_SIZE}
+                    groupNdcs={group.ndcs}
+                    isSelected={selectedForCompare.some(d => d.ndc === drug.ndc)}
+                    onToggleSelect={() => toggleDrugSelection(drug)}
+                    selectionDisabled={selectedForCompare.length >= 4 && !selectedForCompare.some(d => d.ndc === drug.ndc)}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+          {remaining > 0 && (
+            <div className="flex justify-center pt-2">
+              <Button type="button" variant="outline" onClick={() => setVisibleCount(c => c + PAGE_SIZE)}>
+                Load more results ({remaining} more)
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Compare button and modal */}
