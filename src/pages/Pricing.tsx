@@ -1,35 +1,34 @@
+import { useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Check, Crown, ArrowRight } from "lucide-react";
+import { Check, Crown } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useStartCheckout } from "@/hooks/useStartCheckout";
+import { BillingToggle, type BillingPlan } from "@/components/BillingToggle";
 
 const Pricing = () => {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: "NADAC Lookup Pro",
-    description: "Professional NADAC drug pricing tools for independent pharmacies",
-    offers: {
-      "@type": "Offer",
-      price: "29.00",
-      priceCurrency: "USD",
-      availability: "https://schema.org/InStock",
-    },
-  };
+  const [plan, setPlan] = useState<BillingPlan>("monthly");
+  const { user, isSubscribed } = useAuth();
+  const { start, isStarting } = useStartCheckout();
+  const annual = plan === "annual";
 
   return (
     <>
       <div className="min-h-screen flex flex-col bg-background">
         <SiteNavigation />
         <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
               Simple, Transparent Pricing for Pharmacies
             </h1>
             <p className="text-muted-foreground max-w-xl mx-auto">
               Start with free NADAC lookups. Upgrade to Pro when you need full price history, unlimited saves, and automated alerts — less than the cost of one mispriced prescription.
             </p>
+          </div>
+          <div className="flex justify-center mb-10">
+            <BillingToggle value={plan} onChange={setPlan} />
           </div>
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {/* Free */}
@@ -52,16 +51,29 @@ const Pricing = () => {
                 <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1"><Crown className="h-3 w-3" /> Most Popular</span>
               </div>
               <h2 className="text-xl font-bold text-foreground mb-1">Pro</h2>
-              <p className="text-3xl font-bold text-foreground">$29<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+              {annual ? (
+                <>
+                  <p className="text-3xl font-bold text-foreground">$290<span className="text-sm font-normal text-muted-foreground">/yr</span></p>
+                  <p className="text-sm font-medium text-primary mt-1">2 months free — save $58 vs. paying monthly ($348/yr)</p>
+                </>
+              ) : (
+                <p className="text-3xl font-bold text-foreground">$29<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+              )}
               <p className="text-sm text-muted-foreground mt-2 mb-6">Includes the reimbursement calculator and per-payer contract rules no free lookup offers.</p>
               <ul className="space-y-3 text-sm">
                 {["Unlimited use of reimbursement calculator", "Unlimited custom contract rules", "Full NADAC price history charts", "Automated price change alerts", "Unlimited watchlist", "Weekly Top 10 movers (increases & decreases)", "Weekly movers email digest", "Custom alert thresholds", "Drug categories & notes", "Priority support", "Everything in Free"].map(f => (
                   <li key={f} className="flex items-start gap-2 text-muted-foreground"><Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />{f}</li>
                 ))}
               </ul>
-              <Button asChild className="w-full mt-8">
-                <Link to="/auth?mode=signup">Start 7-Day Free Trial</Link>
-              </Button>
+              {user && !isSubscribed ? (
+                <Button className="w-full mt-8" onClick={() => start(plan)} disabled={isStarting}>
+                  Start 7-Day Free Trial
+                </Button>
+              ) : (
+                <Button asChild className="w-full mt-8">
+                  <Link to="/auth?mode=signup">Start 7-Day Free Trial</Link>
+                </Button>
+              )}
               <p className="text-xs text-muted-foreground text-center mt-2">Card required. You're not charged until day 8 — cancel anytime before then. 30-day money-back guarantee. Secure checkout by Stripe.</p>
             </div>
           </div>
