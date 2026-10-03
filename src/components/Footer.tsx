@@ -1,6 +1,7 @@
 import { ExternalLink, Mail, Shield } from "lucide-react";
 import { Link } from "@/lib/router-compat";
 import { drugNameToSlug } from "@/lib/drug-slug";
+import { FOUNDER } from "@/lib/founder";
 
 const FOOTER_POPULAR_DRUGS = [
   "Amoxicillin 500 MG Capsule",
@@ -25,6 +26,8 @@ export const Footer = () => {
             <Link to="/what-is-nadac" className="hover:text-foreground transition-colors">What Is NADAC?</Link>
             <Link to="/how-often-does-nadac-update" className="hover:text-foreground transition-colors">Update Schedule</Link>
             <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
+            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
           </nav>
 
           {/* Popular drug pages */}
@@ -77,6 +80,7 @@ export const Footer = () => {
               >
                 info@nadaclookup.com
               </a>
+              {FOUNDER && <span className="ml-2">· Built by <Link to="/about" className="hover:text-primary hover:underline">{FOUNDER.name}</Link></span>}
             </p>
           </div>
         </div>
