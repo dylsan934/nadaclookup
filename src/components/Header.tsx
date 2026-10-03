@@ -233,7 +233,7 @@ export const Header = ({ heroTitleAsH1 = false }: { heroTitleAsH1?: boolean }) =
             </p>
           )}
           <p className="text-base md:text-lg text-primary-foreground/85 max-w-xl mx-auto leading-relaxed">
-            Check what you actually pay before you fill a claim that reimburses below cost. Free NADAC lookup by drug name or NDC, updated weekly from CMS.
+            Check the reimbursement before you submit the claim — spot payments that fall below cost. Free NADAC lookup by drug name or NDC, updated weekly from CMS.
           </p>
         </div>
       </div>
