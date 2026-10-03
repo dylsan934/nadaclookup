@@ -19,7 +19,7 @@ export const HomeProUpsell = () => {
           Less than the cost of one mispriced prescription. Unlimited reimbursement calculator, full price history, automated alerts, unlimited watchlist.
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          7-day free trial · Card required, not charged until day 8 · Cancel anytime before then · Secure checkout by Stripe ·{" "}
+          7-day free trial · Card required, not charged until day 8 · Cancel anytime before then · 30-day money-back guarantee · Secure checkout by Stripe ·{" "}
           <Link to="/pricing" className="text-primary hover:underline">
             See all features
           </Link>
