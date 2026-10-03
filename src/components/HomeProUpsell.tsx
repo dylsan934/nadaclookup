@@ -1,11 +1,16 @@
+import { useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStartCheckout } from "@/hooks/useStartCheckout";
+import { BillingToggle, type BillingPlan } from "@/components/BillingToggle";
 
 export const HomeProUpsell = () => {
   const { user, isSubscribed } = useAuth();
-  const { start: handleStartTrial, isStarting } = useStartCheckout();
+  const { start: handleStartCheckout, isStarting } = useStartCheckout();
+  const [plan, setPlan] = useState<BillingPlan>("monthly");
+
+  const handleStartTrial = () => handleStartCheckout(plan);
 
   if (isSubscribed) return null;
 
@@ -13,8 +18,13 @@ export const HomeProUpsell = () => {
     <section className="rounded-xl border border-border bg-card p-5 md:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div className="min-w-0">
         <p className="text-sm font-semibold text-foreground">
-          Pro · $29/mo
+          Pro · {plan === "annual" ? "$290/yr" : "$29/mo"}
         </p>
+        {plan === "annual" && (
+          <p className="text-xs font-medium text-primary mt-1">
+            2 months free — save $58 vs. paying monthly ($348/yr)
+          </p>
+        )}
         <p className="text-sm text-muted-foreground">
           Less than the cost of one mispriced prescription. Unlimited reimbursement calculator, full price history, automated alerts, unlimited watchlist.
         </p>
@@ -24,6 +34,9 @@ export const HomeProUpsell = () => {
             See all features
           </Link>
         </p>
+        <div className="mt-3">
+          <BillingToggle value={plan} onChange={setPlan} />
+        </div>
       </div>
       {user ? (
         <Button onClick={handleStartTrial} disabled={isStarting} className="shrink-0">
