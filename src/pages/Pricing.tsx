@@ -62,7 +62,7 @@ const Pricing = () => {
               <Button asChild className="w-full mt-8">
                 <Link to="/auth?mode=signup">Start 7-Day Free Trial</Link>
               </Button>
-              <p className="text-xs text-muted-foreground text-center mt-2">Card required. You're not charged until day 8 — cancel anytime before then. Secure checkout by Stripe.</p>
+              <p className="text-xs text-muted-foreground text-center mt-2">Card required. You're not charged until day 8 — cancel anytime before then. 30-day money-back guarantee. Secure checkout by Stripe.</p>
             </div>
           </div>
         </main>

@@ -9,4 +9,9 @@ export interface FounderInfo {
   bio: string;
   links: { label: string; href: string }[];
 }
-export const FOUNDER: FounderInfo | null = null;
+export const FOUNDER: FounderInfo | null = {
+  name: "Dylan Sanson",
+  role: "Pharmacist & Pharmacy Manager",
+  bio: "I built NADAC Lookup because I wanted an easy and efficient way to search NADAC prices and compare them to what PBMs were actually reimbursing.",
+  links: [],
+};
