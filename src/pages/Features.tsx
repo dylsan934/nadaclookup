@@ -2,6 +2,7 @@ import { Link } from "@/lib/router-compat";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { SearchResultPreview } from "@/components/SearchResultPreview";
 import { Search, BarChart3, Bell, ArrowRight, Scale, BookmarkCheck, Mail, TrendingUp, Calculator } from "lucide-react";
 
 const Features = () => (
@@ -15,6 +16,7 @@ const Features = () => (
         <p className="text-muted-foreground mb-10 leading-relaxed">
           Everything you need to monitor NADAC drug acquisition costs, compare prices, and protect your margins — all sourced from official weekly CMS data.
         </p>
+        <div className="mb-10"><SearchResultPreview /></div>
         <div className="space-y-8">
           {[
             { icon: Calculator, title: "Unlimited Reimbursement Calculator (Pro)", desc: "Estimate reimbursement and margin on every prescription using NADAC plus your own PBM, Medicaid, or LTC contract formulas. Save unlimited contract rules per payer on Pro. Free accounts get 5 calculations per month and 1 custom contract rule." },

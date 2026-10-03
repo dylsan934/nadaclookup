@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { SearchBar } from "@/components/SearchBar";
 import { DrugResults } from "@/components/DrugResults";
 import { DataStatus } from "@/components/DataStatus";
+import { SearchResultPreview } from "@/components/SearchResultPreview";
 import { HomeSEOContent } from "@/components/HomeSEOContent";
 import { HomeProUpsell } from "@/components/HomeProUpsell";
 import { PopularDrugLinks } from "@/components/PopularDrugLinks";
@@ -184,6 +185,7 @@ const Index = () => {
 
           {!hasSearched && (
             <>
+              <SearchResultPreview />
               <HomeSEOContent />
               <HomeProUpsell />
               <PopularDrugLinks />
