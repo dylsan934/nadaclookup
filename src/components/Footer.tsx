@@ -18,7 +18,7 @@ export const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col gap-6 text-sm text-muted-foreground">
           {/* Links */}
-          <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs" aria-label="Footer navigation">
+          <nav className="flex flex-wrap justify-center gap-x-4 gap-y-0 text-xs [&>a]:py-2.5 [&>a]:px-1" aria-label="Footer navigation">
             <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
             <Link to="/features" className="hover:text-foreground transition-colors">Features</Link>
             <Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
