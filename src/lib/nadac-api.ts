@@ -3,6 +3,15 @@ import { DrugData } from "@/components/DrugCard";
 import { searchNadac } from "@/lib/search-nadac.functions";
 import { getPriceHistory } from "@/lib/price-history.functions";
 
+export interface DataStatusInfo {
+  hasData: boolean;
+  lastUpdate: string | undefined;
+  /** Distinct NDCs in the database. */
+  totalRecords: number;
+  lastSyncAt?: string | undefined;
+  biggestMover?: { drugName: string; ndc: string; pctChange: number } | undefined;
+}
+
 export interface SearchResponse {
   success: boolean;
   data?: DrugData[];
@@ -84,32 +93,35 @@ export const nadacApi = {
     return data as SyncResponse;
   },
 
-  async getDataStatus(): Promise<{ hasData: boolean; lastUpdate: string | undefined; totalRecords: number }> {
-    const { count, error } = await supabase
-      .from('nadac_drugs')
-      .select('*', { count: 'exact', head: true });
+  async getDataStatus(): Promise<DataStatusInfo> {
+    const empty: DataStatusInfo = { hasData: false, totalRecords: 0, lastUpdate: undefined };
+    const [countRes, latestRes, moversRes] = await Promise.all([
+      supabase.rpc('nadac_ndc_count'),
+      supabase.from('nadac_drugs').select('effective_date').order('effective_date', { ascending: false }).limit(1).maybeSingle(),
+      supabase.from('weekly_movers').select('created_at, top_increases, top_decreases').order('effective_date', { ascending: false }).limit(1).maybeSingle(),
+    ]);
+    if (countRes.error) {
+      console.error('Status check error:', countRes.error);
+      return empty;
+    }
+    const count = Number(countRes.data ?? 0);
+    if (!count) return empty;
 
-    if (error) {
-      console.error('Status check error:', error);
-      return { hasData: false, totalRecords: 0, lastUpdate: undefined };
+    let biggestMover: DataStatusInfo['biggestMover'];
+    const m = moversRes.data;
+    if (m) {
+      const all = [...((m.top_increases as any[]) ?? []), ...((m.top_decreases as any[]) ?? [])];
+      const top = all.reduce<any>((best, x) => (!best || Math.abs(x.pctChange) > Math.abs(best.pctChange) ? x : best), null);
+      if (top) biggestMover = { drugName: String(top.drugName), ndc: String(top.ndc), pctChange: Number(top.pctChange) };
     }
 
-    if (count && count > 0) {
-      const { data: latestRecord } = await supabase
-        .from('nadac_drugs')
-        .select('effective_date')
-        .order('effective_date', { ascending: false })
-        .limit(1)
-        .single();
-
-      return {
-        hasData: true,
-        lastUpdate: latestRecord?.effective_date,
-        totalRecords: count,
-      };
-    }
-
-    return { hasData: false, totalRecords: 0, lastUpdate: undefined };
+    return {
+      hasData: true,
+      lastUpdate: latestRes.data?.effective_date,
+      totalRecords: count,
+      lastSyncAt: m?.created_at,
+      biggestMover,
+    };
   },
 
   async getSuggestions(searchTerm: string, limit = 10): Promise<string[]> {
