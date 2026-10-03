@@ -12,12 +12,14 @@ export function useStartCheckout(opts?: { onSuccess?: () => void }) {
   const [isStarting, setIsStarting] = useState(false);
   const inFlightRef = useRef(false);
 
-  const start = async () => {
+  const start = async (plan: "monthly" | "annual" = "monthly") => {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     setIsStarting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout");
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { plan: plan === "annual" ? "annual" : "monthly" },
+      });
       if (error) throw error;
 
       if (data?.alreadySubscribed) {

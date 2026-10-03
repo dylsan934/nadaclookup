@@ -53,6 +53,11 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    let plan: "monthly" | "annual" = "monthly";
+    try { const body = await req.json(); if (body?.plan === "annual") plan = "annual"; } catch { /* no body */ }
+    const priceId = plan === "annual" ? "price_1UMWQ5GsrovbpMNPYUJWJgb6" : "price_1SkIucGsrovbpMNPYgTHHtuO";
+    logStep("Plan selected", { plan });
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Prefer stored stripe_customer_id; fall back to email lookup
@@ -113,7 +118,7 @@ serve(async (req) => {
 
     // Idempotency key — same user within same hour returns same session
     const hourBucket = Math.floor(Date.now() / (1000 * 60 * 60));
-    const idempotencyKey = `checkout_${user.id}_${hourBucket}`;
+    const idempotencyKey = `checkout_${user.id}_${plan}_${hourBucket}`;
 
     const session = await stripe.checkout.sessions.create(
       {
@@ -122,12 +127,12 @@ serve(async (req) => {
         client_reference_id: user.id,
         metadata: { app_user_id: user.id },
         subscription_data: {
-          trial_period_days: 14,
+          trial_period_days: 7,
           metadata: { app_user_id: user.id },
         },
         line_items: [
           {
-            price: "price_1SkIucGsrovbpMNPYgTHHtuO",
+            price: priceId,
             quantity: 1,
           },
         ],
