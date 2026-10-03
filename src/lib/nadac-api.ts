@@ -40,7 +40,7 @@ export interface PriceHistoryResponse {
 }
 
 export const nadacApi = {
-  async search(searchTerm: string, limit = 50): Promise<SearchResponse> {
+  async search(searchTerm: string, limit = 200): Promise<SearchResponse> {
     let data: Awaited<ReturnType<typeof searchNadac>>;
     try {
       data = await searchNadac({ data: { searchTerm, limit } });
