@@ -1,0 +1,2 @@
+- Founder identity lives in src/lib/founder.ts; About/footer render it only when non-null — keeps unverified identity off the site.
+- Homepage dataset stats come from nadac_ndc_count() + weekly_movers — counts distinct NDCs, never raw history rows.
