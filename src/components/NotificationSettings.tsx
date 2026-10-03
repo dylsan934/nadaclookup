@@ -97,10 +97,10 @@ export const NotificationSettings = ({ userId }: NotificationSettingsProps) => {
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-0.5">
                 <Label htmlFor="notify-saved" className="text-sm font-medium">
-                  Saved drug alerts
+                  Watchlist alerts
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Get notified when prices change for your saved drugs
+                  Get notified when prices change for drugs on your watchlist
                 </p>
               </div>
               <Switch

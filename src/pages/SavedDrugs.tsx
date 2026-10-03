@@ -431,7 +431,7 @@ export default function SavedDrugs() {
                 <BookmarkCheck className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-foreground">Saved Drugs</h1>
+                <h1 className="text-xl font-semibold text-foreground">Watchlist</h1>
                 <p className="text-sm text-muted-foreground">Track your frequently used medications</p>
               </div>
             </div>
@@ -547,7 +547,7 @@ export default function SavedDrugs() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-foreground">Saved Drugs</h1>
+                  <h1 className="text-xl font-semibold text-foreground">Watchlist</h1>
                   {isSubscribed ? (
                     <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-xs">
                       <Crown className="h-3 w-3 mr-1" />
@@ -565,7 +565,7 @@ export default function SavedDrugs() {
                   </p>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    Saved drugs: <span className="font-medium text-foreground">{lifetimeSavesCount} of {freeSaveLimit}</span> used
+                    Watchlist: <span className="font-medium text-foreground">{lifetimeSavesCount} of {freeSaveLimit}</span> used
                   </p>
                 )}
               </div>

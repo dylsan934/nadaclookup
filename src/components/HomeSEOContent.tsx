@@ -26,9 +26,9 @@ export const HomeSEOContent = () => (
         <div className="flex items-start gap-4">
           <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">3</span>
           <div>
-            <h3 className="font-semibold text-foreground">Save Drugs & Track Prices (Pro)</h3>
+            <h3 className="font-semibold text-foreground">Build a Watchlist (Pro)</h3>
             <p className="text-sm text-muted-foreground">
-              With a <Link to="/pricing" className="text-primary hover:underline">Pro subscription at $29/mo</Link>, save unlimited drugs, access full price history charts, and receive automatic alerts when NADAC prices change significantly.
+              With a <Link to="/pricing" className="text-primary hover:underline">Pro subscription at $29/mo</Link>, keep an unlimited watchlist, access full price history charts, and receive automatic alerts when NADAC prices change significantly.
             </p>
           </div>
         </div>
@@ -56,7 +56,7 @@ export const HomeSEOContent = () => (
           },
           {
             q: "What's the difference between free and Pro features?",
-            a: "NADAC price search is unlimited and free, with no account needed — visitors also get 1 sample reimbursement calculation. A free account adds 5 reimbursement calculations per calendar month (the allowance resets on the 1st), 1 saved contract rule, and up to 3 saved drugs. Pro ($29/mo) gives unlimited calculations, unlimited contract rules, full price history charts, automated price change alerts, unlimited saves, and priority support."
+            a: "NADAC price search is unlimited and free, with no account needed — visitors also get 1 sample reimbursement calculation. A free account adds 5 reimbursement calculations per calendar month (the allowance resets on the 1st), 1 saved contract rule, and up to 3 watchlist drugs. Pro ($29/mo) gives unlimited calculations, unlimited contract rules, full price history charts, automated price change alerts, unlimited watchlist, and priority support."
           },
           {
             q: "How is NADAC different from AWP or WAC?",

@@ -29,7 +29,7 @@ const proFeatures = [
   },
   {
     icon: Bookmark,
-    label: "Unlimited Saved Drugs",
+    label: "Unlimited Watchlist",
     description: "Save and organize as many drugs as you need"
   },
   {
@@ -43,7 +43,7 @@ const freeFeatures = [
   "Unlimited NADAC drug price search",
   "5 reimbursement calculations per month (resets on the 1st)",
   "1 custom contract rule",
-  "Save up to 3 drugs",
+  "Watchlist up to 3 drugs",
 ];
 
 export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeModalProps) => {

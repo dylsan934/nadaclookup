@@ -383,7 +383,7 @@ const Auth = () => {
             </CardTitle>
             <CardDescription className="text-balance">
               {isLogin 
-                ? "Sign in to access your saved drugs and settings" 
+                ? "Sign in to access your watchlist and settings" 
                 : "Create your account, then try every Pro feature free for 7 days. No charge until day 8 · Cancel anytime."}
             </CardDescription>
           </CardHeader>
