@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BillingToggle, type BillingPlan } from "@/components/BillingToggle";
 import { Button } from "@/components/ui/button";
 import { History, Bookmark, Bell, Check, Crown, TrendingUp, Calculator } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -48,6 +50,7 @@ const freeFeatures = [
 
 export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeModalProps) => {
   const { user } = useAuth();
+  const [plan, setPlan] = useState<BillingPlan>("monthly");
   const { start: handleUpgrade, isStarting } = useStartCheckout({
     onSuccess: () => onOpenChange(false),
   });
@@ -124,9 +127,16 @@ export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeMo
 
           {/* Pricing */}
           <div className="text-center pt-2 pb-1 border-t border-border/50">
+            <div className="flex justify-center pt-4">
+              <BillingToggle value={plan} onChange={setPlan} />
+            </div>
             <p className="text-3xl font-bold text-foreground pt-4">
-              $29<span className="text-base font-normal text-muted-foreground">/month</span>
+              {plan === "annual" ? "$290" : "$29"}
+              <span className="text-base font-normal text-muted-foreground">{plan === "annual" ? "/year" : "/month"}</span>
             </p>
+            {plan === "annual" && (
+              <p className="text-xs font-medium text-primary mt-1">2 months free — save $58 vs. monthly</p>
+            )}
             <p className="text-xs text-muted-foreground mt-1.5">
               7-day free trial · No charge until day 8 · Cancel anytime
             </p>
@@ -138,7 +148,7 @@ export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeMo
             <>
               <Button 
                 size="lg" 
-                onClick={handleUpgrade}
+                onClick={() => handleUpgrade(plan)}
                 disabled={isStarting}
                 className="w-full font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md"
               >
