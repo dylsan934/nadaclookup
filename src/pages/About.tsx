@@ -3,6 +3,7 @@ import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { FOUNDER } from "@/lib/founder";
 
 const About = () => (
   <>
@@ -18,6 +19,17 @@ const About = () => (
           <p className="text-muted-foreground leading-relaxed">
             The National Average Drug Acquisition Cost data is public, but navigating raw CMS files is time-consuming and difficult. We built NADAC Lookup to provide a fast, searchable interface to the latest NADAC prices — updated weekly every Wednesday when CMS publishes new data.
           </p>
+          {FOUNDER && (
+            <div className="not-prose flex flex-col sm:flex-row gap-5 items-start rounded-xl border border-border bg-card p-5">
+              {FOUNDER.photoUrl && <img src={FOUNDER.photoUrl} alt={`${FOUNDER.name}, ${FOUNDER.role}`} className="h-20 w-20 rounded-full object-cover" />}
+              <div>
+                <p className="font-semibold text-foreground">{FOUNDER.name}</p>
+                <p className="text-sm text-muted-foreground mb-2">{FOUNDER.role}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{FOUNDER.bio}</p>
+                <p className="mt-2 flex gap-3 text-sm">{FOUNDER.links.map((l) => <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{l.label}</a>)}</p>
+              </div>
+            </div>
+          )}
           <h2 className="text-2xl font-semibold text-foreground">Who We Serve</h2>
           <ul className="list-disc list-inside text-muted-foreground space-y-2">
             <li><strong className="text-foreground">Independent retail pharmacists</strong> who need quick access to current acquisition costs</li>

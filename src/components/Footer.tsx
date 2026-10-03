@@ -1,6 +1,7 @@
 import { ExternalLink, Mail, Shield } from "lucide-react";
 import { Link } from "@/lib/router-compat";
 import { drugNameToSlug } from "@/lib/drug-slug";
+import { FOUNDER } from "@/lib/founder";
 
 const FOOTER_POPULAR_DRUGS = [
   "Amoxicillin 500 MG Capsule",
@@ -17,7 +18,7 @@ export const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col gap-6 text-sm text-muted-foreground">
           {/* Links */}
-          <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs" aria-label="Footer navigation">
+          <nav className="flex flex-wrap justify-center gap-x-4 gap-y-0 text-xs [&>a]:py-2.5 [&>a]:px-1" aria-label="Footer navigation">
             <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
             <Link to="/features" className="hover:text-foreground transition-colors">Features</Link>
             <Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
@@ -25,6 +26,8 @@ export const Footer = () => {
             <Link to="/what-is-nadac" className="hover:text-foreground transition-colors">What Is NADAC?</Link>
             <Link to="/how-often-does-nadac-update" className="hover:text-foreground transition-colors">Update Schedule</Link>
             <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
+            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
           </nav>
 
           {/* Popular drug pages */}
@@ -77,6 +80,7 @@ export const Footer = () => {
               >
                 info@nadaclookup.com
               </a>
+              {FOUNDER && <span className="ml-2">· Built by <Link to="/about" className="hover:text-primary hover:underline">{FOUNDER.name}</Link></span>}
             </p>
           </div>
         </div>

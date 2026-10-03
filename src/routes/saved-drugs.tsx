@@ -5,8 +5,8 @@ import { pageHead } from "@/lib/seo";
 export const Route = createFileRoute("/saved-drugs")({
   head: () =>
     pageHead({
-      title: "Saved Drugs — NADAC Lookup",
-      description: "Your saved drugs with current NADAC pricing.",
+      title: "Watchlist — NADAC Lookup",
+      description: "Your watchlist drugs with current NADAC pricing.",
       path: "/saved-drugs",
       robots: "noindex, nofollow",
     }),

@@ -106,7 +106,7 @@ export const Header = ({ heroTitleAsH1 = false }: { heroTitleAsH1?: boolean }) =
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      aria-label="Saved drugs"
+                      aria-label="Watchlist"
                       className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
                     >
                       {isSubscribed ? (
@@ -114,7 +114,7 @@ export const Header = ({ heroTitleAsH1 = false }: { heroTitleAsH1?: boolean }) =
                       ) : (
                         <Heart className="h-4 w-4" />
                       )}
-                      <span className="hidden sm:inline ml-1">Saved</span>
+                      <span className="hidden sm:inline ml-1">Watchlist</span>
                     </Button>
                   </Link>
                   
@@ -185,7 +185,7 @@ export const Header = ({ heroTitleAsH1 = false }: { heroTitleAsH1?: boolean }) =
                       className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
                     >
                       <Heart className="h-4 w-4" />
-                      <span className="hidden sm:inline ml-1">Saved</span>
+                      <span className="hidden sm:inline ml-1">Watchlist</span>
                     </Button>
                   </Link>
                   {/* Upgrade CTA for non-logged-in users */}
@@ -233,7 +233,7 @@ export const Header = ({ heroTitleAsH1 = false }: { heroTitleAsH1?: boolean }) =
             </p>
           )}
           <p className="text-base md:text-lg text-primary-foreground/85 max-w-xl mx-auto leading-relaxed">
-            Free NADAC drug pricing lookup with weekly CMS updates. Search the National Average Drug Acquisition Cost by drug name or NDC code.
+            Check what you actually pay before you fill a claim that reimburses below cost. Free NADAC lookup by drug name or NDC, updated weekly from CMS.
           </p>
         </div>
       </div>

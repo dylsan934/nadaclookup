@@ -19,9 +19,11 @@ import { Route as HowOftenDoesNadacUpdateRouteImport } from './routes/how-often-
 import { Route as MoversRouteImport } from './routes/movers'
 import { Route as NdcLookupRouteImport } from './routes/ndc-lookup'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReimbursementCalculatorRouteImport } from './routes/reimbursement-calculator'
 import { Route as SavedCalculationsRouteImport } from './routes/saved-calculations'
 import { Route as SavedDrugsRouteImport } from './routes/saved-drugs'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as WhatIsNadacRouteImport } from './routes/what-is-nadac'
 import { Route as BlogIndexRouteImport } from './routes/blog/index'
@@ -79,6 +81,11 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReimbursementCalculatorRoute = ReimbursementCalculatorRouteImport.update({
   id: '/reimbursement-calculator',
   path: '/reimbursement-calculator',
@@ -92,6 +99,11 @@ const SavedCalculationsRoute = SavedCalculationsRouteImport.update({
 const SavedDrugsRoute = SavedDrugsRouteImport.update({
   id: '/saved-drugs',
   path: '/saved-drugs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -131,9 +143,11 @@ export interface FileRoutesByFullPath {
   '/movers': typeof MoversRoute
   '/ndc-lookup': typeof NdcLookupRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reimbursement-calculator': typeof ReimbursementCalculatorRoute
   '/saved-calculations': typeof SavedCalculationsRoute
   '/saved-drugs': typeof SavedDrugsRoute
+  '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/what-is-nadac': typeof WhatIsNadacRoute
   '/blog/$slug': typeof BlogSlugRoute
@@ -151,9 +165,11 @@ export interface FileRoutesByTo {
   '/movers': typeof MoversRoute
   '/ndc-lookup': typeof NdcLookupRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reimbursement-calculator': typeof ReimbursementCalculatorRoute
   '/saved-calculations': typeof SavedCalculationsRoute
   '/saved-drugs': typeof SavedDrugsRoute
+  '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/what-is-nadac': typeof WhatIsNadacRoute
   '/blog/$slug': typeof BlogSlugRoute
@@ -172,9 +188,11 @@ export interface FileRoutesById {
   '/movers': typeof MoversRoute
   '/ndc-lookup': typeof NdcLookupRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reimbursement-calculator': typeof ReimbursementCalculatorRoute
   '/saved-calculations': typeof SavedCalculationsRoute
   '/saved-drugs': typeof SavedDrugsRoute
+  '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/what-is-nadac': typeof WhatIsNadacRoute
   '/blog/$slug': typeof BlogSlugRoute
@@ -194,9 +212,11 @@ export interface FileRouteTypes {
     | '/movers'
     | '/ndc-lookup'
     | '/pricing'
+    | '/privacy'
     | '/reimbursement-calculator'
     | '/saved-calculations'
     | '/saved-drugs'
+    | '/terms'
     | '/unsubscribe'
     | '/what-is-nadac'
     | '/blog/$slug'
@@ -214,9 +234,11 @@ export interface FileRouteTypes {
     | '/movers'
     | '/ndc-lookup'
     | '/pricing'
+    | '/privacy'
     | '/reimbursement-calculator'
     | '/saved-calculations'
     | '/saved-drugs'
+    | '/terms'
     | '/unsubscribe'
     | '/what-is-nadac'
     | '/blog/$slug'
@@ -234,9 +256,11 @@ export interface FileRouteTypes {
     | '/movers'
     | '/ndc-lookup'
     | '/pricing'
+    | '/privacy'
     | '/reimbursement-calculator'
     | '/saved-calculations'
     | '/saved-drugs'
+    | '/terms'
     | '/unsubscribe'
     | '/what-is-nadac'
     | '/blog/$slug'
@@ -255,9 +279,11 @@ export interface RootRouteChildren {
   MoversRoute: typeof MoversRoute
   NdcLookupRoute: typeof NdcLookupRoute
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
   ReimbursementCalculatorRoute: typeof ReimbursementCalculatorRoute
   SavedCalculationsRoute: typeof SavedCalculationsRoute
   SavedDrugsRoute: typeof SavedDrugsRoute
+  TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   WhatIsNadacRoute: typeof WhatIsNadacRoute
   BlogSlugRoute: typeof BlogSlugRoute
@@ -337,6 +363,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reimbursement-calculator': {
       id: '/reimbursement-calculator'
       path: '/reimbursement-calculator'
@@ -356,6 +389,13 @@ declare module '@tanstack/react-router' {
       path: '/saved-drugs'
       fullPath: '/saved-drugs'
       preLoaderRoute: typeof SavedDrugsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/unsubscribe': {
@@ -407,9 +447,11 @@ const rootRouteChildren: RootRouteChildren = {
   MoversRoute: MoversRoute,
   NdcLookupRoute: NdcLookupRoute,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
   ReimbursementCalculatorRoute: ReimbursementCalculatorRoute,
   SavedCalculationsRoute: SavedCalculationsRoute,
   SavedDrugsRoute: SavedDrugsRoute,
+  TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   WhatIsNadacRoute: WhatIsNadacRoute,
   BlogSlugRoute: BlogSlugRoute,

@@ -6,12 +6,13 @@ import { Footer } from "@/components/Footer";
 import { SearchBar } from "@/components/SearchBar";
 import { DrugResults } from "@/components/DrugResults";
 import { DataStatus } from "@/components/DataStatus";
+import { SearchResultPreview } from "@/components/SearchResultPreview";
 import { HomeSEOContent } from "@/components/HomeSEOContent";
 import { HomeProUpsell } from "@/components/HomeProUpsell";
 import { PopularDrugLinks } from "@/components/PopularDrugLinks";
 import { WelcomeTrialModal } from "@/components/WelcomeTrialModal";
 import { DrugData } from "@/components/DrugCard";
-import { nadacApi } from "@/lib/nadac-api";
+import { nadacApi, type DataStatusInfo } from "@/lib/nadac-api";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "@/lib/router-compat";
 
@@ -34,9 +35,9 @@ const Index = () => {
   const [lastSearchTerm, setLastSearchTerm] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
   
-  const [dataStatus, setDataStatus] = useState({
+  const [dataStatus, setDataStatus] = useState<DataStatusInfo>({
     hasData: false,
-    lastUpdate: undefined as string | undefined,
+    lastUpdate: undefined,
     totalRecords: 0,
   });
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
@@ -176,7 +177,7 @@ const Index = () => {
             </Link>
           </p>
 
-          <DataStatus hasData={dataStatus.hasData} lastUpdate={dataStatus.lastUpdate} totalRecords={dataStatus.totalRecords} isLoading={isCheckingStatus} />
+          <DataStatus hasData={dataStatus.hasData} lastUpdate={dataStatus.lastUpdate} totalRecords={dataStatus.totalRecords} lastSyncAt={dataStatus.lastSyncAt} biggestMover={dataStatus.biggestMover} isLoading={isCheckingStatus} />
 
           <section className="pt-2">
             <DrugResults drugs={results} isLoading={isLoading} hasSearched={hasSearched} searchTerm={lastSearchTerm} />
@@ -184,6 +185,7 @@ const Index = () => {
 
           {!hasSearched && (
             <>
+              <SearchResultPreview />
               <HomeSEOContent />
               <HomeProUpsell />
               <PopularDrugLinks />

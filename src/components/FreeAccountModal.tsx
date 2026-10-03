@@ -11,13 +11,13 @@ interface FreeAccountModalProps {
 const freeFeatures = [
   { icon: Calculator, label: "5 reimbursement calculations per month" },
   { icon: Calculator, label: "1 custom contract rule (unlimited on Pro)" },
-  { icon: Heart, label: "Save up to 3 drugs" },
+  { icon: Heart, label: "Watchlist up to 3 drugs" },
   { icon: Bell, label: "In-app alerts when prices change" },
 ];
 
 const proFeatures = [
   { icon: Calculator, label: "Unlimited reimbursement calculator" },
-  { icon: Bookmark, label: "Unlimited saved drugs" },
+  { icon: Bookmark, label: "Unlimited watchlist" },
   { icon: Bell, label: "Email + in-app price alerts weekly" },
 ];
 
@@ -36,7 +36,7 @@ export const FreeAccountModal = ({ open, onOpenChange }: FreeAccountModalProps) 
               Create a Free Account
             </DialogTitle>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Save up to 3 drugs and get alerted when prices change
+              Add up to 3 drugs to your watchlist and get alerted when prices change
             </p>
           </div>
         </DialogHeader>
