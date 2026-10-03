@@ -12,7 +12,8 @@ export function useStartCheckout(opts?: { onSuccess?: () => void }) {
   const [isStarting, setIsStarting] = useState(false);
   const inFlightRef = useRef(false);
 
-  const start = async (plan: "monthly" | "annual" = "monthly") => {
+  // Accepts a plan, or ignores a click event when used directly as onClick.
+  const start = async (plan?: "monthly" | "annual" | unknown) => {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     setIsStarting(true);
