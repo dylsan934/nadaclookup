@@ -625,6 +625,7 @@ export type Database = {
         }
         Returns: number
       }
+      nadac_ndc_count: { Args: never; Returns: number }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
