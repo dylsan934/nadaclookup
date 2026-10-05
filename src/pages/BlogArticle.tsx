@@ -4,6 +4,10 @@ import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft } from "lucide-react";
+import { blogPosts } from "@/pages/Blog";
+import { FOUNDER } from "@/lib/founder";
+import { AUTHOR_PATH, ORGANIZATION_ID, SITE_URL, authorPersonJsonLd } from "@/lib/seo";
+import { formatSourceDate } from "@/lib/format-date";
 
 export const articles: Record<string, { title: string; description: string; content: JSX.Element }> = {
   "calculate-reimbursement-from-nadac": {
@@ -367,18 +371,8 @@ const BlogArticle = () => {
 
   if (!article) return <Navigate to="/blog" replace />;
 
-  const canonical = `https://nadaclookup.com/blog/${slug}`;
-  const headline = article.title.split(" | ")[0];
-  const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline,
-    description: article.description,
-    mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
-    author: { "@type": "Organization", name: "NADAC Lookup" },
-    publisher: { "@type": "Organization", name: "NADAC Lookup" },
-  };
-
+  const post = blogPosts.find((p) => p.slug === slug);
+  const related = blogPosts.filter((p) => p.slug !== slug).slice(0, 4);
   return (
     <>
       <div className="min-h-screen flex flex-col bg-background">
@@ -388,9 +382,30 @@ const BlogArticle = () => {
             <ArrowLeft className="h-3.5 w-3.5" /> Back to Resources
           </Link>
           <article className="prose prose-lg max-w-none">
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">{article.title.split(" | ")[0]}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">{article.title.split(" | ")[0]}</h1>
+            <p className="text-sm text-muted-foreground mb-6 not-prose">
+              {FOUNDER && (
+                <>
+                  By <Link to={AUTHOR_PATH} className="text-primary hover:underline">{FOUNDER.name}</Link>, {FOUNDER.role} ·{" "}
+                </>
+              )}
+              {post && <>Published <time dateTime={post.date}>{formatSourceDate(post.date)}</time></>}
+              {post?.updated && <> · Updated <time dateTime={post.updated}>{formatSourceDate(post.updated)}</time></>}
+            </p>
             {article.content}
           </article>
+          {related.length > 0 && (
+            <section className="mt-12" aria-labelledby="related-articles">
+              <h2 id="related-articles" className="text-xl font-bold text-foreground mb-4">Related NADAC Guides</h2>
+              <ul className="space-y-2">
+                {related.map((r) => (
+                  <li key={r.slug}>
+                    <Link to={`/blog/${r.slug}`} className="text-primary hover:underline">{r.title}</Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
           <div className="mt-12 text-center py-10 bg-card border border-border rounded-xl">
             <h3 className="text-xl font-semibold text-foreground mb-2">Ready to Look Up NADAC Prices?</h3>
             <p className="text-muted-foreground mb-4 text-sm">Search current drug acquisition costs instantly — free.</p>
@@ -406,3 +421,37 @@ const BlogArticle = () => {
 };
 
 export default BlogArticle;
+
+/** Article JSON-LD shared by the route head: real dates, Person author, Organization publisher. */
+export function buildArticleJsonLd(slug: string) {
+  const article = articles[slug];
+  const post = blogPosts.find((p) => p.slug === slug);
+  if (!article) return null;
+  const url = `${SITE_URL}/blog/${slug}`;
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BlogPosting",
+        headline: article.title.split(" | ")[0],
+        description: article.description,
+        mainEntityOfPage: { "@type": "WebPage", "@id": url },
+        url,
+        ...(post ? { datePublished: post.date, dateModified: post.updated ?? post.date } : {}),
+        author: FOUNDER ? { "@id": `${SITE_URL}${AUTHOR_PATH}#person` } : { "@id": ORGANIZATION_ID },
+        publisher: { "@id": ORGANIZATION_ID },
+      },
+      ...(FOUNDER
+        ? [authorPersonJsonLd({ name: FOUNDER.name, role: FOUNDER.role, sameAs: FOUNDER.links.map((l) => l.href) })]
+        : []),
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+          { "@type": "ListItem", position: 2, name: "Resources", item: `${SITE_URL}/blog` },
+          { "@type": "ListItem", position: 3, name: article.title.split(" | ")[0], item: url },
+        ],
+      },
+    ],
+  };
+}

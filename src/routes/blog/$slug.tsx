@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import BlogArticle, { articles } from "@/pages/BlogArticle";
+import BlogArticle, { articles, buildArticleJsonLd } from "@/pages/BlogArticle";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/blog/$slug")({
@@ -16,16 +16,7 @@ export const Route = createFileRoute("/blog/$slug")({
       });
     }
     const canonical = `/blog/${slug}`;
-    const headline = article.title.split(" | ")[0] ?? article.title;
-    const articleJsonLd = {
-      "@context": "https://schema.org",
-      "@type": "Article",
-      headline,
-      description: article.description,
-      mainEntityOfPage: { "@type": "WebPage", "@id": `https://nadaclookup.com${canonical}` },
-      author: { "@type": "Organization", name: "NADAC Lookup" },
-      publisher: { "@type": "Organization", name: "NADAC Lookup" },
-    };
+    const articleJsonLd = buildArticleJsonLd(slug) ?? undefined;
     return pageHead({
       title: article.title,
       description: article.description,

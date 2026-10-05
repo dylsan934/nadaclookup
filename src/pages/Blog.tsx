@@ -60,7 +60,7 @@ const Blog = () => (
           {blogPosts.map((a) => (
             <Link key={a.slug} to={`/blog/${a.slug}`} className="block group">
               <article className="bg-card border border-border rounded-xl p-6 transition-shadow hover:shadow-md">
-                <time className="text-xs text-muted-foreground">{a.date}</time>
+                <time dateTime={a.date} className="text-xs text-muted-foreground">{a.date}</time>
                 <h2 className="text-lg font-semibold text-foreground mt-1 group-hover:text-primary transition-colors">{a.title}</h2>
                 <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{a.excerpt}</p>
                 <span className="inline-flex items-center gap-1 text-sm text-primary mt-3 font-medium">
