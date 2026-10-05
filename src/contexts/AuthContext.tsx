@@ -152,7 +152,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (event === "SIGNED_IN" && session?.user) {
           const createdAt = new Date(session.user.created_at).getTime();
           if (Number.isFinite(createdAt) && Date.now() - createdAt < 10 * 60 * 1000) {
-            analytics.setIdentity(session.user.id, { email: session.user.email });
+            analytics.setIdentity(session.user.id, session.user.email ? { email: session.user.email } : {});
             analytics.trackEvent("signup_completed");
           }
         }
@@ -173,7 +173,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (session && user) {
       analytics.setIdentity(
         user.id,
-        { email: user.email, plan: isSubscribed ? "pro" : "free" },
+        { ...(user.email ? { email: user.email } : {}), plan: isSubscribed ? "pro" : "free" },
         { signup_date: user.created_at },
       );
       checkSubscription();
