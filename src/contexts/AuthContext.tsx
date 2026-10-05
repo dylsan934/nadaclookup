@@ -145,6 +145,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
+
+        // A confirmed signup surfaces as SIGNED_IN for an account created
+        // moments ago — covers the email-confirmation redirect path, where
+        // the Auth page's own handler never runs.
+        if (event === "SIGNED_IN" && session?.user) {
+          const createdAt = new Date(session.user.created_at).getTime();
+          if (Number.isFinite(createdAt) && Date.now() - createdAt < 10 * 60 * 1000) {
+            analytics.setIdentity(session.user.id, { email: session.user.email });
+            analytics.trackEvent("signup_completed");
+          }
+        }
       }
     );
 
