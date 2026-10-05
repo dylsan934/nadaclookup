@@ -10,6 +10,8 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 
+import { analytics } from "@heycatch/sdk";
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +20,12 @@ import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { SITE_URL } from "@/lib/seo";
 import NotFound from "@/pages/NotFound";
 import appCss from "../styles.css?url";
+
+// HeyCatch analytics: module scope so it runs on every page; no-op during SSR.
+analytics.init({
+  projectKey: "hck_pk_cGZW_-nxqc6rqSiMU4EeUH15FPT8Dhm3",
+  install: { framework: "vite-react", frameworkVersion: "7", agent: "lovable" },
+});
 
 const webApplicationJsonLd = {
   "@context": "https://schema.org",
