@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
+import { analytics } from "@heycatch/sdk";
 import { supabase } from "@/integrations/supabase/client";
 
 const FREE_SAVE_LIMIT = 3;
@@ -144,6 +145,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
+
+        // A confirmed signup surfaces as SIGNED_IN for an account created
+        // moments ago — covers the email-confirmation redirect path, where
+        // the Auth page's own handler never runs.
+        if (event === "SIGNED_IN" && session?.user) {
+          const createdAt = new Date(session.user.created_at).getTime();
+          if (Number.isFinite(createdAt) && Date.now() - createdAt < 10 * 60 * 1000) {
+            analytics.setIdentity(session.user.id, session.user.email ? { email: session.user.email } : {});
+            analytics.trackEvent("signup_completed");
+          }
+        }
       }
     );
 
@@ -159,6 +171,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Check subscription and saves count when session changes
   useEffect(() => {
     if (session && user) {
+      analytics.setIdentity(
+        user.id,
+        { ...(user.email ? { email: user.email } : {}), plan: isSubscribed ? "pro" : "free" },
+        { signup_date: user.created_at },
+      );
       checkSubscription();
       refreshSavesCount();
     } else {
@@ -171,6 +188,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsRoleCheckComplete(true);
     }
   }, [session, user]);
+
+  // Keep the analytics plan property in sync when subscription state changes
+  useEffect(() => {
+    if (user) {
+      analytics.setPersonProperties({ plan: isSubscribed ? "pro" : "free" });
+    }
+  }, [user, isSubscribed]);
 
   // Periodic subscription check
   useEffect(() => {
@@ -206,6 +230,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    analytics.resetIdentity();
   };
 
   return (
