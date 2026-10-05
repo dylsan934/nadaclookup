@@ -8,7 +8,8 @@ import { Footer } from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { drugNameToSlug, slugToSearchTerm, drugNameRoot } from "@/lib/drug-slug";
+import { drugNameToSlug, slugToSearchTerm } from "@/lib/drug-slug";
+import { fetchRelatedDrugs, pickExactSlugMatch } from "@/lib/drug-related";
 import { formatSourceDate } from "@/lib/format-date";
 
 interface NadacRow {
@@ -49,11 +50,11 @@ const latestPerNdc = (rows: NadacRow[]): NadacRow[] => {
   );
 };
 
-const DrugPage = ({ initialName = "" }: { initialName?: string }) => {
+const DrugPage = ({ initialName = "", initialRelated = [] }: { initialName?: string; initialRelated?: RelatedDrug[] }) => {
   const { slug = "" } = useParams<{ slug: string }>();
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<NadacRow[]>([]);
-  const [related, setRelated] = useState<RelatedDrug[]>([]);
+  const [related, setRelated] = useState<RelatedDrug[]>(initialRelated);
   const [resolvedName, setResolvedName] = useState<string>(initialName);
 
   useEffect(() => {
@@ -70,7 +71,7 @@ const DrugPage = ({ initialName = "" }: { initialName?: string }) => {
         .order("effective_date", { ascending: false })
         .limit(500);
 
-      let resolved = latestPerNdc((matches || []) as NadacRow[]);
+      let resolved = latestPerNdc(pickExactSlugMatch((matches || []) as NadacRow[], slug));
 
       // Fallback: if exact ilike yields nothing, try a looser prefix match
       if (resolved.length === 0) {
@@ -80,7 +81,7 @@ const DrugPage = ({ initialName = "" }: { initialName?: string }) => {
           .ilike("drug_name", `${searchTerm}%`)
           .order("effective_date", { ascending: false })
           .limit(500);
-        resolved = latestPerNdc((loose || []) as NadacRow[]);
+        resolved = latestPerNdc(pickExactSlugMatch((loose || []) as NadacRow[], slug));
       }
 
       if (cancelled) return;
@@ -89,26 +90,9 @@ const DrugPage = ({ initialName = "" }: { initialName?: string }) => {
       const canonicalName = resolved[0]?.drug_name || searchTerm.toUpperCase();
       setResolvedName(canonicalName);
 
-      // Related drugs: same root token, distinct names, latest pricing
-      const root = drugNameRoot(canonicalName);
-      if (root) {
-        const { data: rel } = await supabase
-          .from("nadac_drugs")
-          .select("drug_name, nadac_per_unit, pricing_unit, effective_date")
-          .ilike("drug_name", `${root}%`)
-          .order("effective_date", { ascending: false })
-          .limit(200);
-
-        const seen = new Set<string>([canonicalName.toUpperCase()]);
-        const distinct: RelatedDrug[] = [];
-        for (const r of rel || []) {
-          const key = r.drug_name.toUpperCase();
-          if (seen.has(key)) continue;
-          seen.add(key);
-          distinct.push(r as RelatedDrug);
-          if (distinct.length >= 6) break;
-        }
-        if (!cancelled) setRelated(distinct);
+      if (resolved[0]) {
+        const rel = await fetchRelatedDrugs(canonicalName).catch(() => null);
+        if (!cancelled && rel) setRelated(rel);
       }
 
       if (!cancelled) setLoading(false);
