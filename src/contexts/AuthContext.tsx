@@ -178,6 +178,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [session, user]);
 
+  // Keep the analytics plan property in sync when subscription state changes
+  useEffect(() => {
+    if (user) {
+      analytics.setPersonProperties({ plan: isSubscribed ? "pro" : "free" });
+    }
+  }, [user, isSubscribed]);
+
   // Periodic subscription check
   useEffect(() => {
     if (!session) return;
