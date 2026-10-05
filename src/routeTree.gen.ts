@@ -26,6 +26,7 @@ import { Route as SavedDrugsRouteImport } from './routes/saved-drugs'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as WhatIsNadacRouteImport } from './routes/what-is-nadac'
+import { Route as AuthorDylanSansonRouteImport } from './routes/author/dylan-sanson'
 import { Route as BlogIndexRouteImport } from './routes/blog/index'
 import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
 import { Route as DrugSlugRouteImport } from './routes/drug/$slug'
@@ -116,6 +117,11 @@ const WhatIsNadacRoute = WhatIsNadacRouteImport.update({
   path: '/what-is-nadac',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthorDylanSansonRoute = AuthorDylanSansonRouteImport.update({
+  id: '/author/dylan-sanson',
+  path: '/author/dylan-sanson',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/what-is-nadac': typeof WhatIsNadacRoute
+  '/author/dylan-sanson': typeof AuthorDylanSansonRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/drug/$slug': typeof DrugSlugRoute
   '/blog/': typeof BlogIndexRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/what-is-nadac': typeof WhatIsNadacRoute
+  '/author/dylan-sanson': typeof AuthorDylanSansonRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/drug/$slug': typeof DrugSlugRoute
   '/blog': typeof BlogIndexRoute
@@ -195,6 +203,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/what-is-nadac': typeof WhatIsNadacRoute
+  '/author/dylan-sanson': typeof AuthorDylanSansonRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/drug/$slug': typeof DrugSlugRoute
   '/blog/': typeof BlogIndexRoute
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/unsubscribe'
     | '/what-is-nadac'
+    | '/author/dylan-sanson'
     | '/blog/$slug'
     | '/drug/$slug'
     | '/blog/'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/unsubscribe'
     | '/what-is-nadac'
+    | '/author/dylan-sanson'
     | '/blog/$slug'
     | '/drug/$slug'
     | '/blog'
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/unsubscribe'
     | '/what-is-nadac'
+    | '/author/dylan-sanson'
     | '/blog/$slug'
     | '/drug/$slug'
     | '/blog/'
@@ -286,6 +298,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   WhatIsNadacRoute: typeof WhatIsNadacRoute
+  AuthorDylanSansonRoute: typeof AuthorDylanSansonRoute
   BlogSlugRoute: typeof BlogSlugRoute
   DrugSlugRoute: typeof DrugSlugRoute
   BlogIndexRoute: typeof BlogIndexRoute
@@ -412,6 +425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WhatIsNadacRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/author/dylan-sanson': {
+      id: '/author/dylan-sanson'
+      path: '/author/dylan-sanson'
+      fullPath: '/author/dylan-sanson'
+      preLoaderRoute: typeof AuthorDylanSansonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/blog/': {
       id: '/blog/'
       path: '/blog'
@@ -454,6 +474,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   WhatIsNadacRoute: WhatIsNadacRoute,
+  AuthorDylanSansonRoute: AuthorDylanSansonRoute,
   BlogSlugRoute: BlogSlugRoute,
   DrugSlugRoute: DrugSlugRoute,
   BlogIndexRoute: BlogIndexRoute,

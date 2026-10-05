@@ -22,7 +22,7 @@ export interface PageHeadOptions {
   /** og:type; defaults to "website". */
   ogType?: string;
   /** One or more JSON-LD objects rendered as application/ld+json scripts. */
-  jsonLd?: object | object[];
+  jsonLd?: object | object[] | undefined;
 }
 
 export function pageHead(opts: PageHeadOptions) {
