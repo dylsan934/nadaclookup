@@ -3,7 +3,9 @@ import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { ArrowRight } from "lucide-react";
 
-export const blogPosts = [
+export interface BlogPostMeta { slug: string; title: string; excerpt: string; date: string; updated?: string }
+
+export const blogPosts: BlogPostMeta[] = [
   {
     slug: "pbm-cost-plus-dispensing-fee-audit",
     title: "PBM Cost-Plus + Dispensing Fee: Auditing Your Claims",
