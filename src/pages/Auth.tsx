@@ -234,9 +234,8 @@ const Auth = () => {
             });
           }
         } else if (data?.session) {
-          // Auto-confirmed signup — user is already signed in
-          analytics.setIdentity(data.user!.id, { email });
-          analytics.trackEvent("signup_completed");
+          // Auto-confirmed signup — user is already signed in.
+          // signup_completed is tracked by AuthContext's SIGNED_IN handler.
           toast({
             title: "Account created!",
             description: "Welcome! You can now access all features.",
