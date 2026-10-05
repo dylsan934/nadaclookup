@@ -52,3 +52,42 @@ export function pageHead(opts: PageHeadOptions) {
     })),
   };
 }
+
+export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
+export const AUTHOR_PATH = "/author/dylan-sanson";
+export const AUTHOR_ID = `${SITE_URL}${AUTHOR_PATH}#person`;
+
+/** Site-wide Organization + WebSite entity; one spelling of the brand everywhere. */
+export const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": ORGANIZATION_ID,
+      name: "NADAC Lookup",
+      url: SITE_URL,
+      logo: { "@type": "ImageObject", url: `${SITE_URL}/favicon.png` },
+      founder: { "@id": AUTHOR_ID },
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      name: "NADAC Lookup",
+      url: SITE_URL,
+      publisher: { "@id": ORGANIZATION_ID },
+    },
+  ],
+};
+
+/** Person node for the article author; sameAs only lists profiles the author actually runs. */
+export function authorPersonJsonLd(opts: { name: string; role: string; sameAs: string[] }) {
+  return {
+    "@type": "Person",
+    "@id": AUTHOR_ID,
+    name: opts.name,
+    jobTitle: opts.role,
+    url: `${SITE_URL}${AUTHOR_PATH}`,
+    worksFor: { "@id": ORGANIZATION_ID },
+    ...(opts.sameAs.length ? { sameAs: opts.sameAs } : {}),
+  };
+}
