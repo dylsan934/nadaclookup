@@ -10,7 +10,6 @@ import { Loader2, Search, Bookmark, Calculator, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { sanitizeInternalPath } from "@/lib/safe-redirect";
-import { analytics } from "@heycatch/sdk";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
