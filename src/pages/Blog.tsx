@@ -3,12 +3,13 @@ import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { ArrowRight } from "lucide-react";
 
-const articles = [
+export const blogPosts = [
   {
     slug: "pbm-cost-plus-dispensing-fee-audit",
     title: "PBM Cost-Plus + Dispensing Fee: Auditing Your Claims",
     excerpt: "A new wave of PBM contracts pays acquisition cost plus a flat dispensing fee. Here's the formula, the most common underpayment traps, and a 5-step claim audit using NADAC Lookup.",
     date: "2026-05-16",
+    updated: "2026-10-05",
   },
   {
     slug: "calculate-reimbursement-from-nadac",
@@ -56,7 +57,7 @@ const Blog = () => (
         <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">NADAC Pricing Resources</h1>
         <p className="text-muted-foreground mb-10">Insights and guides for independent pharmacies on drug acquisition costs, pricing trends, and margin optimization.</p>
         <div className="space-y-6">
-          {articles.map((a) => (
+          {blogPosts.map((a) => (
             <Link key={a.slug} to={`/blog/${a.slug}`} className="block group">
               <article className="bg-card border border-border rounded-xl p-6 transition-shadow hover:shadow-md">
                 <time className="text-xs text-muted-foreground">{a.date}</time>

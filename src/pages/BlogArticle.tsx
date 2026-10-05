@@ -117,18 +117,18 @@ export const articles: Record<string, { title: string; description: string; cont
         <p className="text-muted-foreground leading-relaxed mb-4">
           NADAC prices are updated every Wednesday by CMS, and even small changes can impact your pharmacy's bottom line. Here's what pharmacists should know about staying on top of weekly price movements.
         </p>
-        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Why Weekly NADAC Changes Matter</h2>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Why Do Weekly NADAC Changes Matter?</h2>
         <p className="text-muted-foreground leading-relaxed mb-4">
           A 5% increase on a high-volume generic you dispense 500 times a month can cost you hundreds of dollars if your reimbursement rates lag behind. Conversely, catching a price drop early lets you negotiate better terms or adjust your purchasing strategy.
         </p>
-        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">How to Monitor NADAC Price Changes</h2>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">How Do You Monitor NADAC Price Changes?</h2>
         <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
           <li>Use a <Link to="/" className="text-primary hover:underline">NADAC lookup tool</Link> to search your most-dispensed drugs weekly</li>
           <li>Save drugs to your watchlist and enable price change alerts with <Link to="/pricing" className="text-primary hover:underline">NADAC Lookup Pro ($29/mo)</Link></li>
           <li>Compare price trends over time with full price history charts</li>
           <li>Review the effective date on each NADAC entry to confirm you're seeing the latest data</li>
         </ul>
-        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">What to Do When Prices Change</h2>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">What Should You Do When Prices Change?</h2>
         <p className="text-muted-foreground leading-relaxed mb-4">
           <strong className="text-foreground">Price increase?</strong> Check if your PBM reimbursement has adjusted. If not, flag the drug for a reimbursement appeal. Consider buying ahead if you expect continued increases.
         </p>
@@ -202,15 +202,15 @@ export const articles: Record<string, { title: string; description: string; cont
         <p className="text-muted-foreground leading-relaxed mb-4">
           Pharmacy benefit manager (PBM) reimbursement rates don't always keep pace with actual drug costs. NADAC data gives independent pharmacies the transparency they need to push back on unfair rates.
         </p>
-        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Identifying Underwater Claims</h2>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">How Do You Identify Underwater Claims?</h2>
         <p className="text-muted-foreground leading-relaxed mb-4">
           An "underwater" claim occurs when your PBM reimburses you less than your actual acquisition cost. By comparing PBM payments against <Link to="/" className="text-primary hover:underline">current NADAC prices</Link>, you can identify exactly which drugs are losing money — and by how much.
         </p>
-        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Building Your Case with Data</h2>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">How Do You Build Your Case with Data?</h2>
         <p className="text-muted-foreground leading-relaxed mb-4">
           When approaching PBMs for rate adjustments, come prepared with specific examples showing your acquisition cost (backed by NADAC) versus their reimbursement. Track trends with <Link to="/pricing" className="text-primary hover:underline">NADAC Lookup Pro</Link> price history charts for compelling visual evidence.
         </p>
-        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Taking Action</h2>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">What Should You Do Next?</h2>
         <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
           <li>Run weekly reports comparing your top 50 dispensed drugs against NADAC</li>
           <li>Flag any drug where reimbursement is below NADAC + a reasonable dispensing fee</li>
@@ -260,7 +260,7 @@ export const articles: Record<string, { title: string; description: string; cont
           This guide breaks down the new model and shows you exactly how to use NADAC Lookup to verify each reimbursement and catch underpayments before they pile up.
         </p>
 
-        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">What "Cost-Plus + Dispensing Fee" Actually Means</h2>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">What Does "Cost-Plus + Dispensing Fee" Actually Mean?</h2>
         <p className="text-muted-foreground leading-relaxed mb-4">
           Under the new model, your reimbursement is calculated as:
         </p>
@@ -271,7 +271,7 @@ export const articles: Record<string, { title: string; description: string; cont
           The "acquisition cost" benchmark is typically NADAC — the CMS-published, invoice-based price that updates every Wednesday. The dispensing fee is contract-specific but usually lands in the <strong className="text-foreground">$9 to $12</strong> range, mirroring the Medicaid professional dispensing fee methodology. For background on how that fee is set and how Medicaid programs use the same structure, see <Link to="/blog/calculate-reimbursement-from-nadac" className="text-primary hover:underline">Calculate Reimbursement from NADAC</Link>.
         </p>
 
-        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Why You Still Need to Audit Every Claim</h2>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Why Do You Still Need to Audit Every Claim?</h2>
         <p className="text-muted-foreground leading-relaxed mb-4">
           Even under a transparent cost-plus contract, underpayments happen — and they usually fall into three buckets:
         </p>
@@ -284,7 +284,7 @@ export const articles: Record<string, { title: string; description: string; cont
           Each of these is appealable — but only if you spot it. That's where a weekly audit habit pays for itself.
         </p>
 
-        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">A 5-Minute Per-Claim Audit Using NADAC Lookup</h2>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">How Do You Audit a Claim in 5 Minutes?</h2>
         <p className="text-muted-foreground leading-relaxed mb-4">
           Pull your remittance for any cost-plus contract claim, then walk through these steps:
         </p>
@@ -321,7 +321,7 @@ export const articles: Record<string, { title: string; description: string; cont
           Nineteen cents sounds trivial. Multiply it across hundreds of claims a week on the dozens of high-volume generics that move price most often, and the recoverable revenue is meaningful.
         </p>
 
-        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Scaling the Audit: Catch the Movers First</h2>
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Which Claims Should You Audit First?</h2>
         <p className="text-muted-foreground leading-relaxed mb-4">
           You can't audit every claim manually, but you don't need to. The highest-risk claims are the ones where NADAC moved this week — those are most likely to be priced against a stale benchmark. Start your audit there:
         </p>
@@ -340,6 +340,16 @@ export const articles: Record<string, { title: string; description: string; cont
           <li><strong className="text-foreground">Price change alerts</strong> notify you the moment NADAC moves on a drug you stock — before any claim gets paid against the new number.</li>
           <li><strong className="text-foreground">Full 5-year price history</strong> makes documenting a trend trivial when you escalate to contract renegotiation.</li>
           <li><strong className="text-foreground">Weekly movers email digest</strong> delivers the top 10 increases and decreases straight to your inbox every Wednesday morning.</li>
+        </ul>
+
+        <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Where Do These Numbers Come From?</h2>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          NADAC values on this site come straight from the CMS weekly file. Check the primary sources yourself:
+        </p>
+        <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
+          <li><a href="https://data.medicaid.gov/dataset/dfa2ab14-06c2-457a-9e36-5cb6d80f8d93" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">CMS NADAC (National Average Drug Acquisition Cost) dataset on data.medicaid.gov</a> — the weekly file every NADAC price on this site is pulled from.</li>
+          <li><a href="https://www.medicaid.gov/medicaid/prescription-drugs/retail-price-survey/index.html" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">CMS Retail Price Survey</a> — how CMS collects pharmacy invoice data and calculates NADAC.</li>
+          <li><a href="https://www.ecfr.gov/current/title-42/chapter-IV/subchapter-C/part-447/subpart-I" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">42 CFR Part 447, Subpart I</a> — the federal rule requiring Medicaid to pay actual acquisition cost plus a professional dispensing fee.</li>
         </ul>
 
         <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">The Bottom Line</h2>
