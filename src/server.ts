@@ -44,12 +44,27 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+// Security headers on every response. CSP only restricts framing/base/object so the
+// site's own and third-party scripts (Stripe, analytics, fonts) keep working.
+const SECURITY_HEADERS: Record<string, string> = {
+  "Content-Security-Policy": "frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
+  "X-Frame-Options": "SAMEORIGIN",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+};
+
+function withSecurityHeaders(response: Response): Response {
+  const res = new Response(response.body, response);
+  for (const [k, v] of Object.entries(SECURITY_HEADERS)) if (!res.headers.has(k)) res.headers.set(k, v);
+  return res;
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response));
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {

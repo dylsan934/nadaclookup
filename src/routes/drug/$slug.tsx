@@ -1,35 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import DrugPage from "@/pages/DrugPage";
-import { supabase } from "@/integrations/supabase/client";
-import { slugToSearchTerm } from "@/lib/drug-slug";
-import { pageHead } from "@/lib/seo";
+import { fetchRelatedDrugs, resolveDrugNameForSlug, type RelatedDrugLink } from "@/lib/drug-related";
+import { pageHead, SITE_URL } from "@/lib/seo";
 
 interface DrugSummary {
   slug: string;
   drugName: string | null;
   ndc: string | null;
+  related: RelatedDrugLink[];
 }
 
 export const Route = createFileRoute("/drug/$slug")({
   loader: async ({ params }): Promise<DrugSummary> => {
-    const searchTerm = slugToSearchTerm(params.slug);
-    let { data } = await supabase
-      .from("nadac_drugs")
-      .select("drug_name, ndc")
-      .ilike("drug_name", searchTerm)
-      .order("effective_date", { ascending: false })
-      .limit(1);
-    if (!data || data.length === 0) {
-      const loose = await supabase
-        .from("nadac_drugs")
-        .select("drug_name, ndc")
-        .ilike("drug_name", `${searchTerm}%`)
-        .order("effective_date", { ascending: false })
-        .limit(1);
-      data = loose.data;
-    }
-    const row = data?.[0];
-    return { slug: params.slug, drugName: row?.drug_name ?? null, ndc: row?.ndc ?? null };
+    const row = await resolveDrugNameForSlug(params.slug);
+    const related = row ? await fetchRelatedDrugs(row.drug_name).catch(() => []) : [];
+    return { slug: params.slug, drugName: row?.drug_name ?? null, ndc: row?.ndc ?? null, related };
   },
   head: ({ loaderData }) => {
     const slug = loaderData?.slug ?? "";
@@ -47,6 +32,15 @@ export const Route = createFileRoute("/drug/$slug")({
       "@context": "https://schema.org",
       "@graph": [
         {
+          "@type": "WebPage",
+          "@id": `${SITE_URL}${canonical}`,
+          url: `${SITE_URL}${canonical}`,
+          name: `${drugName} NADAC Price`,
+          isPartOf: { "@id": `${SITE_URL}/#website` },
+          publisher: { "@id": `${SITE_URL}/#organization` },
+          about: { "@type": "Drug", name: drugName },
+        },
+        {
           "@type": "Drug",
           name: drugName,
           description: `${drugName} NADAC pharmacy acquisition cost, updated weekly from CMS.`,
@@ -57,14 +51,9 @@ export const Route = createFileRoute("/drug/$slug")({
         {
           "@type": "BreadcrumbList",
           itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Home", item: "https://nadaclookup.com/" },
-            { "@type": "ListItem", position: 2, name: "Drugs", item: "https://nadaclookup.com/" },
-            {
-              "@type": "ListItem",
-              position: 3,
-              name: `${drugName} NADAC Price`,
-              item: `https://nadaclookup.com${canonical}`,
-            },
+            { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+            { "@type": "ListItem", position: 2, name: "Drugs", item: `${SITE_URL}/` },
+            { "@type": "ListItem", position: 3, name: `${drugName} NADAC Price`, item: `${SITE_URL}${canonical}` },
           ],
         },
       ],
@@ -81,5 +70,5 @@ export const Route = createFileRoute("/drug/$slug")({
 
 function DrugRouteComponent() {
   const data = Route.useLoaderData();
-  return <DrugPage initialName={data.drugName ?? ""} />;
+  return <DrugPage initialName={data.drugName ?? ""} initialRelated={data.related} />;
 }

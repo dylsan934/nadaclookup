@@ -23,7 +23,7 @@ const About = () => (
             <div className="not-prose flex flex-col sm:flex-row gap-5 items-start rounded-xl border border-border bg-card p-5">
               {FOUNDER.photoUrl && <img src={FOUNDER.photoUrl} alt={`${FOUNDER.name}, ${FOUNDER.role}`} className="h-20 w-20 rounded-full object-cover" />}
               <div>
-                <p className="font-semibold text-foreground">{FOUNDER.name}</p>
+                <p className="font-semibold text-foreground"><Link to="/author/dylan-sanson" className="hover:underline">{FOUNDER.name}</Link></p>
                 <p className="text-sm text-muted-foreground mb-2">{FOUNDER.role}</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">{FOUNDER.bio}</p>
                 <p className="mt-2 flex gap-3 text-sm">{FOUNDER.links.map((l) => <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{l.label}</a>)}</p>

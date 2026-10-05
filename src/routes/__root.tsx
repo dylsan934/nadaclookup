@@ -17,7 +17,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL, organizationJsonLd } from "@/lib/seo";
 import NotFound from "@/pages/NotFound";
 import appCss from "../styles.css?url";
 
@@ -45,7 +45,7 @@ const webApplicationJsonLd = {
       description: "Pro plan with price history, unlimited saves, and alerts",
     },
   ],
-  creator: { "@type": "Organization", name: "NADAC Lookup", url: SITE_URL },
+  creator: { "@id": `${SITE_URL}/#organization` },
 };
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -73,7 +73,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "icon", type: "image/png", href: "/favicon.png" },
     ],
-    scripts: [{ type: "application/ld+json", children: JSON.stringify(webApplicationJsonLd) }],
+    scripts: [
+      { type: "application/ld+json", children: JSON.stringify(organizationJsonLd) },
+      { type: "application/ld+json", children: JSON.stringify(webApplicationJsonLd) },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
