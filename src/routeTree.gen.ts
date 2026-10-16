@@ -17,6 +17,7 @@ import { Route as ComparePrescriptionDrugPricesRouteImport } from './routes/comp
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as HowOftenDoesNadacUpdateRouteImport } from './routes/how-often-does-nadac-update'
 import { Route as MoversRouteImport } from './routes/movers'
+import { Route as NadacIntelligenceAlternativeRouteImport } from './routes/nadac-intelligence-alternative'
 import { Route as NdcLookupRouteImport } from './routes/ndc-lookup'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -72,6 +73,12 @@ const MoversRoute = MoversRouteImport.update({
   path: '/movers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NadacIntelligenceAlternativeRoute =
+  NadacIntelligenceAlternativeRouteImport.update({
+    id: '/nadac-intelligence-alternative',
+    path: '/nadac-intelligence-alternative',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const NdcLookupRoute = NdcLookupRouteImport.update({
   id: '/ndc-lookup',
   path: '/ndc-lookup',
@@ -147,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/features': typeof FeaturesRoute
   '/how-often-does-nadac-update': typeof HowOftenDoesNadacUpdateRoute
   '/movers': typeof MoversRoute
+  '/nadac-intelligence-alternative': typeof NadacIntelligenceAlternativeRoute
   '/ndc-lookup': typeof NdcLookupRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -170,6 +178,7 @@ export interface FileRoutesByTo {
   '/features': typeof FeaturesRoute
   '/how-often-does-nadac-update': typeof HowOftenDoesNadacUpdateRoute
   '/movers': typeof MoversRoute
+  '/nadac-intelligence-alternative': typeof NadacIntelligenceAlternativeRoute
   '/ndc-lookup': typeof NdcLookupRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -194,6 +203,7 @@ export interface FileRoutesById {
   '/features': typeof FeaturesRoute
   '/how-often-does-nadac-update': typeof HowOftenDoesNadacUpdateRoute
   '/movers': typeof MoversRoute
+  '/nadac-intelligence-alternative': typeof NadacIntelligenceAlternativeRoute
   '/ndc-lookup': typeof NdcLookupRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -219,6 +229,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/how-often-does-nadac-update'
     | '/movers'
+    | '/nadac-intelligence-alternative'
     | '/ndc-lookup'
     | '/pricing'
     | '/privacy'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/how-often-does-nadac-update'
     | '/movers'
+    | '/nadac-intelligence-alternative'
     | '/ndc-lookup'
     | '/pricing'
     | '/privacy'
@@ -265,6 +277,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/how-often-does-nadac-update'
     | '/movers'
+    | '/nadac-intelligence-alternative'
     | '/ndc-lookup'
     | '/pricing'
     | '/privacy'
@@ -289,6 +302,7 @@ export interface RootRouteChildren {
   FeaturesRoute: typeof FeaturesRoute
   HowOftenDoesNadacUpdateRoute: typeof HowOftenDoesNadacUpdateRoute
   MoversRoute: typeof MoversRoute
+  NadacIntelligenceAlternativeRoute: typeof NadacIntelligenceAlternativeRoute
   NdcLookupRoute: typeof NdcLookupRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -360,6 +374,13 @@ declare module '@tanstack/react-router' {
       path: '/movers'
       fullPath: '/movers'
       preLoaderRoute: typeof MoversRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nadac-intelligence-alternative': {
+      id: '/nadac-intelligence-alternative'
+      path: '/nadac-intelligence-alternative'
+      fullPath: '/nadac-intelligence-alternative'
+      preLoaderRoute: typeof NadacIntelligenceAlternativeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ndc-lookup': {
@@ -465,6 +486,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeaturesRoute: FeaturesRoute,
   HowOftenDoesNadacUpdateRoute: HowOftenDoesNadacUpdateRoute,
   MoversRoute: MoversRoute,
+  NadacIntelligenceAlternativeRoute: NadacIntelligenceAlternativeRoute,
   NdcLookupRoute: NdcLookupRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
