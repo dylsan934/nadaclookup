@@ -25,6 +25,7 @@ export const Footer = () => {
             <Link to="/blog" className="hover:text-foreground transition-colors">Resources</Link>
             <Link to="/what-is-nadac" className="hover:text-foreground transition-colors">What Is NADAC?</Link>
             <Link to="/how-often-does-nadac-update" className="hover:text-foreground transition-colors">Update Schedule</Link>
+            <Link to="/nadac-intelligence-alternative" className="hover:text-foreground transition-colors">vs NADAC Intelligence</Link>
             <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
             <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
