@@ -15,14 +15,14 @@ The stale display is confirmed. Search contains records effective October 14, bu
 
 ## Read-only source comparison
 
-Downloaded exact CMS CSV files with `as_of_date` filters; checked every release label and kept files/checksums in temporary audit storage. No application data was modified.
+Exact CMS releases were downloaded and verified read-only.
 
 | Comparison | Previous rows | Current rows | Added | Removed | Non-comparable | Unchanged | Changed NDCs |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | October 7 vs September 30 | 30,079 | 30,048 | 61 | 92 | 0 | 29,985 | 2 |
 | October 14 vs October 7 | 30,048 | 30,031 | 4 | 21 | 3 | 30,024 | **0** |
 
-These comparisons use exact normalized NDC, matching drug description, pricing unit and pharmacy type, with valid comparable prices. October 7's two changed NDCs are BCG (TICE STRAIN) VIAL packages; the existing drug-name deduplication will produce one ranked card. October 14's three non-comparable rows have identity/unit/pharmacy differences and must remain visible in reconciliation counts, not disappear.
+Matching requires normalized NDC, description, unit, pharmacy type and valid prices. October 7 changed two BCG (TICE STRAIN) VIAL packages (one grouped card). October 14 has three identity/unit/pharmacy mismatches, counted as non-comparable.
 
 The correct October 14 biggest-mover state is **no comparable price changes**, not SOLU-CORTEF +25.6%.
 
