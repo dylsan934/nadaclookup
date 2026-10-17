@@ -177,7 +177,7 @@ const Index = () => {
             </Link>
           </p>
 
-          <DataStatus hasData={dataStatus.hasData} lastUpdate={dataStatus.lastUpdate} totalRecords={dataStatus.totalRecords} lastSyncAt={dataStatus.lastSyncAt} biggestMover={dataStatus.biggestMover} isLoading={isCheckingStatus} />
+          <DataStatus hasData={dataStatus.hasData} lastUpdate={dataStatus.lastUpdate} totalRecords={dataStatus.totalRecords} lastSyncAt={dataStatus.lastSyncAt} biggestMover={dataStatus.biggestMover} pendingDate={dataStatus.pendingDate} isLoading={isCheckingStatus} />
 
           <section className="pt-2">
             <DrugResults drugs={results} isLoading={isLoading} hasSearched={hasSearched} searchTerm={lastSearchTerm} />

@@ -1,2 +1,6 @@
 - Founder identity lives in src/lib/founder.ts; About/footer render it only when non-null — keeps unverified identity off the site.
-- Homepage dataset stats come from nadac_ndc_count() + weekly_movers — counts distinct NDCs, never raw history rows.
+- Public homepage/Movers status comes from nadac_public_status() with a finalized run identity and nadac_ndc_count(); this prevents mixed freshness and history-row counts.
+- Weekly repair uses immutable release staging and service-only transactional RPC stages; a current pointer advances only after all stages succeed.
+- Digest preparations are private and preview-only with one identity per run/user; repair never invokes legacy sending functions or changes existing cron targets.
+- Weekly authenticated server functions use weeklyBearer client middleware and verified admin roles before importing privileged clients.
+- CSV parsing uses Papa Parse and validates As of Date separately from record Effective Date to preserve source precision and publication identity.

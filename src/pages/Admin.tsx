@@ -1,3 +1,4 @@
+import { WeeklyRunPanel } from "@/components/WeeklyRunPanel";
 import { useEffect, useState } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { useAuth } from "@/contexts/AuthContext";
@@ -266,6 +267,8 @@ const Admin = () => {
           <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
           <p className="text-muted-foreground">Manage users and view platform statistics</p>
         </div>
+
+        <WeeklyRunPanel />
 
         {/* Revenue */}
         <div className="mb-4">

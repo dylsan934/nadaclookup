@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { DrugData } from "@/components/DrugCard";
 import { searchNadac } from "@/lib/search-nadac.functions";
+import { getWeeklyPublication } from "@/lib/weekly-publication.functions";
+import { visiblePublication } from "@/lib/weekly-publication";
 import { getPriceHistory } from "@/lib/price-history.functions";
 
 export interface DataStatusInfo {
@@ -9,6 +11,7 @@ export interface DataStatusInfo {
   /** Distinct NDCs in the database. */
   totalRecords: number;
   lastSyncAt?: string | undefined;
+  pendingDate?: string | undefined;
   biggestMover?: { drugName: string; ndc: string; pctChange: number } | undefined;
 }
 
@@ -94,34 +97,11 @@ export const nadacApi = {
   },
 
   async getDataStatus(): Promise<DataStatusInfo> {
-    const empty: DataStatusInfo = { hasData: false, totalRecords: 0, lastUpdate: undefined };
-    const [countRes, latestRes, moversRes] = await Promise.all([
-      supabase.rpc('nadac_ndc_count'),
-      supabase.from('nadac_drugs').select('effective_date').order('effective_date', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('weekly_movers').select('created_at, top_increases, top_decreases').order('effective_date', { ascending: false }).limit(1).maybeSingle(),
-    ]);
-    if (countRes.error) {
-      console.error('Status check error:', countRes.error);
-      return empty;
-    }
-    const count = Number(countRes.data ?? 0);
-    if (!count) return empty;
-
-    let biggestMover: DataStatusInfo['biggestMover'];
-    const m = moversRes.data;
-    if (m) {
-      const all = [...((m.top_increases as any[]) ?? []), ...((m.top_decreases as any[]) ?? [])];
-      const top = all.reduce<any>((best, x) => (!best || Math.abs(x.pctChange) > Math.abs(best.pctChange) ? x : best), null);
-      if (top) biggestMover = { drugName: String(top.drugName), ndc: String(top.ndc), pctChange: Number(top.pctChange) };
-    }
-
-    return {
-      hasData: true,
-      lastUpdate: latestRes.data?.effective_date,
-      totalRecords: count,
-      lastSyncAt: m?.created_at,
-      biggestMover,
-    };
+    const p = await getWeeklyPublication();
+    const visible = visiblePublication(p);
+    return { hasData: p.totalRecords > 0, totalRecords: p.totalRecords,
+      lastUpdate: p.currentDate ?? undefined, lastSyncAt: p.completedAt ?? undefined,
+      pendingDate: p.pendingDate ?? undefined, biggestMover: visible.biggestMover };
   },
 
   async getSuggestions(searchTerm: string, limit = 10): Promise<string[]> {
