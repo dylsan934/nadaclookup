@@ -24,7 +24,7 @@ Exact CMS releases were downloaded and verified read-only.
 
 Matching requires normalized NDC, description, unit, pharmacy type and valid prices. October 7 changed two BCG (TICE STRAIN) VIAL packages (one grouped card). October 14 has three identity/unit/pharmacy mismatches, counted as non-comparable.
 
-The correct October 14 biggest-mover state is **no comparable price changes**, not SOLU-CORTEF +25.6%.
+October 14 must show **no price changes**, not SOLU-CORTEF +25.6%.
 
 ## Proposed result
 
@@ -34,7 +34,7 @@ Use immutable release snapshots to compare October 14 directly with October 7. P
 
 Show all date labels and the biggest mover from one finalized publication. If newer pricing is searchable before finalization, clearly mark the pending comparison and suppress the older biggest mover. Zero-change weeks are successful published comparisons with empty ranking lists and reconciliation counts.
 
-Keep digest **preparation** separate from sending. Repair and backfill prepare previews only: no email queue insertion, alert invocation or provider send. Authorized admin previews show selected recipients and rows privately; public data never includes recipient details.
+Digest preparation is separate from sending. Backfills show private admin previews, never enqueue or send emails.
 
 ## Technical changes
 
