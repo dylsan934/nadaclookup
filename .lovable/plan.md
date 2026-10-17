@@ -2,16 +2,16 @@
 
 ## Audit result
 
-The stale display is confirmed. Search contains records effective October 14, but the latest saved Movers row is October 1 versus September 23, created September 30 at 07:00 UTC. That creation time is incorrectly labeled “Last CMS sync.”
+The stale display is confirmed. Search contains records effective October 14, but the latest saved Movers row is October 1 versus September 23. That creation time is incorrectly labeled “Last CMS sync.”
 
 **Root causes verified in code and data:**
 - Importing, calculating Movers and sending digests are three independent Wednesday jobs (06:00, 07:00 and 14:00 UTC), with no shared run record or success dependency.
 - The importer discards CMS **As of Date** (the weekly release date). Stored **Effective Date** belongs to each drug's price, not to the full weekly snapshot. Selecting only October 14 effective rows gives four NDCs; October 7 gives 61, with no overlap. These are not complete releases.
 - The Movers calculation walks backward until it finds changes. It compares individual prior price records rather than two explicit consecutive snapshots. Zero-change results are not saved, and the page/digest filter them out.
-- The homepage mixes the newest drug effective date with an unrelated Movers creation timestamp. The Movers page accepts a result up to 14 days old as current.
+- The homepage mixes the newest drug effective date with an unrelated Movers creation timestamp. 
 - Import batch errors do not prevent a partial import being reported successful. Import retries also invoke real price alerts.
 
-**What logs establish:** scheduler history says requests were dispatched successfully, not that their processing succeeded. Recent sync/Movers function logs are unavailable. The retained October 14 digest HTTP response shows a five-second timeout. There is insufficient retained evidence to identify the exact October 7/14 Movers execution failure; the architectural causes above are confirmed, not a guess about that missing error.
+**What logs establish:** scheduler history says requests were dispatched successfully, not that their processing succeeded. Recent sync/Movers function logs are unavailable. There is insufficient retained evidence to identify the exact October 7/14 Movers execution failure; the architectural causes above are confirmed, not a guess about that missing error.
 
 ## Read-only source comparison
 
@@ -54,18 +54,16 @@ Keep digest **preparation** separate from sending. Repair and backfill prepare p
 - Explicit grants and row-level policies on every new table; public reads limited to safe finalized/pending fields. Failure details and recipients are admin/service-only.
 
 ### Proposed processing and publication
-1. Download and validate a complete release into staging. A failed batch cannot count as a successful import.
-2. Resume stages using durable status, locks and unique source/run identities; retries skip completed work and never re-trigger alerts.
-3. Compare the two explicitly selected complete releases. Record every matched, added, removed and non-comparable row; preserve zero-change outcomes.
-4. Prepare homepage statistics and immutable digest content/recipient selections without sending.
-5. Publish the finalized Movers, homepage statistics, freshness metadata and current-run pointer in one database transaction. Make searchable-data activation part of that transaction for new staged releases; any already-searchable ingestion is explicitly pending, never called finalized.
-6. Store stage failures separately and show the pending state. Resume the failed stage without reimporting or preparing duplicate notifications.
+1. Download, validate and stage the complete release. Any failed batch prevents import success.
+2. Use locks, unique source/run identities and durable stage status to resume failed work without reimporting or invoking alerts.
+3. Compare two explicitly selected complete releases; account for every row and persist zero-change results.
+4. Prepare homepage statistics and private digest previews without sending or queueing.
+5. Atomically publish searchable-data activation, Movers, statistics, freshness and the current-run pointer after all stages succeed. Existing October 14 data remains searchable with a pending label until repaired.
+6. Record failures and resume only incomplete stages.
 
-External downloads and database writes cannot be one transaction. Staging plus the final atomic publication prevents partial work becoming “current.” Existing October 14 search data remains available while repairing its missing finalization.
+External downloads cannot share a database transaction; staging and atomic publication keep partial work from becoming current. Existing schedules remain unchanged until a separately authorized cutover. New server code uses TanStack server functions/routes, not new legacy functions. This project lacks the generated managed HTTP scheduling helper; do not invent a scheduler authentication migration or add polling.
 
-Replace independent readiness assumptions with this run dependency; do not add another polling job. New server code uses the project's TanStack server functions/routes. This existing project lacks the generated managed HTTP scheduling helper, so do not silently rewrite scheduled authentication: prepare the repair and document any scheduler cutover for a separately authorized deployment. Inspect and preserve existing schedules until then.
-
-Digest recipient selection must preserve existing Pro/trial/admin/opt-in rules. Its current per-user subscription call does not resolve service-originated lookups correctly; use a verified server-side resolver with the same entitlement rules, without changing Stripe configuration. Preview never invokes the sending endpoint; `testRecipient` currently sends a real email and is **not** a dry run.
+Digest selection preserves Pro/trial/admin/opt-in entitlements. Replace the ineffective service-originated per-user subscription lookup with a verified private resolver using the same rules, without changing Stripe settings. The existing test-recipient path sends real email and is not a dry run.
 
 ## Backfill plan
 
@@ -90,7 +88,7 @@ Digest recipient selection must preserve existing Pro/trial/admin/opt-in rules. 
 7. Repeated preparation creates only one digest identity per recipient/run; dry-run creates no sends or queue messages.
 8. Newer failed/pending run suppresses stale biggest mover.
 
-Use isolated fixtures and database transaction/integration checks for uniqueness and atomic publication, not simulated happy-path assertions alone. Production read-back and public-page verification remain blocked until approved implementation/backfill/deployment.
+Use isolated fixtures plus database integration checks for uniqueness and atomic publication. Public read-back waits for approved backfill/deployment.
 
 ## Exact public text after repair
 
