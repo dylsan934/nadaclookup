@@ -5,7 +5,7 @@ import { parseRelease } from '@/lib/weekly-publication';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { Loader2, Upload, RotateCcw } from 'lucide-react';
+import { Loader2, RotateCcw } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
 export function WeeklyRunPanel() {

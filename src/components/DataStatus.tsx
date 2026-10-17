@@ -1,6 +1,6 @@
 import { Database, Calendar, TrendingUp, TrendingDown } from "lucide-react";
 import { Link } from "@/lib/router-compat";
-import { formatSourceDateShort } from "@/lib/format-date";
+import { formatSourceDate, formatSourceDateShort } from "@/lib/format-date";
 import { drugNameToSlug } from "@/lib/drug-slug";
 
 interface DataStatusProps {
@@ -40,7 +40,7 @@ export const DataStatus = ({ hasData, lastUpdate, totalRecords, lastSyncAt, bigg
 
   return (
     <>
-    {pendingDate && <p role="status" className="text-sm text-muted-foreground mb-3">{formatSourceDateShort(pendingDate).replace(", 2026", "")} pricing is available; weekly Movers are still processing.</p>}
+    {pendingDate && <p role="status" className="text-sm text-muted-foreground mb-3">{formatSourceDate(pendingDate, {month:"long",day:"numeric"})} pricing is available; weekly Movers are still processing.</p>}
     <dl className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <div className="rounded-xl border border-border/60 bg-card px-4 py-3">
         <dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><Database className="h-3.5 w-3.5" aria-hidden="true" />NDCs in the database</dt>
