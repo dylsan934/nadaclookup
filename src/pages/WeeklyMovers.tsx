@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { TrendingUp, TrendingDown, ArrowRight, Loader2, Info, Lock, Sparkles } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { getWeeklyPublication } from "@/lib/weekly-publication.functions";
+import type { WeeklyPublication } from "@/lib/weekly-publication";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -135,42 +136,15 @@ const MoversCard = ({
 export default function WeeklyMovers() {
   const { user, isSubscribed } = useAuth();
   const [data, setData] = useState<MoversData | null>(null);
-  const [latestDataDate, setLatestDataDate] = useState<string | null>(null);
+  const [publication, setPublication] = useState<WeeklyPublication | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [{ data: row, error }, { data: latest }] = await Promise.all([
-          supabase
-            .from("weekly_movers")
-            .select("*")
-            .gt("total_changed", 0)
-            .order("effective_date", { ascending: false })
-            .limit(1)
-            .maybeSingle(),
-          supabase
-            .from("nadac_drugs")
-            .select("effective_date")
-            .order("effective_date", { ascending: false })
-            .limit(1)
-            .maybeSingle(),
-        ]);
-
-        if (error) throw error;
-        if (latest?.effective_date) setLatestDataDate(latest.effective_date);
-        if (row) {
-          setData({
-            success: true,
-            currentDate: row.effective_date,
-            previousDate: row.previous_date,
-            topIncreases: row.top_increases as unknown as Mover[],
-            topDecreases: row.top_decreases as unknown as Mover[],
-            totalChanged: row.total_changed,
-          });
-        } else {
-          setData({ success: false, currentDate: "", previousDate: "", topIncreases: [], topDecreases: [], totalChanged: 0, error: "No data yet" });
-        }
+        const p = await getWeeklyPublication();
+        setPublication(p);
+        setData({ success: !!p.runId && !p.pendingDate, currentDate: p.currentDate ?? "", previousDate: p.previousDate ?? "", topIncreases: p.topIncreases, topDecreases: p.topDecreases, totalChanged: p.totalChanged ?? 0 });
       } catch (e) {
         console.error("Failed to load movers:", e);
       } finally {
@@ -180,15 +154,6 @@ export default function WeeklyMovers() {
     load();
   }, []);
 
-  // CMS publishes small incremental files as well as full snapshots, so the newest published
-  // effective date often contains no price changes at all. A stored comparison counts as current
-  // when it comes from data published within two weeks of the newest data we hold; anything older
-  // is clearly labelled as historical rather than presented as this week's movement.
-  const daysBetween = (a: string, b: string) =>
-    Math.abs(new Date(a + "T00:00:00Z").getTime() - new Date(b + "T00:00:00Z").getTime()) / 86400000;
-  const isCurrent =
-    !!data?.success && !!latestDataDate && daysBetween(latestDataDate, data.currentDate) <= 14;
-  const isArchived = !!data?.success && !isCurrent;
 
   return (
     <>
@@ -207,16 +172,11 @@ export default function WeeklyMovers() {
             </p>
             {data?.success && (
               <p className="text-xs text-muted-foreground mt-1">
-                {isCurrent ? "Latest changes" : "Most recent available changes"}: CMS data effective{" "}
-                {formatDate(data.currentDate)}, compared with each drug's previously published price ·{" "}
-                {data.totalChanged.toLocaleString()} {data.totalChanged === 1 ? "price" : "prices"} changed
+                Latest changes: {formatDate(data.currentDate)} vs {formatDate(data.previousDate)}
               </p>
             )}
-            {latestDataDate && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Newest CMS data in our database: effective {formatDate(latestDataDate)}
-              </p>
-            )}
+            {publication?.currentDate && <p className="text-xs text-muted-foreground mt-1">Newest CMS data: {formatDate(publication.currentDate)}</p>}
+            {publication?.pendingDate && <p role="status" className="text-sm text-muted-foreground mt-3">{formatSourceDate(publication.pendingDate, {month:"long",day:"numeric"})} pricing is available; weekly Movers are still processing.</p>}
           </div>
 
           {loading ? (
@@ -231,24 +191,12 @@ export default function WeeklyMovers() {
             </Card>
           ) : (
             <>
-            {isArchived && (
-              <Card className="p-4 mb-6 bg-muted/40 border-border flex gap-3 items-start">
-                <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <div className="text-sm text-foreground leading-relaxed">
-                  <p className="font-semibold mb-1">Current weekly movers are unavailable.</p>
-                  <p>
-                    The newest NADAC data in our database is effective{" "}
-                    <strong>{formatDate(latestDataDate!)}</strong>, but none of the products in that release changed
-                    against a previously published price, so there is nothing to report for this week. Everything below
-                    comes from the most recent data that did contain changes,{" "}
-                    <strong>effective {formatDate(data.currentDate)}</strong>. It is historical, not this week's
-                    movement, and will be replaced as soon as CMS publishes changed prices.
-                  </p>
-                </div>
-              </Card>
-            )}
-
-            {!user ? (
+            {data.totalChanged === 0 ? (
+              <section className="border-y border-border py-6 space-y-2">
+                <p>No comparable NADAC prices changed between {formatDate(data.previousDate)} and {formatDate(data.currentDate)}.</p>
+                <p className="text-sm text-muted-foreground">{publication?.added ?? 0} NDCs added · {publication?.removed ?? 0} NDCs removed · {publication?.nonComparable ?? 0} non-comparable NDCs</p>
+              </section>
+            ) : !user ? (
               <Card className="p-10 text-center bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
                 <Lock className="h-10 w-10 text-primary mx-auto mb-4" />
                 <h2 className="text-xl font-bold text-foreground mb-2">

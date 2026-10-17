@@ -221,6 +221,165 @@ export type Database = {
         }
         Relationships: []
       }
+      nadac_import_runs: {
+        Row: {
+          added_count: number
+          baseline: boolean
+          checksum: string
+          completed_at: string | null
+          digest_status: string
+          expected_count: number
+          failure_reason: string | null
+          freshness_status: string
+          historical: boolean
+          homepage_status: string
+          id: string
+          ingested_at: string | null
+          movers_status: string
+          non_comparable_count: number
+          previous_run_id: string | null
+          record_count: number
+          removed_count: number
+          search_status: string
+          source_date: string
+          source_effective_date: string | null
+          started_at: string
+          status: string
+          top_decreases: Json
+          top_increases: Json
+          total_changed: number
+          unchanged_count: number
+        }
+        Insert: {
+          added_count?: number
+          baseline?: boolean
+          checksum: string
+          completed_at?: string | null
+          digest_status?: string
+          expected_count: number
+          failure_reason?: string | null
+          freshness_status?: string
+          historical?: boolean
+          homepage_status?: string
+          id?: string
+          ingested_at?: string | null
+          movers_status?: string
+          non_comparable_count?: number
+          previous_run_id?: string | null
+          record_count?: number
+          removed_count?: number
+          search_status?: string
+          source_date: string
+          source_effective_date?: string | null
+          started_at?: string
+          status?: string
+          top_decreases?: Json
+          top_increases?: Json
+          total_changed?: number
+          unchanged_count?: number
+        }
+        Update: {
+          added_count?: number
+          baseline?: boolean
+          checksum?: string
+          completed_at?: string | null
+          digest_status?: string
+          expected_count?: number
+          failure_reason?: string | null
+          freshness_status?: string
+          historical?: boolean
+          homepage_status?: string
+          id?: string
+          ingested_at?: string | null
+          movers_status?: string
+          non_comparable_count?: number
+          previous_run_id?: string | null
+          record_count?: number
+          removed_count?: number
+          search_status?: string
+          source_date?: string
+          source_effective_date?: string | null
+          started_at?: string
+          status?: string
+          top_decreases?: Json
+          top_increases?: Json
+          total_changed?: number
+          unchanged_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nadac_import_runs_previous_run_id_fkey"
+            columns: ["previous_run_id"]
+            isOneToOne: false
+            referencedRelation: "nadac_import_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nadac_publication: {
+        Row: {
+          current_run_id: string | null
+          id: number
+        }
+        Insert: {
+          current_run_id?: string | null
+          id?: number
+        }
+        Update: {
+          current_run_id?: string | null
+          id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nadac_publication_current_run_id_fkey"
+            columns: ["current_run_id"]
+            isOneToOne: false
+            referencedRelation: "nadac_import_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nadac_release_records: {
+        Row: {
+          drug_name: string
+          effective_date: string
+          explanation: string | null
+          nadac_per_unit: number
+          ndc: string
+          pharmacy_type: string
+          pricing_unit: string
+          run_id: string
+        }
+        Insert: {
+          drug_name: string
+          effective_date: string
+          explanation?: string | null
+          nadac_per_unit: number
+          ndc: string
+          pharmacy_type: string
+          pricing_unit: string
+          run_id: string
+        }
+        Update: {
+          drug_name?: string
+          effective_date?: string
+          explanation?: string | null
+          nadac_per_unit?: number
+          ndc?: string
+          pharmacy_type?: string
+          pricing_unit?: string
+          run_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nadac_release_records_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "nadac_import_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_alerts: {
         Row: {
           drug_name: string
@@ -550,12 +709,51 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_digest_preparations: {
+        Row: {
+          content_identity: string
+          eligibility: string
+          kind: string
+          prepared_at: string
+          preview_only: boolean
+          run_id: string
+          user_id: string
+        }
+        Insert: {
+          content_identity: string
+          eligibility: string
+          kind?: string
+          prepared_at?: string
+          preview_only?: boolean
+          run_id: string
+          user_id: string
+        }
+        Update: {
+          content_identity?: string
+          eligibility?: string
+          kind?: string
+          prepared_at?: string
+          preview_only?: boolean
+          run_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_digest_preparations_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "nadac_import_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weekly_movers: {
         Row: {
           created_at: string
           effective_date: string
           id: string
           previous_date: string
+          run_id: string | null
           top_decreases: Json
           top_increases: Json
           total_changed: number
@@ -565,6 +763,7 @@ export type Database = {
           effective_date: string
           id?: string
           previous_date: string
+          run_id?: string | null
           top_decreases?: Json
           top_increases?: Json
           total_changed?: number
@@ -574,11 +773,20 @@ export type Database = {
           effective_date?: string
           id?: string
           previous_date?: string
+          run_id?: string | null
           top_decreases?: Json
           top_increases?: Json
           total_changed?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "weekly_movers_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "nadac_import_runs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -625,7 +833,34 @@ export type Database = {
         }
         Returns: number
       }
+      nadac_begin_run: {
+        Args: {
+          p_baseline?: boolean
+          p_checksum: string
+          p_expected: number
+          p_historical?: boolean
+          p_previous?: string
+          p_source: string
+        }
+        Returns: string
+      }
+      nadac_compare_run: { Args: { p_run: string }; Returns: undefined }
+      nadac_fail_run: {
+        Args: { p_reason: string; p_run: string; p_stage: string }
+        Returns: undefined
+      }
+      nadac_finalize_run: { Args: { p_run: string }; Returns: undefined }
       nadac_ndc_count: { Args: never; Returns: number }
+      nadac_prepare_digest: {
+        Args: { p_recipients: Json; p_run: string }
+        Returns: number
+      }
+      nadac_public_status: { Args: never; Returns: Json }
+      nadac_stage_records: {
+        Args: { p_records: Json; p_run: string }
+        Returns: number
+      }
+      nadac_validate_run: { Args: { p_run: string }; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {

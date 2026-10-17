@@ -1,6 +1,6 @@
 import { Database, Calendar, TrendingUp, TrendingDown } from "lucide-react";
 import { Link } from "@/lib/router-compat";
-import { formatSourceDateShort } from "@/lib/format-date";
+import { formatSourceDate, formatSourceDateShort } from "@/lib/format-date";
 import { drugNameToSlug } from "@/lib/drug-slug";
 
 interface DataStatusProps {
@@ -9,6 +9,7 @@ interface DataStatusProps {
   /** Distinct NDCs in the database. */
   totalRecords: number;
   lastSyncAt?: string | undefined;
+  pendingDate?: string | undefined;
   biggestMover?: { drugName: string; ndc: string; pctChange: number } | undefined;
   isLoading: boolean;
 }
@@ -17,7 +18,7 @@ const formatSync = (iso: string) =>
   new Date(iso).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short" });
 
 /** Live dataset proof strip: NDC count, last CMS sync, last week's biggest mover. */
-export const DataStatus = ({ hasData, lastUpdate, totalRecords, lastSyncAt, biggestMover, isLoading }: DataStatusProps) => {
+export const DataStatus = ({ hasData, lastUpdate, totalRecords, lastSyncAt, biggestMover, pendingDate, isLoading }: DataStatusProps) => {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" aria-busy="true" aria-label="Loading dataset stats">
@@ -38,6 +39,8 @@ export const DataStatus = ({ hasData, lastUpdate, totalRecords, lastSyncAt, bigg
   const Trend = up ? TrendingUp : TrendingDown;
 
   return (
+    <>
+    {pendingDate && <p role="status" className="text-sm text-muted-foreground mb-3">{formatSourceDate(pendingDate, {month:"long",day:"numeric"})} pricing is available; weekly Movers are still processing.</p>}
     <dl className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <div className="rounded-xl border border-border/60 bg-card px-4 py-3">
         <dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><Database className="h-3.5 w-3.5" aria-hidden="true" />NDCs in the database</dt>
@@ -46,12 +49,12 @@ export const DataStatus = ({ hasData, lastUpdate, totalRecords, lastSyncAt, bigg
       <div className="rounded-xl border border-border/60 bg-card px-4 py-3">
         <dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><Calendar className="h-3.5 w-3.5" aria-hidden="true" />Last CMS sync</dt>
         <dd className="text-sm font-semibold text-foreground leading-tight mt-1">
-          {lastSyncAt ? formatSync(lastSyncAt) : "Weekly, Wednesdays"}
+          {lastSyncAt ? formatSync(lastSyncAt) : "Awaiting finalized sync"}
           {lastUpdate && <span className="block text-xs font-normal text-muted-foreground">Prices effective {formatSourceDateShort(lastUpdate)}</span>}
         </dd>
       </div>
       <div className="rounded-xl border border-border/60 bg-card px-4 py-3 min-w-0">
-        <dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><Trend className="h-3.5 w-3.5" aria-hidden="true" />Last week's biggest mover</dt>
+        <dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><Trend className="h-3.5 w-3.5" aria-hidden="true" />This week's biggest mover</dt>
         {biggestMover ? (
           <dd className="text-sm leading-tight mt-1 min-w-0">
             <Link to={`/drug/${drugNameToSlug(biggestMover.drugName)}`} className="font-semibold text-foreground hover:text-primary hover:underline block truncate">
@@ -63,9 +66,10 @@ export const DataStatus = ({ hasData, lastUpdate, totalRecords, lastSyncAt, bigg
             <Link to="/movers" className="text-xs text-muted-foreground hover:underline">See all movers</Link>
           </dd>
         ) : (
-          <dd className="text-sm text-muted-foreground mt-1">No changes this week</dd>
+          <dd className="text-sm text-muted-foreground mt-1">{pendingDate ? "Weekly Movers are still processing" : "No price changes this week"}</dd>
         )}
       </div>
     </dl>
+    </>
   );
 };
