@@ -1,5 +1,14 @@
 # Roadmap
 
+## Weekly data-finalization audit and repair
+- [x] Inspect existing imports, schedules, available logs, Movers SQL, public labels and digest flow
+- [x] Download and compare September 30, October 7 and October 14 CMS releases read-only
+- [x] Run existing tests and present evidence, proposed changes, backfill and public wording
+- [ ] Implement the approved repair and eight pipeline regression tests (blocker: user review of the plan)
+- [ ] Apply approved migration and dry-run chronological backfill (blocker: user approval; shared production backend)
+- [ ] Verify corrected homepage and Movers after cache invalidation (blocker: approved repair and backfill)
+- [ ] Deploy or release notifications only on explicit request (blocker: user permission)
+
 ## SEO architecture fix via TanStack Start migration
 - [x] Audit current routing/metadata/canonical/robots/sitemap
 - [x] Preflight build check (green)
