@@ -15,6 +15,13 @@
       "when": 1792247743682,
       "tag": "0001_nadac_weekly_finalization",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792294217091,
+      "tag": "0002_allow_cms_future_effective_records",
+      "breakpoints": true
     }
   ]
 }
