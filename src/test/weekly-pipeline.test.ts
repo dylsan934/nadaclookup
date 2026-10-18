@@ -31,6 +31,7 @@ describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)'
   `);
   await db.exec(readFileSync('drizzle/migrations/0001_nadac_weekly_finalization.sql','utf8'));
   await db.exec(readFileSync('drizzle/migrations/0002_allow_cms_future_effective_records.sql','utf8'));
+  await db.exec(readFileSync('drizzle/migrations/0003_preserve_release_freshness_identity.sql','utf8'));
   await db.query('begin');
   await db.query('update public.nadac_publication set current_run_id=null where id=1');
  });
@@ -72,6 +73,11 @@ describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)'
  it('failed newer run suppresses stale biggest-mover even if old rankings exist',async()=>{
   const b=await completed('2026-09-30',null,true,'182.30285'),p=await completed('2026-10-07',b);expect((await row(p))['top_increases']).toHaveLength(1);
   const id=await begin('2026-10-14',p);await stage(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_fail_run',[id,'movers','failure']);const s=await status();expect(s.pendingDate).toBe('2026-10-14');expect(s.topIncreases).toEqual([]);expect(visiblePublication(s).biggestMover).toBeUndefined();expect(s.runId).toBe(p);
+ });
+ it('future row effective dates never supersede finalized CMS publication identity',async()=>{
+  const p=await completed('2026-10-07',null,true);await completed('2026-10-14',p);
+  await db.query("insert into public.nadac_drugs values ('00052060201','BCG (TICE STRAIN) VIAL',187.77376,'2026-10-15','EA','Community/Independent',null)");
+  const s=await status();expect(s.currentDate).toBe('2026-10-14');expect(s.pendingDate).toBeNull();
  });
 });
 it('CSV retains exact decimal price and leading-zero NDC while separating source dates',()=>{
