@@ -6,13 +6,14 @@ import { visiblePublication, publicationSchema, parseRelease } from '@/lib/weekl
 
 let db:PGlite;
 const record=(ndc='00052060201',price='187.77376')=>({ndc,drug_name:'BCG (TICE STRAIN) VIAL',nadac_per_unit:price,effective_date:'2026-10-07',pricing_unit:'EA',pharmacy_type:'Community/Independent',explanation:null});
-const rpc=async(fn:string,args:unknown[]):Promise<any> => (await db.query<Record<string,any>>(`select public.${fn}(${args.map((_,i)=>`$${i+1}`).join(',')}) as value`,args)).rows[0]['value'];
+const first = (rows:Record<string,any>[]) => { const r=rows[0];if(!r)throw new Error('Expected database result');return r; };
+const rpc=async(fn:string,args:unknown[]):Promise<any> => first((await db.query<Record<string,any>>(`select public.${fn}(${args.map((_,i)=>`$${i+1}`).join(',')}) as value`,args)).rows)['value'];
 const begin=(date:string,prev:string|null,baseline=false)=>rpc('nadac_begin_run',[date,'a'.repeat(64),1,prev,true,baseline]);
 const stage=(id:string,price='187.77376')=>rpc('nadac_stage_records',[id,JSON.stringify([record('00052060201',price)])]);
 async function completed(date:string,prev:string|null,baseline=false,price='187.77376') {
  const id=await begin(date,prev,baseline);await rpc('nadac_stage_records',[id,JSON.stringify([{...record('00052060201',price),effective_date:date}])]);await rpc('nadac_validate_run',[id]);await rpc('nadac_compare_run',[id]);await rpc('nadac_prepare_digest',[id,'[]']);await rpc('nadac_finalize_run',[id]);return id as string;
 }
-async function row(id:string){return (await db.query<Record<string,any>>('select * from public.nadac_import_runs where id=$1',[id])).rows[0];}
+async function row(id:string){return first((await db.query<Record<string,any>>('select * from public.nadac_import_runs where id=$1',[id])).rows);}
 async function status(){return publicationSchema.parse(await rpc('nadac_public_status',[]));}
 describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)',()=>{
  beforeEach(async()=>{
@@ -37,20 +38,20 @@ describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)'
   const p=await completed('2026-10-07',null,true);const id=await begin('2026-10-14',p);await stage(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_compare_run',[id]);
   await db.query('savepoint incomplete');await expect(rpc('nadac_finalize_run',[id])).rejects.toThrow('All stages must succeed');await db.query('rollback to savepoint incomplete');
   expect((await status()).runId).not.toBe(id);await rpc('nadac_prepare_digest',[id,'[]']);await rpc('nadac_finalize_run',[id]);
-  expect((await status()).runId).toBe(id);expect((await row(id)).freshness_status).toBe('completed');
+  expect((await status()).runId).toBe(id);expect((await row(id))['freshness_status']).toBe('completed');
  });
  it('Movers failure after ingestion remains unfinalized and records failure',async()=>{
   const p=await completed('2026-10-07',null,true);const id=await begin('2026-10-14',p);await stage(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_fail_run',[id,'movers','fixture comparison failure']);
-  const r=await row(id);expect(r.search_status).toBe('completed');expect(r.movers_status).toBe('failed');expect(r.completed_at).toBeNull();expect(r.failure_reason).toContain('fixture comparison failure');expect((await status()).pendingDate).toBe('2026-10-14');
+  const r=await row(id);expect(r['search_status']).toBe('completed');expect(r['movers_status']).toBe('failed');expect(r['completed_at']).toBeNull();expect(r['failure_reason']).toContain('fixture comparison failure');expect((await status()).pendingDate).toBe('2026-10-14');
  });
  it('safe retry preserves run identity, record count and one finalized result',async()=>{
   const p=await completed('2026-10-07',null,true);const id=await begin('2026-10-14',p);await stage(id);await stage(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_fail_run',[id,'movers','retry']);
-  expect(await begin('2026-10-14',p)).toBe(id);expect((await row(id)).record_count).toBe(1);await rpc('nadac_compare_run',[id]);await rpc('nadac_prepare_digest',[id,'[]']);await rpc('nadac_finalize_run',[id]);const timestamp=(await row(id)).completed_at;
-  await rpc('nadac_finalize_run',[id]);expect((await row(id)).completed_at).toEqual(timestamp);expect((await db.query<Record<string,any>>('select count(*)::int n from public.weekly_movers where run_id=$1',[id])).rows[0]['n']).toBe(1);
+  expect(await begin('2026-10-14',p)).toBe(id);expect((await row(id))['record_count']).toBe(1);await rpc('nadac_compare_run',[id]);await rpc('nadac_prepare_digest',[id,'[]']);await rpc('nadac_finalize_run',[id]);const timestamp=(await row(id))['completed_at'];
+  await rpc('nadac_finalize_run',[id]);expect((await row(id))['completed_at']).toEqual(timestamp);expect((await db.query<Record<string,any>>('select count(*)::int n from public.weekly_movers where run_id=$1',[id])).rows[0]?.['n']).toBe(1);
  });
  it('October 14 zero-change week replaces prior increases with empty rankings',async()=>{
-  const b=await completed('2026-09-30',null,true,'182.30285');const p=await completed('2026-10-07',b,false);expect((await row(p)).total_changed).toBe(1);
-  const id=await completed('2026-10-14',p);const r=await row(id);expect(r.total_changed).toBe(0);expect(r.unchanged_count).toBe(1);expect((await status()).topIncreases).toEqual([]);expect(visiblePublication(await status()).biggestMover).toBeUndefined();
+  const b=await completed('2026-09-30',null,true,'182.30285');const p=await completed('2026-10-07',b,false);expect((await row(p))['total_changed']).toBe(1);
+  const id=await completed('2026-10-14',p);const r=await row(id);expect(r['total_changed']).toBe(0);expect(r['unchanged_count']).toBe(1);expect((await status()).topIncreases).toEqual([]);expect(visiblePublication(await status()).biggestMover).toBeUndefined();
  });
  it('October 14 requires October 7, rejecting October 1 baseline',async()=>{
   // Source records for this baseline must not be effective after its publication.
@@ -68,7 +69,7 @@ describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)'
   expect((await db.query<Record<string,any>>('select count(*)::int n,bool_and(preview_only) preview from public.weekly_digest_preparations where run_id=$1',[id])).rows[0]).toEqual({n:1,preview:true});expect(await counts()).toEqual(before);
  });
  it('failed newer run suppresses stale biggest-mover even if old rankings exist',async()=>{
-  const b=await completed('2026-09-30',null,true,'182.30285'),p=await completed('2026-10-07',b);expect((await row(p)).top_increases).toHaveLength(1);
+  const b=await completed('2026-09-30',null,true,'182.30285'),p=await completed('2026-10-07',b);expect((await row(p))['top_increases']).toHaveLength(1);
   const id=await begin('2026-10-14',p);await stage(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_fail_run',[id,'movers','failure']);const s=await status();expect(s.pendingDate).toBe('2026-10-14');expect(s.topIncreases).toEqual([]);expect(visiblePublication(s).biggestMover).toBeUndefined();expect(s.runId).toBe(p);
  });
 });
