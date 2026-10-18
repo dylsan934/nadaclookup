@@ -30,6 +30,7 @@ describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)'
    create table public.email_send_log(id uuid); create table pgmq.q_transactional_emails(id bigint);
   `);
   await db.exec(readFileSync('drizzle/migrations/0001_nadac_weekly_finalization.sql','utf8'));
+  await db.exec(readFileSync('drizzle/migrations/0002_allow_cms_future_effective_records.sql','utf8'));
   await db.query('begin');
   await db.query('update public.nadac_publication set current_run_id=null where id=1');
  });
