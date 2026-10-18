@@ -55,7 +55,7 @@ describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)'
   const id=await completed('2026-10-14',p);const r=await row(id);expect(r['total_changed']).toBe(0);expect(r['unchanged_count']).toBe(1);expect((await status()).topIncreases).toEqual([]);expect(visiblePublication(await status()).biggestMover).toBeUndefined();
  });
  it('October 14 requires October 7, rejecting October 1 baseline',async()=>{
-  // Source records for this baseline must not be effective after its publication.
+  // Publication identity, not per-record effective date, determines the previous release.
   const p=await begin('2026-10-01',null,true);await rpc('nadac_stage_records',[p,JSON.stringify([{...record(),effective_date:'2026-10-01'}])]);await rpc('nadac_validate_run',[p]);await rpc('nadac_compare_run',[p]);await rpc('nadac_prepare_digest',[p,'[]']);await rpc('nadac_finalize_run',[p]);
   await db.query('savepoint wrong_previous');await expect(begin('2026-10-14',p)).rejects.toThrow('Immediately preceding');await db.query('rollback to savepoint wrong_previous');
  });
@@ -77,4 +77,8 @@ describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)'
 it('CSV retains exact decimal price and leading-zero NDC while separating source dates',()=>{
  const csv='NDC,NDC Description,NADAC Per Unit,Effective Date,Pricing Unit,Pharmacy Type Indicator,As of Date\n00052060201,BCG (TICE STRAIN) VIAL,187.77376,10/07/2026,EA,C/I,10/14/2026';
  expect(parseRelease(csv,'2026-10-14')[0]).toMatchObject({ndc:'00052060201',nadac_per_unit:'187.77376',effective_date:'2026-10-07'});expect(()=>parseRelease(csv,'2026-10-07')).toThrow('different publication date');
+});
+it('CMS future-effective entries retain their date without changing publication identity',()=>{
+ const csv='NDC,NDC Description,NADAC Per Unit,Effective Date,Pricing Unit,Pharmacy Type Indicator,As of Date\n00052060201,BCG (TICE STRAIN) VIAL,187.77376,10/01/2026,EA,C/I,09/30/2026';
+ expect(parseRelease(csv,'2026-09-30')[0]?.effective_date).toBe('2026-10-01');
 });

@@ -13,7 +13,7 @@ export async function selectDigestRecipients(db:SupabaseClient<Database>,stripeK
  const include=(userId:string,eligibility:string)=>{const email=users.get(userId);if(email && !suppressed.has(email.toLowerCase()))byEmail.set(email.toLowerCase(),{userId,email,eligibility});};
  for(const id of admins) include(id,'admin');
  for(const p of profiles.data ?? []) {
-  if(admins.has(p.user_id) || !p.notify_weekly_movers || !users.has(p.user_id))continue;
+  if(admins.has(p.user_id) || p.notify_weekly_movers === false || !users.has(p.user_id))continue;
   if(p.trial_ends_at && Date.parse(p.trial_ends_at)>Date.now()) {include(p.user_id,'profile_trial');continue;}
   if(!stripeKey)throw new Error('Stripe eligibility cannot be verified; digest remains pending');
   let customer=p.stripe_customer_id;
