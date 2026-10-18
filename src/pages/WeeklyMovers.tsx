@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { weeklyPublicationQuery } from "@/lib/weekly-publication.query";
 import { Link } from "@/lib/router-compat";
 import { TrendingUp, TrendingDown, ArrowRight, Loader2, Info, Lock, Sparkles } from "lucide-react";
-import { getWeeklyPublication } from "@/lib/weekly-publication.functions";
-import type { WeeklyPublication } from "@/lib/weekly-publication";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -135,25 +134,9 @@ const MoversCard = ({
 
 export default function WeeklyMovers() {
   const { user, isSubscribed } = useAuth();
-  const [data, setData] = useState<MoversData | null>(null);
-  const [publication, setPublication] = useState<WeeklyPublication | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const p = await getWeeklyPublication();
-        setPublication(p);
-        setData({ success: !!p.runId && !p.pendingDate, currentDate: p.currentDate ?? "", previousDate: p.previousDate ?? "", topIncreases: p.topIncreases, topDecreases: p.topDecreases, totalChanged: p.totalChanged ?? 0 });
-      } catch (e) {
-        console.error("Failed to load movers:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
-
+  const {data:publication} = useSuspenseQuery(weeklyPublicationQuery);
+  const loading = false;
+  const data: MoversData = {success:!!publication.runId && !publication.pendingDate,currentDate:publication.currentDate ?? "",previousDate:publication.previousDate ?? "",topIncreases:publication.topIncreases,topDecreases:publication.topDecreases,totalChanged:publication.totalChanged ?? 0};
 
   return (
     <>

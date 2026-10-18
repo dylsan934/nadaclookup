@@ -1,3 +1,6 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { weeklyPublicationQuery } from "@/lib/weekly-publication.query";
+import { visiblePublication } from "@/lib/weekly-publication";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "@/lib/router-compat";
 import { Header } from "@/components/Header";
@@ -35,13 +38,11 @@ const Index = () => {
   const [lastSearchTerm, setLastSearchTerm] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
   
-  const [dataStatus, setDataStatus] = useState<DataStatusInfo>({
-    hasData: false,
-    lastUpdate: undefined,
-    totalRecords: 0,
-  });
-  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
-  
+  const {data:publication} = useSuspenseQuery(weeklyPublicationQuery);
+  const visible = visiblePublication(publication);
+  const dataStatus: DataStatusInfo = { hasData:publication.totalRecords>0,totalRecords:publication.totalRecords,lastUpdate:publication.currentDate ?? undefined,lastSyncAt:publication.completedAt ?? undefined,pendingDate:publication.pendingDate ?? undefined,biggestMover:visible.biggestMover };
+  const isCheckingStatus = false;
+
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -64,20 +65,6 @@ const Index = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => { checkDataStatus(); }, []);
-
-  const checkDataStatus = async () => {
-    setIsCheckingStatus(true);
-    try {
-      const status = await nadacApi.getDataStatus();
-      setDataStatus(status);
-    } catch (error) {
-      console.error('Failed to check data status:', error);
-    } finally {
-      setIsCheckingStatus(false);
-    }
-  };
 
   const handleSearch = useCallback(async (overrideSearchTerm?: string) => {
     const termToSearch = overrideSearchTerm ?? searchTerm;

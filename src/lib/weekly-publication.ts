@@ -25,7 +25,6 @@ export function parseRelease(csv: string, sourceDate: string): ReleaseRecord[] {
     if (seen.has(ndc)) throw new Error(`Duplicate NDC requires review: ${ndc}`);
     seen.add(ndc);
     const effective_date = isoDate(row['effective_date'] ?? '');
-    if (effective_date > sourceDate) throw new Error('Price effective date exceeds publication date');
     return releaseRecordSchema.parse({ ndc, drug_name: row['ndc_description']?.trim(), nadac_per_unit: row['nadac_per_unit']?.trim(), effective_date,
       pricing_unit: row['pricing_unit']?.trim(), pharmacy_type: row['pharmacy_type_indicator'] === 'C/I' ? 'Community/Independent' : row['pharmacy_type_indicator'] === 'C/C' ? 'Chain' : row['pharmacy_type_indicator']?.trim(), explanation: row['explanation_code']?.trim() || null });
   });

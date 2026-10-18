@@ -4,10 +4,11 @@
 - [x] Inspect existing imports, schedules, available logs, Movers SQL, public labels and digest flow
 - [x] Download and compare September 30, October 7 and October 14 CMS releases read-only
 - [x] Run existing tests and present evidence, proposed changes, backfill and public wording
-- [ ] Implement the approved repair and eight pipeline regression tests (blocker: user review of the plan)
-- [ ] Apply approved migration and dry-run chronological backfill (blocker: user approval; shared production backend)
-- [ ] Verify corrected homepage and Movers after cache invalidation (blocker: approved repair and backfill)
-- [ ] Deploy or release notifications only on explicit request (blocker: user permission)
+- [x] Implement durable stages, consecutive-release comparison, private digest preparation and 11 pipeline/parser regression tests
+- [x] Apply additive migrations and backfill September 30 baseline, October 7 and October 14 chronologically; preserve all existing searchable pricing values
+- [x] Verify corrected homepage and Movers after cache invalidation; 19 regression tests passed, preview healthy
+- [ ] Activate automatic weekly orchestration and publish the public changes (blocker: explicit deployment permission; existing cron targets intentionally unchanged)
+- [ ] Release real notifications (blocker: explicit permission; all repair preparations remain permanently preview-only)
 
 ## SEO architecture fix via TanStack Start migration
 - [x] Audit current routing/metadata/canonical/robots/sitemap

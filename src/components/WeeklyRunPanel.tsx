@@ -31,9 +31,9 @@ export function WeeklyRunPanel() {
    const {runId}=await action({data:{action:'begin',sourceDate:date,checksum,count:records.length,previousRunId:previous?.id ?? null,baseline}});
    for(let i=0;i<records.length;i+=500)await action({data:{action:'stage',runId,records:records.slice(i,i+500)}});
    await finish(runId);
-  }catch(e){setError(e instanceof Error ? e.message:'Weekly repair failed.');}finally{setBusy(false);await refresh();}
+  }catch(e){setError(e instanceof Error ? e.message:'Weekly repair failed.');}finally{await refresh();setBusy(false);}
  };
- const retry=async(runId:string)=>{setBusy(true);setError('');try{await finish(runId);}catch(e){setError(e instanceof Error ? e.message:'Retry failed.');}finally{setBusy(false);await refresh();}};
+ const retry=async(runId:string)=>{setBusy(true);setError('');try{await finish(runId);}catch(e){setError(e instanceof Error ? e.message:'Retry failed.');}finally{await refresh();setBusy(false);}};
  return <section className="mb-8 border-y border-border py-6 space-y-4">
   <h2 className="text-xl font-semibold">Weekly data runs</h2>
   <p className="text-sm text-muted-foreground">Historical repair · preview-only digest preparations · no emails sent</p>
