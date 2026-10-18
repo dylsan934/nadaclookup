@@ -10,7 +10,7 @@ const rpc=async(fn:string,args:unknown[]):Promise<any> => (await db.query<Record
 const begin=(date:string,prev:string|null,baseline=false)=>rpc('nadac_begin_run',[date,'a'.repeat(64),1,prev,true,baseline]);
 const stage=(id:string,price='187.77376')=>rpc('nadac_stage_records',[id,JSON.stringify([record('00052060201',price)])]);
 async function completed(date:string,prev:string|null,baseline=false,price='187.77376') {
- const id=await begin(date,prev,baseline);await stage(id,price);await rpc('nadac_validate_run',[id]);await rpc('nadac_compare_run',[id]);await rpc('nadac_prepare_digest',[id,'[]']);await rpc('nadac_finalize_run',[id]);return id as string;
+ const id=await begin(date,prev,baseline);await rpc('nadac_stage_records',[id,JSON.stringify([{...record('00052060201',price),effective_date:date}])]);await rpc('nadac_validate_run',[id]);await rpc('nadac_compare_run',[id]);await rpc('nadac_prepare_digest',[id,'[]']);await rpc('nadac_finalize_run',[id]);return id as string;
 }
 async function row(id:string){return (await db.query<Record<string,any>>('select * from public.nadac_import_runs where id=$1',[id])).rows[0];}
 async function status(){return publicationSchema.parse(await rpc('nadac_public_status',[]));}
