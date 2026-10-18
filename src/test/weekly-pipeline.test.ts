@@ -1,25 +1,38 @@
 // @vitest-environment node
 import { beforeEach, afterEach, describe, it, expect } from 'vitest';
-import { Client } from 'pg';
+import { PGlite } from '@electric-sql/pglite';
+import { readFileSync } from 'node:fs';
 import { visiblePublication, publicationSchema, parseRelease } from '@/lib/weekly-publication';
 
-let db:Client;
+let db:PGlite;
 const record=(ndc='00052060201',price='187.77376')=>({ndc,drug_name:'BCG (TICE STRAIN) VIAL',nadac_per_unit:price,effective_date:'2026-10-07',pricing_unit:'EA',pharmacy_type:'Community/Independent',explanation:null});
-const rpc=async(fn:string,args:unknown[]) => (await db.query(`select public.${fn}(${args.map((_,i)=>`$${i+1}`).join(',')}) as value`,args)).rows[0].value;
+const rpc=async(fn:string,args:unknown[]):Promise<any> => (await db.query<Record<string,any>>(`select public.${fn}(${args.map((_,i)=>`$${i+1}`).join(',')}) as value`,args)).rows[0]['value'];
 const begin=(date:string,prev:string|null,baseline=false)=>rpc('nadac_begin_run',[date,'a'.repeat(64),1,prev,true,baseline]);
 const stage=(id:string,price='187.77376')=>rpc('nadac_stage_records',[id,JSON.stringify([record('00052060201',price)])]);
 async function completed(date:string,prev:string|null,baseline=false,price='187.77376') {
  const id=await begin(date,prev,baseline);await stage(id,price);await rpc('nadac_validate_run',[id]);await rpc('nadac_compare_run',[id]);await rpc('nadac_prepare_digest',[id,'[]']);await rpc('nadac_finalize_run',[id]);return id as string;
 }
-async function row(id:string){return (await db.query('select * from public.nadac_import_runs where id=$1',[id])).rows[0];}
+async function row(id:string){return (await db.query<Record<string,any>>('select * from public.nadac_import_runs where id=$1',[id])).rows[0];}
 async function status(){return publicationSchema.parse(await rpc('nadac_public_status',[]));}
-describe('weekly pipeline real database transactions (rolled back)',()=>{
+describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)',()=>{
  beforeEach(async()=>{
-  const connectionString=process.env['SUPABASE_DB_URL'];if(!connectionString)throw new Error('Integration database credential is required');
-  db=new Client({connectionString,ssl:{rejectUnauthorized:false}});await db.connect();await db.query('begin');await db.query('select pg_advisory_xact_lock(87101017)');
+  db=new PGlite();
+  await db.exec(`
+   create role anon; create role authenticated; create role service_role;
+   create schema auth; create schema pgmq;
+   create function auth.uid() returns uuid language sql as $$select null::uuid$$;
+   create function public.has_role(uuid,text) returns boolean language sql as $$select false$$;
+   create function public.pg_advisory_xact_lock(bigint) returns void language sql as $$select$$;
+   create table public.nadac_drugs(ndc text,drug_name text,nadac_per_unit numeric,effective_date date,pricing_unit text,pharmacy_type text,explanation text,unique(ndc,effective_date));
+   create function public.nadac_ndc_count() returns bigint language sql as $$select count(distinct ndc) from public.nadac_drugs$$;
+   create table public.weekly_movers(id uuid default gen_random_uuid(),effective_date date unique,previous_date date,top_increases jsonb,top_decreases jsonb,total_changed integer,created_at timestamptz default now());
+   create table public.email_send_log(id uuid); create table pgmq.q_transactional_emails(id bigint);
+  `);
+  await db.exec(readFileSync('drizzle/migrations/0001_nadac_weekly_finalization.sql','utf8'));
+  await db.query('begin');
   await db.query('update public.nadac_publication set current_run_id=null where id=1');
  });
- afterEach(async()=>{if(db){await db.query('rollback');await db.end();}});
+ afterEach(async()=>{if(db){await db.query('rollback');await db.close();}});
  it('full October 14 run advances current only after all required stages',async()=>{
   const p=await completed('2026-10-07',null,true);const id=await begin('2026-10-14',p);await stage(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_compare_run',[id]);
   await db.query('savepoint incomplete');await expect(rpc('nadac_finalize_run',[id])).rejects.toThrow('All stages must succeed');await db.query('rollback to savepoint incomplete');
@@ -33,7 +46,7 @@ describe('weekly pipeline real database transactions (rolled back)',()=>{
  it('safe retry preserves run identity, record count and one finalized result',async()=>{
   const p=await completed('2026-10-07',null,true);const id=await begin('2026-10-14',p);await stage(id);await stage(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_fail_run',[id,'movers','retry']);
   expect(await begin('2026-10-14',p)).toBe(id);expect((await row(id)).record_count).toBe(1);await rpc('nadac_compare_run',[id]);await rpc('nadac_prepare_digest',[id,'[]']);await rpc('nadac_finalize_run',[id]);const timestamp=(await row(id)).completed_at;
-  await rpc('nadac_finalize_run',[id]);expect((await row(id)).completed_at).toEqual(timestamp);expect((await db.query('select count(*)::int n from public.weekly_movers where run_id=$1',[id])).rows[0].n).toBe(1);
+  await rpc('nadac_finalize_run',[id]);expect((await row(id)).completed_at).toEqual(timestamp);expect((await db.query<Record<string,any>>('select count(*)::int n from public.weekly_movers where run_id=$1',[id])).rows[0]['n']).toBe(1);
  });
  it('October 14 zero-change week replaces prior increases with empty rankings',async()=>{
   const b=await completed('2026-09-30',null,true,'182.30285');const p=await completed('2026-10-07',b,false);expect((await row(p)).total_changed).toBe(1);
@@ -50,9 +63,9 @@ describe('weekly pipeline real database transactions (rolled back)',()=>{
  });
  it('repeated digest preparation has one identity and makes no send/queue entries',async()=>{
   const p=await completed('2026-10-07',null,true);const id=await begin('2026-10-14',p);await stage(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_compare_run',[id]);
-  const counts=async()=> (await db.query('select (select count(*) from public.email_send_log)::int logs,(select count(*) from pgmq.q_transactional_emails)::int queue')).rows[0];const before=await counts();
+  const counts=async()=> (await db.query<Record<string,any>>('select (select count(*) from public.email_send_log)::int logs,(select count(*) from pgmq.q_transactional_emails)::int queue')).rows[0];const before=await counts();
   const recipients=JSON.stringify([{user_id:'a9bad2b3-4c95-4592-9291-04665af6386f',eligibility:'admin'}]);await rpc('nadac_prepare_digest',[id,recipients]);await rpc('nadac_prepare_digest',[id,recipients]);
-  expect((await db.query('select count(*)::int n,bool_and(preview_only) preview from public.weekly_digest_preparations where run_id=$1',[id])).rows[0]).toEqual({n:1,preview:true});expect(await counts()).toEqual(before);
+  expect((await db.query<Record<string,any>>('select count(*)::int n,bool_and(preview_only) preview from public.weekly_digest_preparations where run_id=$1',[id])).rows[0]).toEqual({n:1,preview:true});expect(await counts()).toEqual(before);
  });
  it('failed newer run suppresses stale biggest-mover even if old rankings exist',async()=>{
   const b=await completed('2026-09-30',null,true,'182.30285'),p=await completed('2026-10-07',b);expect((await row(p)).top_increases).toHaveLength(1);
