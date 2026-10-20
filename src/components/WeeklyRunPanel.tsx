@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { getWeeklyAdmin, weeklyAdminAction } from '@/lib/weekly-admin.functions';
+import { previewSavedAlerts } from '@/lib/saved-alerts.functions';
 import { parseRelease } from '@/lib/weekly-publication';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,8 @@ import { useQueryClient } from '@tanstack/react-query';
 export function WeeklyRunPanel() {
  const read=useServerFn(getWeeklyAdmin), action=useServerFn(weeklyAdminAction);
  const queryClient=useQueryClient();
+ const preview=useServerFn(previewSavedAlerts);
+ const [alerts,setAlerts]=useState<Awaited<ReturnType<typeof previewSavedAlerts>> | null>(null);
  const [data,setData]=useState<Awaited<ReturnType<typeof getWeeklyAdmin>> | null>(null);
  const [date,setDate]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const refresh=async()=>{try {setData(await read());}catch {setError('Unable to load weekly run history.');}};
@@ -36,6 +39,8 @@ export function WeeklyRunPanel() {
  const retry=async(runId:string)=>{setBusy(true);setError('');try{await finish(runId);}catch(e){setError(e instanceof Error ? e.message:'Retry failed.');}finally{await refresh();setBusy(false);}};
  return <section className="mb-8 border-y border-border py-6 space-y-4">
   <h2 className="text-xl font-semibold">Weekly data runs</h2>
+  <Button variant="outline" disabled={busy} onClick={async()=>{setBusy(true);setError('');try{setAlerts(await preview());}catch{setError('Saved-drug alert preview unavailable.');}finally{setBusy(false);}}}>Preview saved-drug alerts</Button>
+  {alerts && <div className="text-sm space-y-2"><p>Private preview only · no emails queued · {alerts.rows.length} saved drugs checked</p>{alerts.rows.map(a=><p key={a.savedDrugId}>{a.drugName ?? a.ndc} · {a.ndc} · {a.previousDate} → {a.currentDate} · {a.reason ?? 'Verified change'}{a.oldPrice && a.newPrice ? ` · $${a.oldPrice} → $${a.newPrice}`:''}</p>)}</div>}
   <p className="text-sm text-muted-foreground">Historical repair · preview-only digest preparations · no emails sent</p>
   <div className="flex flex-wrap items-end gap-3">
    <label className="text-sm">CMS publication date<Input type="date" value={date} onChange={e=>setDate(e.target.value)} disabled={busy}/></label>
