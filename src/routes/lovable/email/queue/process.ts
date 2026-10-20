@@ -222,6 +222,21 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
             }
 
             try {
+              // Revalidate this single saved-drug event after queue delay, before delivery.
+              if (queue === 'transactional_emails') {
+                if (payload.label !== 'saved-drug-price-change' || !payload.saved_drug_event_id) {
+                  await moveToDlq(supabase, queue, msg, 'Unverified legacy app email blocked');
+                  continue;
+                }
+                const { verifiedEmailEvent } = await import('@/lib/saved-alerts.server');
+                try {
+                  const verified = await verifiedEmailEvent(supabase, payload.saved_drug_event_id, process.env['STRIPE_SECRET_KEY']);
+                  if (verified.email !== payload.to || verified.event.id !== payload.message_id) throw new Error('Recipient mismatch');
+                } catch {
+                  await moveToDlq(supabase, queue, msg, 'Saved-drug verification no longer passes');
+                  continue;
+                }
+              }
               await sendLovableEmail(
                 {
                   run_id: payload.run_id,
