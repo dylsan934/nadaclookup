@@ -8,7 +8,12 @@
 - [x] Apply additive migrations and backfill September 30 baseline, October 7 and October 14 chronologically; preserve all existing searchable pricing values
 - [x] Verify corrected homepage and Movers after cache invalidation; 19 regression tests passed, preview healthy
 - [ ] Activate automatic weekly orchestration and publish the public changes (blocker: explicit deployment permission; existing cron targets intentionally unchanged)
-- [ ] Release real notifications (blocker: explicit permission; all repair preparations remain permanently preview-only)
+- [ ] Release accurate saved-drug email notifications (permission received; verify finalized-release safety before sending; historical preparations remain permanently preview-only)
+
+## Email accuracy safeguards
+- [x] Audit existing send paths, finalized data, duplicate prevention and recipient eligibility: legacy digest skips zero-change weeks; legacy alerts bypass finalized runs, preferences and shared sending safeguards
+- [ ] Add and test fail-closed checks for supported saved-drug notifications
+- [ ] Verify readiness without releasing historical digests or changing the scheduler without deployment permission
 
 ## SEO architecture fix via TanStack Start migration
 - [x] Audit current routing/metadata/canonical/robots/sitemap
