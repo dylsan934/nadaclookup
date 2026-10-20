@@ -5,9 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
-const SUPABASE_URL = import.meta.env['VITE_SUPABASE_URL'] as string;
-const SUPABASE_ANON_KEY = import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] as string;
-
 type State =
   | { kind: "loading" }
   | { kind: "valid" }
@@ -18,11 +15,13 @@ type State =
   | { kind: "error"; message: string };
 
 export default function Unsubscribe() {
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get("token");
+  const [token, setToken] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
+  useEffect(() => { setToken(new URLSearchParams(window.location.search).get('token')); setReady(true); }, []);
   const [state, setState] = useState<State>({ kind: "loading" });
 
   useEffect(() => {
+    if (!ready) return;
     if (!token) {
       setState({ kind: "invalid" });
       return;
@@ -30,8 +29,7 @@ export default function Unsubscribe() {
     (async () => {
       try {
         const res = await fetch(
-          `${SUPABASE_URL}/functions/v1/handle-email-unsubscribe?token=${encodeURIComponent(token)}`,
-          { headers: { apikey: SUPABASE_ANON_KEY } },
+          `/email/unsubscribe?token=${encodeURIComponent(token)}`,
         );
         const json = await res.json();
         if (json.valid) setState({ kind: "valid" });
@@ -41,15 +39,15 @@ export default function Unsubscribe() {
         setState({ kind: "invalid" });
       }
     })();
-  }, [token]);
+  }, [token, ready]);
 
   const confirm = async () => {
     if (!token) return;
     setState({ kind: "submitting" });
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/handle-email-unsubscribe`, {
+      const res = await fetch('/email/unsubscribe', {
         method: "POST",
-        headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON_KEY },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token }),
       });
       const json = await res.json();

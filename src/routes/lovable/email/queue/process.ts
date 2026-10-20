@@ -43,9 +43,9 @@ async function moveToDlq(
 ): Promise<void> {
   const payload = msg.message
   await supabase.from('email_send_log').insert({
-    message_id: payload.message_id,
-    template_name: (payload.label || queue) as string,
-    recipient_email: payload.to,
+    message_id: payload['message_id'],
+    template_name: (payload['label'] || queue) as string,
+    recipient_email: payload['to'],
     status: 'dlq',
     error_message: reason,
   })
@@ -65,7 +65,7 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
     handlers: {
       POST: async ({ request }) => {
         const apiKey = process.env['LOVABLE_API_KEY']
-        const supabaseUrl = import.meta.env['VITE_SUPABASE_URL']
+        const supabaseUrl = process.env['SUPABASE_URL']
         const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY']
 
         if (!apiKey || !supabaseUrl || !supabaseServiceKey) {
@@ -176,7 +176,7 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
             const queuedAt = payload.queued_at ?? msg.enqueued_at
             if (queuedAt) {
               const ageMs = Date.now() - new Date(queuedAt).getTime()
-              const maxAgeMs = ttlMinutes[queue] * 60 * 1000
+              const maxAgeMs = (ttlMinutes[queue] ?? DEFAULT_TRANSACTIONAL_TTL_MINUTES) * 60 * 1000
               if (ageMs > maxAgeMs) {
                 console.warn('Email expired (TTL exceeded)', {
                   queue,
