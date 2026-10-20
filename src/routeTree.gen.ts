@@ -31,6 +31,7 @@ import { Route as AuthorDylanSansonRouteImport } from './routes/author/dylan-san
 import { Route as BlogIndexRouteImport } from './routes/blog/index'
 import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
 import { Route as DrugSlugRouteImport } from './routes/drug/$slug'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -144,6 +145,12 @@ const DrugSlugRoute = DrugSlugRouteImport.update({
   path: '/drug/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/blog/$slug': typeof BlogSlugRoute
   '/drug/$slug': typeof DrugSlugRoute
   '/blog/': typeof BlogIndexRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -192,6 +200,7 @@ export interface FileRoutesByTo {
   '/blog/$slug': typeof BlogSlugRoute
   '/drug/$slug': typeof DrugSlugRoute
   '/blog': typeof BlogIndexRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -217,6 +226,7 @@ export interface FileRoutesById {
   '/blog/$slug': typeof BlogSlugRoute
   '/drug/$slug': typeof DrugSlugRoute
   '/blog/': typeof BlogIndexRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -243,6 +253,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/drug/$slug'
     | '/blog/'
+    | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -267,6 +278,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/drug/$slug'
     | '/blog'
+    | '/lovable/email/queue/process'
   id:
     | '__root__'
     | '/'
@@ -291,6 +303,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/drug/$slug'
     | '/blog/'
+    | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -316,6 +329,7 @@ export interface RootRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
   DrugSlugRoute: typeof DrugSlugRoute
   BlogIndexRoute: typeof BlogIndexRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -474,6 +488,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DrugSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -500,6 +521,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogSlugRoute: BlogSlugRoute,
   DrugSlugRoute: DrugSlugRoute,
   BlogIndexRoute: BlogIndexRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
