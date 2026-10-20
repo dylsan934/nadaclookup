@@ -46,4 +46,4 @@ export const Route=createFileRoute('/lovable/email/transactional/send')({server:
   if(queueError)throw new Error('Queue blocked');
   return Response.json(result);
  }catch{return Response.json({error:'Email blocked: accuracy, preferences or eligibility could not be verified'},{status:409});}
-}}});
+}}}});

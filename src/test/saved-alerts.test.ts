@@ -32,7 +32,8 @@ beforeAll(async()=>{
 afterAll(async()=>{await db.close();});
 beforeEach(async()=>{
  await db.exec('truncate nadac_saved_drug_events,price_alerts,test_queue,email_send_log,suppressed_emails,email_unsubscribe_tokens,saved_drugs,profiles,nadac_alert_delivery_state,nadac_publication,weekly_movers,nadac_release_records,weekly_digest_preparations,nadac_import_runs cascade');
- await db.query(`insert into profiles(user_id,notify_saved_drugs,notify_large_changes_only,large_change_threshold) values($1,true,false,5);insert into saved_drugs values($2,$1,'00052060201',true,now()-interval '20 days')`,[uid,sid]);
+ await db.query('insert into profiles(user_id,notify_saved_drugs,notify_large_changes_only,large_change_threshold) values($1,true,false,5)',[uid]);
+ await db.query("insert into saved_drugs values($1,$2,'00052060201',true,now()-interval '20 days')",[sid,uid]);
  const complete=async(date:string,previous:string|null,baseline:boolean,price:string)=>{
   const id=await rpc('nadac_begin_run',[date,'a'.repeat(64),1,previous,false,baseline]);
   await rpc('nadac_stage_records',[id,JSON.stringify([{ndc:'00052060201',drug_name:'DRUG',nadac_per_unit:price,effective_date:date,pricing_unit:'EA',pharmacy_type:'Community/Independent',explanation:null}])]);
