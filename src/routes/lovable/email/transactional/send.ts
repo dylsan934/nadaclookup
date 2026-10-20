@@ -8,14 +8,14 @@ export const Route=createFileRoute('/lovable/email/transactional/send')({server:
  if(!url || !key)return Response.json({error:'Email configuration unavailable'},{status:503});
  const bearer=request.headers.get('authorization')?.replace(/^Bearer /,'');
  if(!bearer)return Response.json({error:'Unauthorized'},{status:401});
- const db=createClient<import('@/integrations/supabase/types').Database>(url,key,{auth:{persistSession:false}});
- const {data:{user},error:authError}=await db.auth.getUser(bearer);
- if(authError || !user)return Response.json({error:'Unauthorized'},{status:401});
  // Caller role is checked through their own authenticated client, never the privileged client.
  const publishable=process.env['SUPABASE_PUBLISHABLE_KEY'] ?? import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'];
  const caller=createClient(url,publishable,{global:{headers:{Authorization:`Bearer ${bearer}`}},auth:{persistSession:false}});
+ const {data:{user},error:authError}=await caller.auth.getUser(bearer);
+ if(authError || !user)return Response.json({error:'Unauthorized'},{status:401});
  const {data:admin,error:roleError}=await caller.rpc('has_role',{_user_id:user.id,_role:'admin'});
  if(roleError || !admin)return Response.json({error:'Forbidden'},{status:403});
+ const db=createClient<import('@/integrations/supabase/types').Database>(url,key,{auth:{persistSession:false}});
  const parsed=z.object({templateName:z.literal('saved-drug-price-change'),eventId:z.string().uuid()}).strict().safeParse(await request.json().catch(()=>null));
  if(!parsed.success)return Response.json({error:'A verified saved-drug event is required'},{status:400});
  try {
@@ -38,7 +38,8 @@ export const Route=createFileRoute('/lovable/email/transactional/send')({server:
   const element=React.createElement(template.component,comparison);
   const [html,text]=await Promise.all([render(element),render(element,{plainText:true})]);
   // Re-check private account entitlement and preference immediately before atomic handoff.
-  await verifiedEmailEvent(db,event.id,process.env['STRIPE_SECRET_KEY']);
+  const rechecked=await verifiedEmailEvent(db,event.id,process.env['STRIPE_SECRET_KEY']);
+  if(rechecked.email!==email)throw new Error('Account address changed');
   const {data:result,error:queueError}=await db.rpc('nadac_enqueue_saved_alert',{p_event:event.id,p_payload:{
    message_id:event.id,idempotency_key:`saved-drug:${event.id}`,to:email,from:'NADAC Price Finder <noreply@nadaclookup.com>',sender_domain:'notify.nadaclookup.com',
    subject:typeof template.subject==='function'?template.subject(comparison):template.subject,html,text,purpose:'transactional',label:'saved-drug-price-change',unsubscribe_token:token.token,queued_at:new Date().toISOString(),saved_drug_event_id:event.id,

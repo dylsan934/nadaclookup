@@ -81,3 +81,10 @@ it('retries produce one in-app alert and one atomic queue handoff',async()=>{
 it('preference changes after event preparation block queueing',async()=>{
  const id=await rpc('nadac_prepare_saved_alert',[sid]);await db.exec('update profiles set notify_saved_drugs=false');await expect(rpc('nadac_enqueue_saved_alert',[id,'{}'])).rejects.toThrow('Email alerts disabled');expect((await db.query('select * from price_alerts')).rows).toHaveLength(1);
 });
+it('suppression blocks atomic queueing while retaining the in-app alert',async()=>{
+ const id=await rpc('nadac_prepare_saved_alert',[sid]);
+ await db.exec("insert into email_unsubscribe_tokens values('fixture@example.invalid','token',null); insert into suppressed_emails values('fixture@example.invalid')");
+ const payload=JSON.stringify({label:'saved-drug-price-change',purpose:'transactional',idempotency_key:`saved-drug:${id}`,message_id:id,to:'fixture@example.invalid',unsubscribe_token:'token'});
+ await expect(rpc('nadac_enqueue_saved_alert',[id,payload])).rejects.toThrow('Recipient suppressed');
+ expect((await db.query('select * from test_queue')).rows).toHaveLength(0);expect((await db.query('select * from price_alerts')).rows).toHaveLength(1);
+});
