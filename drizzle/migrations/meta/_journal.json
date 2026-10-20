@@ -29,6 +29,13 @@
       "when": 1792294357085,
       "tag": "0003_preserve_release_freshness_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792465083095,
+      "tag": "0004_verified_saved_drug_alert_events",
+      "breakpoints": true
     }
   ]
 }
