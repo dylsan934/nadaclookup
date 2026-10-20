@@ -11,7 +11,7 @@
 - [ ] Release accurate saved-drug email notifications (permission received; verify finalized-release safety before sending; historical preparations remain permanently preview-only)
 
 ## Email accuracy safeguards
-- [ ] Audit existing send paths, finalized data, duplicate prevention and recipient eligibility
+- [x] Audit existing send paths, finalized data, duplicate prevention and recipient eligibility: legacy digest skips zero-change weeks; legacy alerts bypass finalized runs, preferences and shared sending safeguards
 - [ ] Add and test fail-closed checks for supported saved-drug notifications
 - [ ] Verify readiness without releasing historical digests or changing the scheduler without deployment permission
 
