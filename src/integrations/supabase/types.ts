@@ -182,6 +182,21 @@ export type Database = {
         }
         Relationships: []
       }
+      nadac_alert_delivery_state: {
+        Row: {
+          activated_at: string | null
+          id: number
+        }
+        Insert: {
+          activated_at?: string | null
+          id?: number
+        }
+        Update: {
+          activated_at?: string | null
+          id?: number
+        }
+        Relationships: []
+      }
       nadac_drugs: {
         Row: {
           created_at: string
@@ -373,6 +388,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "nadac_release_records_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "nadac_import_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nadac_saved_drug_events: {
+        Row: {
+          content: Json
+          id: string
+          in_app_alert_id: string | null
+          queued_at: string | null
+          run_id: string
+          saved_drug_id: string
+          user_id: string
+        }
+        Insert: {
+          content: Json
+          id?: string
+          in_app_alert_id?: string | null
+          queued_at?: string | null
+          run_id: string
+          saved_drug_id: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          id?: string
+          in_app_alert_id?: string | null
+          queued_at?: string | null
+          run_id?: string
+          saved_drug_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nadac_saved_drug_events_run_id_fkey"
             columns: ["run_id"]
             isOneToOne: false
             referencedRelation: "nadac_import_runs"
@@ -845,6 +898,10 @@ export type Database = {
         Returns: string
       }
       nadac_compare_run: { Args: { p_run: string }; Returns: undefined }
+      nadac_enqueue_saved_alert: {
+        Args: { p_event: string; p_payload: Json }
+        Returns: Json
+      }
       nadac_fail_run: {
         Args: { p_reason: string; p_run: string; p_stage: string }
         Returns: undefined
@@ -855,7 +912,9 @@ export type Database = {
         Args: { p_recipients: Json; p_run: string }
         Returns: number
       }
+      nadac_prepare_saved_alert: { Args: { p_saved: string }; Returns: string }
       nadac_public_status: { Args: never; Returns: Json }
+      nadac_saved_alert_preview: { Args: { p_saved: string }; Returns: Json }
       nadac_stage_records: {
         Args: { p_records: Json; p_run: string }
         Returns: number

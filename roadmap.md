@@ -12,8 +12,12 @@
 
 ## Email accuracy safeguards
 - [x] Audit existing send paths, finalized data, duplicate prevention and recipient eligibility: legacy digest skips zero-change weeks; legacy alerts bypass finalized runs, preferences and shared sending safeguards
-- [ ] Add and test fail-closed checks for supported saved-drug notifications
-- [ ] Verify readiness without releasing historical digests or changing the scheduler without deployment permission
+- [x] Pause legacy weekly digest schedule, preserving its Wednesday 14:00 UTC configuration
+- [x] Add finalized-release preview, activation cutoff, private recipient eligibility, event identities, atomic queue handoff and delivery-time rechecks
+- [x] Verify 29 accuracy/pipeline checks and authenticated read-only preview: seven saved drugs blocked as historical; zero events, zero queued messages, activation unset
+- [ ] Verify private preview displayed in the admin page and delivery end-to-end (blocker: admin page renders blank in browser despite direct authenticated preview succeeding; live queue must stay empty until this passes)
+- [ ] Retire unsafe legacy saved-drug sender (blocker: platform requires migrated app published and verified first; existing sync still invokes it)
+- [ ] Activate future-release alerts and connect automatic trigger (blocker: publishing/scheduler permission; activation remains unset and no historical catch-up allowed)
 
 ## SEO architecture fix via TanStack Start migration
 - [x] Audit current routing/metadata/canonical/robots/sitemap

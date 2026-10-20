@@ -2,6 +2,7 @@
 - Public homepage/Movers status comes from nadac_public_status() with a finalized run identity and nadac_ndc_count(); this prevents mixed freshness and history-row counts.
 - Weekly repair uses immutable release staging and service-only transactional RPC stages; a current pointer advances only after all stages succeed.
 - Historical repair runs never write nadac_drugs; scheduler cutover requires separate deployment authorization so repair cannot change searchable prices or existing cron behavior.
-- Digest preparations are private and preview-only with one identity per run/user; repair never invokes legacy sending functions or changes existing cron targets.
+- Digest preparations remain private and permanently preview-only; the unsafe legacy digest schedule is paused, while import schedules remain unchanged. Legacy sender retirement is blocked until the migrated app is published and verified.
+- Saved-drug email events use service-only finalized-release validation, an activation cutoff, private account eligibility checks and atomic event-to-queue handoff; this prevents stale, historical, preference-bypassing and duplicate sends.
 - Weekly authenticated server functions use weeklyBearer client middleware and verified admin roles before importing privileged clients.
 - CSV parsing uses Papa Parse and validates As of Date separately from record Effective Date to preserve source precision and publication identity.

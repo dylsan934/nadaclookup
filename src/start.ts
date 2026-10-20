@@ -4,7 +4,9 @@ import { weeklyBearer } from "./lib/weekly-bearer";
 
 import { renderErrorPage } from "./lib/error-page";
 
-const errorMiddleware = createMiddleware().server(async ({ next }) => {
+const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
+  const path = new URL(request.url).pathname;
+  if (path.startsWith('/lovable/') || path === '/email/unsubscribe') return next();
   try {
     return await next();
   } catch (error) {
