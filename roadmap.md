@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Agent integrations
-- [ ] Add OAuth-protected exact-NDC lookup and account watchlist tools, plus browser search-page tools
-- [ ] Verify consent states, authentication boundaries, current-price semantics and generated catalog
+- [x] Add OAuth-protected exact-NDC lookup and account watchlist tools, plus browser search-page tools
+- [x] Verify generated two-tool catalog, 11 regression tests, signed-out consent return, invalid requests, approve/deny, already-authorized redirects and real account watchlist/exact-NDC reads; build OK
+- [ ] Verify hosted login/signup return and assistant connection after republishing (blocker: publication; local OAuth provider calls require a canonical-origin test bridge, and native WebMCP is unavailable in the test browser)
 - [ ] Republish agent integrations (blocker: user publishing decision; no publishing authorization given)
 
 ## Weekly data-finalization audit and repair
