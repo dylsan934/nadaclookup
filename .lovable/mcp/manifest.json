@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "sdk_version": "3.1.1",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://wcbzqrskgfszkwgrzogo.supabase.co/auth/v1",
+    "require_oauth_client_claim": true,
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "nadac-price-finder",
+      "version": "0.1.0",
+      "title": "NADAC Price Finder"
+    },
+    "tools": [
+      {
+        "name": "lookup_drug",
+        "title": "Look up exact NDC pricing",
+        "description": "Read the latest stored NADAC price for an exact 11-digit package NDC, preserving leading zeros and pharmacy categories.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "ndc": {
+              "type": "string",
+              "pattern": "^\\d{11}$",
+              "description": "Exact 11-digit NDC including leading zeros; no dashes."
+            }
+          },
+          "required": [
+            "ndc"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_watchlist",
+        "title": "Read your watchlist",
+        "description": "List up to 100 drugs saved by the connected account, with NDC and in-app alert setting; this does not send emails or change saves.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

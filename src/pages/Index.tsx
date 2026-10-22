@@ -18,6 +18,8 @@ import { DrugData } from "@/components/DrugCard";
 import { nadacApi, type DataStatusInfo } from "@/lib/nadac-api";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "@/lib/router-compat";
+import { useWebMCP } from 'use-webmcp-tool';
+import { runWebMCPTool } from '@/lib/webmcp-telemetry';
 
 export const faqJsonLd = {
   "@context": "https://schema.org",
@@ -127,6 +129,7 @@ const Index = () => {
   }, [urlQuery, dataStatus.hasData]);
 
   const handleSearchAndSync = (overrideSearchTerm?: string) => {
+    if (overrideSearchTerm !== undefined && typeof overrideSearchTerm !== 'string') throw new Error('Search must be a drug name or NDC string.');
     const term = (overrideSearchTerm ?? searchTerm).trim();
     if (!term) { void handleSearch(overrideSearchTerm); return; }
     if (term === urlQuery) { void handleSearch(term); return; }
@@ -135,6 +138,19 @@ const Index = () => {
     next.set("q", term);
     setSearchParams(next);
   };
+
+  useWebMCP({
+    name: 'search_drugs',
+    description: 'Change the open page to search for a drug name or NDC; read the displayed results once loading finishes.',
+    enabled: !isLoading && dataStatus.hasData,
+    inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Drug name or NDC to search.' } }, required: ['query'] },
+    execute: ({ query }: { query: string }) => runWebMCPTool('search_drugs', () => {
+      if (typeof query !== 'string' || !query.trim()) throw new Error('Provide a nonempty drug name or NDC.');
+      if (isLoading || !dataStatus.hasData) throw new Error('Search is currently unavailable.');
+      handleSearchAndSync(query);
+      return 'Search requested. Read displayed results after loading completes.';
+    }),
+  });
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

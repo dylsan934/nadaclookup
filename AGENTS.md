@@ -6,3 +6,5 @@
 - Saved-drug email events use service-only finalized-release validation, an activation cutoff, private account eligibility checks and atomic event-to-queue handoff; this prevents stale, historical, preference-bypassing and duplicate sends.
 - Weekly authenticated server functions use weeklyBearer client middleware and verified admin roles before importing privileged clients.
 - CSV parsing uses Papa Parse and validates As of Date separately from record Effective Date to preserve source precision and publication identity.
+- MCP tools live in src/lib/mcp and use verified OAuth caller-scoped clients with existing RLS; browser tools stay in the components owning the displayed controls to preserve account and view boundaries.
+- OAuth consent returns use oauthReturnPath at the auth boundary and preserve the canonical path through password signup and social login so authorizations survive sign-in.

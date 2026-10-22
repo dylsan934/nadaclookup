@@ -7,10 +7,11 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { loadEnv } from 'vite';
 import path from 'node:path';
+import { mcpPlugin } from '@lovable.dev/mcp-js/stacks/tanstack/vite';
 
 export default defineConfig({
   vite: {
-    plugins: [{ name: 'email-server-env', config: (_, { mode }) => {
+    plugins: [mcpPlugin(), { name: 'email-server-env', config: (_, { mode }) => {
       Object.assign(process.env, loadEnv(mode, process.cwd(), ''));
     } }],
     resolve: { alias: {

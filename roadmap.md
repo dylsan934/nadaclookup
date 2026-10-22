@@ -1,5 +1,10 @@
 # Roadmap
 
+## Agent integrations
+- [ ] Add OAuth-protected exact-NDC lookup and account watchlist tools, plus browser search-page tools
+- [ ] Verify consent states, authentication boundaries, current-price semantics and generated catalog
+- [ ] Republish agent integrations (blocker: user publishing decision; no publishing authorization given)
+
 ## Weekly data-finalization audit and repair
 - [x] Inspect existing imports, schedules, available logs, Movers SQL, public labels and digest flow
 - [x] Download and compare September 30, October 7 and October 14 CMS releases read-only

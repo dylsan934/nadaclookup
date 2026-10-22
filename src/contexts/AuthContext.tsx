@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { analytics } from "@heycatch/sdk";
 import { supabase } from "@/integrations/supabase/client";
+import { oauthReturnPath } from '@/lib/oauth-return-path';
 
 const FREE_SAVE_LIMIT = 3;
 
@@ -22,7 +23,7 @@ interface AuthContextType {
   clearPasswordRecovery: () => void;
   checkSubscription: () => Promise<void>;
   refreshSavesCount: () => Promise<void>;
-  signUp: (email: string, password: string) => Promise<{ data: { session: Session | null; user: User | null } | null; error: Error | null }>;
+  signUp: (email: string, password: string, next?: string) => Promise<{ data: { session: Session | null; user: User | null } | null; error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -207,8 +208,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => clearInterval(interval);
   }, [session]);
 
-  const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+  const signUp = async (email: string, password: string, next?: string) => {
+    const redirectUrl = new URL(oauthReturnPath(next), window.location.origin).href;
     
     const { data, error } = await supabase.auth.signUp({
       email,
