@@ -10,11 +10,13 @@ import { Loader2, Search, Bookmark, Calculator, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { sanitizeInternalPath } from "@/lib/safe-redirect";
+import { oauthReturnPath } from '@/lib/oauth-return-path';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
   // Optional internal return destination (e.g. the calculator with a drug preselected).
-  const redirectTo = sanitizeInternalPath(searchParams.get("redirect"));
+  const next = searchParams.get('next');
+  const redirectTo = next !== null ? oauthReturnPath(next) : sanitizeInternalPath(searchParams.get("redirect"));
   const afterAuthPath = redirectTo ?? "/";
   const afterSignupPath = redirectTo ?? "/?welcome=1";
   const [isLogin, setIsLogin] = useState(() => searchParams.get("mode") !== "signup");
@@ -132,7 +134,7 @@ const Auth = () => {
     setIsSubmitting(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}${afterSignupPath}`,
+        redirect_uri: new URL(afterSignupPath, window.location.origin).href,
       });
       if (result.error) {
         toast({
@@ -200,7 +202,7 @@ const Auth = () => {
           navigate(afterAuthPath);
         }
       } else {
-        const { data, error } = await signUp(email, password);
+        const { data, error } = await signUp(email, password, afterSignupPath);
         if (error) {
           // Handle various signup error cases
           const errorMessage = error.message.toLowerCase();

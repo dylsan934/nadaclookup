@@ -7,6 +7,8 @@ import { ResultsFilters, SortOption, DosageFilter } from "./ResultsFilters";
 import { CompareButton } from "./CompareButton";
 import { DrugComparisonModal } from "./DrugComparisonModal";
 import { FileSearch, Loader2 } from "lucide-react";
+import { useWebMCP } from 'use-webmcp-tool';
+import { runWebMCPTool } from '@/lib/webmcp-telemetry';
 
 interface DrugResultsProps {
   drugs: DrugData[];
@@ -94,6 +96,18 @@ export const DrugResults = ({ drugs, isLoading, hasSearched, searchTerm }: DrugR
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [drugs, sortBy, dosageFilter, strengthFilter]);
   const visibleGroups = filteredAndSortedGroups.slice(0, visibleCount);
   const remaining = filteredAndSortedGroups.length - visibleGroups.length;
+
+  useWebMCP({
+    name: 'read_drug_results',
+    description: 'Read only the drug cards displayed on this page, respecting grouping, filters, sorting and loaded pages.',
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    execute: () => runWebMCPTool('read_drug_results', () => {
+      if (isLoading) return 'Drug results are loading.';
+      if (!hasSearched) return 'No search has been submitted.';
+      if (!visibleGroups.length) return 'No drug cards are displayed.';
+      return visibleGroups.map(({ representative: d, ndcs }) => `${d.ndc}: ${d.drugName}; NADAC ${d.nadacPerUnit} per ${d.pricingUnit}; effective ${d.effectiveDate}; pharmacy ${d.pharmacyType ?? 'unspecified'}; ${ndcs.length} package NDCs`).join('\n');
+    }),
+  });
 
   if (isLoading) {
     return (

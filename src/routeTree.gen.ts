@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ComparePrescriptionDrugPricesRouteImport } from './routes/compare-prescription-drug-prices'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as HowOftenDoesNadacUpdateRouteImport } from './routes/how-often-does-nadac-update'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MoversRouteImport } from './routes/movers'
 import { Route as NadacIntelligenceAlternativeRouteImport } from './routes/nadac-intelligence-alternative'
 import { Route as NdcLookupRouteImport } from './routes/ndc-lookup'
@@ -27,11 +28,13 @@ import { Route as SavedDrugsRouteImport } from './routes/saved-drugs'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as WhatIsNadacRouteImport } from './routes/what-is-nadac'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthorDylanSansonRouteImport } from './routes/author/dylan-sanson'
 import { Route as BlogIndexRouteImport } from './routes/blog/index'
 import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
 import { Route as DrugSlugRouteImport } from './routes/drug/$slug'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -71,6 +74,11 @@ const FeaturesRoute = FeaturesRouteImport.update({
 const HowOftenDoesNadacUpdateRoute = HowOftenDoesNadacUpdateRouteImport.update({
   id: '/how-often-does-nadac-update',
   path: '/how-often-does-nadac-update',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MoversRoute = MoversRouteImport.update({
@@ -129,6 +137,12 @@ const WhatIsNadacRoute = WhatIsNadacRouteImport.update({
   path: '/what-is-nadac',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthorDylanSansonRoute = AuthorDylanSansonRouteImport.update({
   id: '/author/dylan-sanson',
   path: '/author/dylan-sanson',
@@ -152,6 +166,11 @@ const DrugSlugRoute = DrugSlugRouteImport.update({
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
@@ -186,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/compare-prescription-drug-prices': typeof ComparePrescriptionDrugPricesRoute
   '/features': typeof FeaturesRoute
   '/how-often-does-nadac-update': typeof HowOftenDoesNadacUpdateRoute
+  '/mcp': typeof McpRoute
   '/movers': typeof MoversRoute
   '/nadac-intelligence-alternative': typeof NadacIntelligenceAlternativeRoute
   '/ndc-lookup': typeof NdcLookupRoute
@@ -197,11 +217,13 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/what-is-nadac': typeof WhatIsNadacRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/author/dylan-sanson': typeof AuthorDylanSansonRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/drug/$slug': typeof DrugSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/blog/': typeof BlogIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -215,6 +237,7 @@ export interface FileRoutesByTo {
   '/compare-prescription-drug-prices': typeof ComparePrescriptionDrugPricesRoute
   '/features': typeof FeaturesRoute
   '/how-often-does-nadac-update': typeof HowOftenDoesNadacUpdateRoute
+  '/mcp': typeof McpRoute
   '/movers': typeof MoversRoute
   '/nadac-intelligence-alternative': typeof NadacIntelligenceAlternativeRoute
   '/ndc-lookup': typeof NdcLookupRoute
@@ -226,11 +249,13 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/what-is-nadac': typeof WhatIsNadacRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/author/dylan-sanson': typeof AuthorDylanSansonRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/drug/$slug': typeof DrugSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/blog': typeof BlogIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -245,6 +270,7 @@ export interface FileRoutesById {
   '/compare-prescription-drug-prices': typeof ComparePrescriptionDrugPricesRoute
   '/features': typeof FeaturesRoute
   '/how-often-does-nadac-update': typeof HowOftenDoesNadacUpdateRoute
+  '/mcp': typeof McpRoute
   '/movers': typeof MoversRoute
   '/nadac-intelligence-alternative': typeof NadacIntelligenceAlternativeRoute
   '/ndc-lookup': typeof NdcLookupRoute
@@ -256,11 +282,13 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/what-is-nadac': typeof WhatIsNadacRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/author/dylan-sanson': typeof AuthorDylanSansonRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/drug/$slug': typeof DrugSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/blog/': typeof BlogIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -276,6 +304,7 @@ export interface FileRouteTypes {
     | '/compare-prescription-drug-prices'
     | '/features'
     | '/how-often-does-nadac-update'
+    | '/mcp'
     | '/movers'
     | '/nadac-intelligence-alternative'
     | '/ndc-lookup'
@@ -287,11 +316,13 @@ export interface FileRouteTypes {
     | '/terms'
     | '/unsubscribe'
     | '/what-is-nadac'
+    | '/.well-known/oauth-protected-resource'
     | '/author/dylan-sanson'
     | '/blog/$slug'
     | '/drug/$slug'
     | '/email/unsubscribe'
     | '/blog/'
+    | '/.lovable/oauth/consent'
     | '/lovable/email/suppression'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -305,6 +336,7 @@ export interface FileRouteTypes {
     | '/compare-prescription-drug-prices'
     | '/features'
     | '/how-often-does-nadac-update'
+    | '/mcp'
     | '/movers'
     | '/nadac-intelligence-alternative'
     | '/ndc-lookup'
@@ -316,11 +348,13 @@ export interface FileRouteTypes {
     | '/terms'
     | '/unsubscribe'
     | '/what-is-nadac'
+    | '/.well-known/oauth-protected-resource'
     | '/author/dylan-sanson'
     | '/blog/$slug'
     | '/drug/$slug'
     | '/email/unsubscribe'
     | '/blog'
+    | '/.lovable/oauth/consent'
     | '/lovable/email/suppression'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -334,6 +368,7 @@ export interface FileRouteTypes {
     | '/compare-prescription-drug-prices'
     | '/features'
     | '/how-often-does-nadac-update'
+    | '/mcp'
     | '/movers'
     | '/nadac-intelligence-alternative'
     | '/ndc-lookup'
@@ -345,11 +380,13 @@ export interface FileRouteTypes {
     | '/terms'
     | '/unsubscribe'
     | '/what-is-nadac'
+    | '/.well-known/oauth-protected-resource'
     | '/author/dylan-sanson'
     | '/blog/$slug'
     | '/drug/$slug'
     | '/email/unsubscribe'
     | '/blog/'
+    | '/.lovable/oauth/consent'
     | '/lovable/email/suppression'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -364,6 +401,7 @@ export interface RootRouteChildren {
   ComparePrescriptionDrugPricesRoute: typeof ComparePrescriptionDrugPricesRoute
   FeaturesRoute: typeof FeaturesRoute
   HowOftenDoesNadacUpdateRoute: typeof HowOftenDoesNadacUpdateRoute
+  McpRoute: typeof McpRoute
   MoversRoute: typeof MoversRoute
   NadacIntelligenceAlternativeRoute: typeof NadacIntelligenceAlternativeRoute
   NdcLookupRoute: typeof NdcLookupRoute
@@ -375,11 +413,13 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   WhatIsNadacRoute: typeof WhatIsNadacRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AuthorDylanSansonRoute: typeof AuthorDylanSansonRoute
   BlogSlugRoute: typeof BlogSlugRoute
   DrugSlugRoute: typeof DrugSlugRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   BlogIndexRoute: typeof BlogIndexRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -435,6 +475,13 @@ declare module '@tanstack/react-router' {
       path: '/how-often-does-nadac-update'
       fullPath: '/how-often-does-nadac-update'
       preLoaderRoute: typeof HowOftenDoesNadacUpdateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/movers': {
@@ -514,6 +561,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WhatIsNadacRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/author/dylan-sanson': {
       id: '/author/dylan-sanson'
       path: '/author/dylan-sanson'
@@ -547,6 +601,13 @@ declare module '@tanstack/react-router' {
       path: '/email/unsubscribe'
       fullPath: '/email/unsubscribe'
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/suppression': {
@@ -588,6 +649,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComparePrescriptionDrugPricesRoute: ComparePrescriptionDrugPricesRoute,
   FeaturesRoute: FeaturesRoute,
   HowOftenDoesNadacUpdateRoute: HowOftenDoesNadacUpdateRoute,
+  McpRoute: McpRoute,
   MoversRoute: MoversRoute,
   NadacIntelligenceAlternativeRoute: NadacIntelligenceAlternativeRoute,
   NdcLookupRoute: NdcLookupRoute,
@@ -599,11 +661,14 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   WhatIsNadacRoute: WhatIsNadacRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   AuthorDylanSansonRoute: AuthorDylanSansonRoute,
   BlogSlugRoute: BlogSlugRoute,
   DrugSlugRoute: DrugSlugRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   BlogIndexRoute: BlogIndexRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
