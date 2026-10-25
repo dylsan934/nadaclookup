@@ -60,7 +60,7 @@ export const Header = ({ heroTitleAsH1 = false }: { heroTitleAsH1?: boolean }) =
       const { data, error } = await supabase.functions.invoke('customer-portal');
       if (error) throw error;
       if (data?.url) {
-        window.open(data.url, '_blank');
+        window.location.assign(data.url);
       }
     } catch (error) {
       console.error('Error opening portal:', error);

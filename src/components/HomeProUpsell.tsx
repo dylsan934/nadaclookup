@@ -1,3 +1,4 @@
+import { proAuthPath } from "@/lib/pro-checkout";
 import { useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ export const HomeProUpsell = () => {
         </Button>
       ) : (
         <Button asChild className="shrink-0">
-          <Link to="/auth?mode=signup">Start 7-day trial</Link>
+          <Link to={proAuthPath(plan)}>Start 7-day trial</Link>
         </Button>
       )}
     </section>
