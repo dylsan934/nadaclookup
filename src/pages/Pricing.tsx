@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "@/lib/router-compat";
+import { Link, useSearchParams } from "@/lib/router-compat";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,11 @@ import { Check, Crown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStartCheckout } from "@/hooks/useStartCheckout";
 import { BillingToggle, type BillingPlan } from "@/components/BillingToggle";
+import { proAuthPath, proPlan } from "@/lib/pro-checkout";
 
 const Pricing = () => {
-  const [plan, setPlan] = useState<BillingPlan>("monthly");
+  const [searchParams] = useSearchParams();
+  const [plan, setPlan] = useState<BillingPlan>(() => proPlan(searchParams.get("plan")));
   const { user, isSubscribed } = useAuth();
   const { start, isStarting } = useStartCheckout();
   const annual = plan === "annual";
@@ -19,6 +21,12 @@ const Pricing = () => {
       <div className="min-h-screen flex flex-col bg-background">
         <SiteNavigation />
         <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">
+          {user && !isSubscribed && searchParams.get("checkout") === "1" && (
+            <p role="status" className="rounded-lg bg-primary/10 p-4 mb-6 text-center">
+              You're signed in. Review your plan below, then continue to Stripe to start your trial.
+              {annual ? " Annual billing is $290/year after 7 days." : " Monthly billing is $29/month after 7 days."}
+            </p>
+          )}
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
               Simple, Transparent Pricing for Pharmacies
@@ -48,7 +56,7 @@ const Pricing = () => {
             {/* Pro */}
             <div className="bg-card border-2 border-primary rounded-xl p-8 relative">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1"><Crown className="h-3 w-3" /> Most Popular</span>
+                <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1"><Crown className="h-3 w-3" /> For regular pharmacy workflows</span>
               </div>
               <h2 className="text-xl font-bold text-foreground mb-1">Pro</h2>
               {annual ? (
@@ -59,19 +67,23 @@ const Pricing = () => {
               ) : (
                 <p className="text-3xl font-bold text-foreground">$29<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
               )}
-              <p className="text-sm text-muted-foreground mt-2 mb-6">Includes the reimbursement calculator and per-payer contract rules no free lookup offers.</p>
+              <p className="text-sm text-muted-foreground mt-2 mb-6">Review reimbursement estimates using your own contract rules, then track the drugs you buy regularly.</p>
               <ul className="space-y-3 text-sm">
-                {["Unlimited use of reimbursement calculator", "Unlimited custom contract rules", "Full NADAC price history charts", "Automated price change alerts", "Unlimited watchlist", "Weekly Top 10 movers (increases & decreases)", "Weekly movers email digest", "Custom alert thresholds", "Drug categories & notes", "Priority support", "Everything in Free"].map(f => (
+                {["Unlimited use of reimbursement calculator", "Unlimited custom contract rules", "Full NADAC price history charts", "Automated price change alerts", "Unlimited watchlist", "Weekly Top 10 movers (increases & decreases)", "Custom alert thresholds", "Drug categories & notes", "Priority support", "Everything in Free"].map(f => (
                   <li key={f} className="flex items-start gap-2 text-muted-foreground"><Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />{f}</li>
                 ))}
               </ul>
-              {user && !isSubscribed ? (
+              {isSubscribed ? (
+                <Button asChild className="w-full mt-8">
+                  <Link to="/saved-drugs">Open your Pro watchlist</Link>
+                </Button>
+              ) : user ? (
                 <Button className="w-full mt-8" onClick={() => start(plan)} disabled={isStarting}>
-                  Start 7-Day Free Trial
+                  {isStarting ? "Opening secure checkout…" : "Start 7-Day Free Trial"}
                 </Button>
               ) : (
                 <Button asChild className="w-full mt-8">
-                  <Link to="/auth?mode=signup">Start 7-Day Free Trial</Link>
+                  <Link to={proAuthPath(plan)}>Start 7-Day Free Trial</Link>
                 </Button>
               )}
               <p className="text-xs text-muted-foreground text-center mt-2">Card required. You're not charged until day 8 — cancel anytime before then. 30-day money-back guarantee. Secure checkout by Stripe.</p>
