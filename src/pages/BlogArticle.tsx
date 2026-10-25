@@ -343,7 +343,7 @@ export const articles: Record<string, { title: string; description: string; cont
           <li><strong className="text-foreground">Save your top-dispensed drugs</strong> so they're one click away each Wednesday.</li>
           <li><strong className="text-foreground">Price change alerts</strong> notify you the moment NADAC moves on a drug you stock — before any claim gets paid against the new number.</li>
           <li><strong className="text-foreground">Full 5-year price history</strong> makes documenting a trend trivial when you escalate to contract renegotiation.</li>
-          <li><strong className="text-foreground">Weekly movers email digest</strong> delivers the top 10 increases and decreases straight to your inbox every Wednesday morning.</li>
+          <li><strong className="text-foreground">Weekly movers email digest</strong> is being prepared and is not currently available. You can review price movers on the website.</li>
         </ul>
 
         <h2 className="text-2xl font-semibold text-foreground mt-8 mb-3">Where Do These Numbers Come From?</h2>

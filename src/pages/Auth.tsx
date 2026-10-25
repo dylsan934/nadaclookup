@@ -375,7 +375,7 @@ const Auth = () => {
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">NADAC Pricing</h1>
           <p className="text-muted-foreground">
-            Access real-time drug pricing data
+            Access weekly CMS drug pricing benchmarks
           </p>
         </div>
 

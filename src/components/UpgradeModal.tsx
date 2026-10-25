@@ -1,3 +1,4 @@
+import { proAuthPath } from "@/lib/pro-checkout";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BillingToggle, type BillingPlan } from "@/components/BillingToggle";
@@ -166,7 +167,7 @@ export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeMo
             </>
           ) : (
             <>
-              <Link to="/auth?mode=signup" className="w-full" onClick={() => onOpenChange(false)}>
+              <Link to={proAuthPath(plan)} className="w-full" onClick={() => onOpenChange(false)}>
                 <Button 
                   size="lg" 
                   className="w-full font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md"
@@ -178,7 +179,7 @@ export const UpgradeModal = ({ open, onOpenChange, featureHighlight }: UpgradeMo
               <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
                 <span>Already have an account?</span>
                 <Link 
-                  to="/auth" 
+                  to={proAuthPath(plan, "login")}
                   onClick={() => onOpenChange(false)}
                   className="text-primary hover:underline font-medium"
                 >
