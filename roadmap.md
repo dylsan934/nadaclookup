@@ -1,5 +1,12 @@
 # Roadmap
 
+## October 21 published-release consistency
+- [ ] Inspect current ingestion, publication, search, drug pages and public statistics; report root cause
+- [ ] Prepare a non-destructive release-selection repair and October 21 versus October 14 backfill plan
+- [ ] Implement and test shared published-release reads, durable stage gates and cross-surface invariants
+- [ ] Finalize October 21 using immutable CMS snapshots; notifications and emails stay dry-run
+- [ ] Verify exact homepage/Movers text and public date consistency; no scheduling changes or publish without separate permission
+
 ## Agent integrations
 - [x] Add OAuth-protected exact-NDC lookup and account watchlist tools, plus browser search-page tools
 - [x] Verify generated two-tool catalog, 11 regression tests, signed-out consent return, invalid requests, approve/deny, already-authorized redirects and real account watchlist/exact-NDC reads; build OK
