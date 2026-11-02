@@ -34,6 +34,6 @@ export const getDrugPageSnapshot = createServerFn({method:'GET'}).inputValidator
  const related=responses.flatMap((response,i)=>{
   if(response.error)throw new Error('Related published pricing unavailable');
   return (response.data ?? []).filter(r=>{if(!r.drug_name || seen.has(r.drug_name))return false;seen.add(r.drug_name);return true;}).slice(0,[5,2,1][i]);
- }).map(r=>({drug_name:r.drug_name ?? '',nadac_per_unit:r.nadac_per_unit ?? 0,pricing_unit:r.pricing_unit,effective_date:r.effective_date ?? ''}));
+ }).map(r=>z.object({drug_name:z.string(),nadac_per_unit:z.number(),pricing_unit:z.string(),effective_date:z.string()}).parse(r));
  return {rows,related,runId:primary.run_id,publicationDate:primary.publication_date};
 });

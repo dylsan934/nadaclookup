@@ -6,7 +6,7 @@ export const publicationSchema = z.object({
   runId: z.string().nullable(), currentDate: z.string().nullable(), previousDate: z.string().nullable(), completedAt: z.string().nullable(), pendingDate: z.string().nullable(), totalRecords: z.number(),
   topIncreases: z.array(moverSchema), topDecreases: z.array(moverSchema), totalChanged: z.number().nullable(), added: z.number().nullable(), removed: z.number().nullable(), nonComparable: z.number().nullable(),
   rejected:z.number().nullable().optional(), currentPriceStatus:z.string().nullable().optional(), drugPageStatus:z.string().nullable().optional(),
-  invariant:z.object({ok:z.boolean(),error:z.string().nullable(),runId:z.string().nullable(),searchPublicationDate:z.string().nullable(),drugPagePublicationDate:z.string().nullable(),homepagePublicationDate:z.string().nullable(),moversPublicationDate:z.string().nullable(),effectiveDateMismatch:z.boolean(),effectiveDateError:z.string().nullable()}).passthrough().optional(),
+  invariant:z.object({ok:z.boolean(),error:z.string().nullable(),runId:z.string().nullable(),searchPublicationDate:z.string().nullable(),drugPagePublicationDate:z.string().nullable(),homepagePublicationDate:z.string().nullable(),moversPublicationDate:z.string().nullable(),effectiveDateMismatch:z.boolean(),effectiveDateError:z.string().nullable()}).optional(),
 });
 export type WeeklyPublication = z.infer<typeof publicationSchema>;
 export const releaseRecordSchema = z.object({ ndc: z.string().regex(/^\d{11}$/), drug_name: z.string().min(1), nadac_per_unit: z.string().regex(/^\d+(\.\d+)?$/), effective_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), pricing_unit: z.string().min(1), pharmacy_type: z.string().min(1), explanation: z.string().nullable() });

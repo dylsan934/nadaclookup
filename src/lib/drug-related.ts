@@ -13,8 +13,8 @@ export interface RelatedDrugLink {
  * from slugToSearchTerm also matches near-names ("abilify%5%mg" matches "ABILIFY 15 MG"),
  * which previously gave different URLs the same drug and the same title.
  */
-export function pickExactSlugMatch<T extends { drug_name: string }>(rows: T[], slug: string): T[] {
-  const exact = rows.filter((r) => drugNameToSlug(r.drug_name) === slug);
+export function pickExactSlugMatch<T extends { drug_name: string | null }>(rows: T[], slug: string): T[] {
+  const exact = rows.filter((r) => r.drug_name && drugNameToSlug(r.drug_name) === slug);
   return exact.length > 0 ? exact : rows;
 }
 
