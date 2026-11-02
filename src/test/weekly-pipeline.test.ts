@@ -32,6 +32,7 @@ describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)'
   await db.exec(readFileSync('drizzle/migrations/0001_nadac_weekly_finalization.sql','utf8'));
   await db.exec(readFileSync('drizzle/migrations/0002_allow_cms_future_effective_records.sql','utf8'));
   await db.exec(readFileSync('drizzle/migrations/0003_preserve_release_freshness_identity.sql','utf8'));
+  await db.exec(readFileSync('/tmp/nadac-repair/publication.sql','utf8'));
   await db.query('begin');
   await db.query('update public.nadac_publication set current_run_id=null where id=1');
  });
@@ -74,10 +75,29 @@ describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)'
   const b=await completed('2026-09-30',null,true,'182.30285'),p=await completed('2026-10-07',b);expect((await row(p))['top_increases']).toHaveLength(1);
   const id=await begin('2026-10-14',p);await stage(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_fail_run',[id,'movers','failure']);const s=await status();expect(s.pendingDate).toBe('2026-10-14');expect(s.topIncreases).toEqual([]);expect(visiblePublication(s).biggestMover).toBeUndefined();expect(s.runId).toBe(p);
  });
- it('future row effective dates never supersede finalized CMS publication identity',async()=>{
+ it('newer legacy ingestion is processing without superseding finalized publication identity',async()=>{
   const p=await completed('2026-10-07',null,true);await completed('2026-10-14',p);
   await db.query("insert into public.nadac_drugs values ('00052060201','BCG (TICE STRAIN) VIAL',187.77376,'2026-10-15','EA','Community/Independent',null)");
-  const s=await status();expect(s.currentDate).toBe('2026-10-14');expect(s.pendingDate).toBeNull();
+  const s=await status();expect(s.currentDate).toBe('2026-10-14');expect(s.pendingDate).toBe('2026-10-15');
+ });
+ it('October 21 versus October 14 uses one immutable snapshot across public surfaces',async()=>{
+  const p=await completed('2026-10-14',null,true),id=await completed('2026-10-21',p,false,'190');
+  const s=await status();expect(s.currentDate).toBe('2026-10-21');expect(s.previousDate).toBe('2026-10-14');expect(s.totalChanged).toBe(1);
+  const report=await rpc('nadac_public_invariant',[]);expect(report.ok).toBe(true);
+  for(const field of ['searchPublicationDate','drugPagePublicationDate','homepagePublicationDate','moversPublicationDate'])expect(report[field]).toBe('2026-10-21');
+  const prices=(await db.query<Record<string,any>>('select * from nadac_published_drugs')).rows;
+  expect(prices).toHaveLength(1);expect(prices[0]?.['run_id']).toBe(id);expect(Number(prices[0]?.['nadac_per_unit'])).toBe(190);
+  expect((await db.query('select * from nadac_drugs')).rows).toHaveLength(0);
+ });
+ it('drug-page failure blocks publication and revalidation allows safe retry',async()=>{
+  const p=await completed('2026-10-14',null,true),id=await begin('2026-10-21',p);await stage(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_compare_run',[id]);await rpc('nadac_prepare_digest',[id,'[]']);
+  await rpc('nadac_fail_run',[id,'drug_pages','readiness failure']);
+  await db.query('savepoint gate');await expect(rpc('nadac_finalize_run',[id])).rejects.toThrow('All stages');await db.query('rollback to savepoint gate');
+  expect((await status()).runId).not.toBe(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_finalize_run',[id]);expect((await status()).runId).toBe(id);
+ });
+ it('rejects incomplete or rejected records rather than publishing partial data',async()=>{
+  const p=await completed('2026-10-14',null,true),id=await begin('2026-10-21',p);await stage(id);await db.query('update nadac_import_runs set rejected_count=1 where id=$1',[id]);
+  await db.query('savepoint rejected');await expect(rpc('nadac_validate_run',[id])).rejects.toThrow('Incomplete or invalid');await db.query('rollback to savepoint rejected');expect((await status()).runId).not.toBe(id);
  });
 });
 it('CSV retains exact decimal price and leading-zero NDC while separating source dates',()=>{
