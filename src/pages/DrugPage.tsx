@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { ArrowRight, Search, Calendar, DollarSign, Pill, ChevronRight, Calculator } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from '@tanstack/react-start';
+import { getDrugPageSnapshot } from '@/lib/drug-page.functions';
 import { buildCalculatorHref } from "@/lib/drug-params";
 import { SiteNavigation } from "@/components/SiteNavigation";
 import { Footer } from "@/components/Footer";
@@ -50,39 +51,24 @@ const latestPerNdc = (rows: NadacRow[]): NadacRow[] => {
   );
 };
 
-const DrugPage = ({ initialName = "", initialRelated = [] }: { initialName?: string; initialRelated?: RelatedDrug[] }) => {
+const DrugPage = ({ initialName = "", initialRelated = [], initialRows, publicationDate }: { initialName?: string; initialRelated?: RelatedDrug[]; initialRows?:NadacRow[];publicationDate?:string|null }) => {
   const { slug = "" } = useParams<{ slug: string }>();
-  const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState<NadacRow[]>([]);
+  const [loading, setLoading] = useState(initialRows === undefined);
+  const [rows, setRows] = useState<NadacRow[]>(initialRows ?? []);
+  const [loadError,setLoadError]=useState('');
+  const readSnapshot=useServerFn(getDrugPageSnapshot);
   const [related, setRelated] = useState<RelatedDrug[]>(initialRelated);
   const [resolvedName, setResolvedName] = useState<string>(initialName);
 
   useEffect(() => {
+    if(initialRows !== undefined){setRows(initialRows);setRelated(initialRelated);setResolvedName(initialName);setLoading(false);return;}
     let cancelled = false;
     const load = async () => {
       setLoading(true);
       const searchTerm = slugToSearchTerm(slug);
 
-      // Fetch all NDCs matching this drug name (case-insensitive, latest effective_date)
-      const { data: matches } = await supabase
-        .from("nadac_drugs")
-        .select("ndc, drug_name, nadac_per_unit, effective_date, pricing_unit, pharmacy_type")
-        .ilike("drug_name", searchTerm)
-        .order("effective_date", { ascending: false })
-        .limit(500);
-
-      let resolved = latestPerNdc(pickExactSlugMatch((matches || []) as NadacRow[], slug));
-
-      // Fallback: if exact ilike yields nothing, try a looser prefix match
-      if (resolved.length === 0) {
-        const { data: loose } = await supabase
-          .from("nadac_drugs")
-          .select("ndc, drug_name, nadac_per_unit, effective_date, pricing_unit, pharmacy_type")
-          .ilike("drug_name", `${searchTerm}%`)
-          .order("effective_date", { ascending: false })
-          .limit(500);
-        resolved = latestPerNdc(pickExactSlugMatch((loose || []) as NadacRow[], slug));
-      }
+      const snapshot=await readSnapshot({data:{slug}});
+      const resolved=snapshot.rows;
 
       if (cancelled) return;
       setRows(resolved);
@@ -91,18 +77,18 @@ const DrugPage = ({ initialName = "", initialRelated = [] }: { initialName?: str
       setResolvedName(canonicalName);
 
       if (resolved[0]) {
-        const rel = await fetchRelatedDrugs(canonicalName).catch(() => null);
+        const rel = snapshot.related;
         if (!cancelled && rel) setRelated(rel);
       }
 
       if (!cancelled) setLoading(false);
     };
 
-    load();
+    void load().catch(()=>{if(!cancelled){setLoadError('Published pricing is temporarily unavailable.');setLoading(false);}});
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug,initialRows,initialName,initialRelated]);
 
   const canonical = `https://nadaclookup.com/drug/${slug}`;
   // While loading we only have the URL slug, whose wildcard form ("METFORMIN%ER%1%000%MG")
@@ -143,9 +129,9 @@ const DrugPage = ({ initialName = "", initialRelated = [] }: { initialName?: str
         <div className="min-h-screen flex flex-col bg-background">
           <SiteNavigation />
           <main className="flex-1 container mx-auto px-4 py-16 max-w-2xl text-center">
-            <h1 className="text-2xl font-bold text-foreground mb-3">Drug not found</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-3">{loadError ? 'Pricing unavailable' : 'Drug not found'}</h1>
             <p className="text-muted-foreground mb-6">
-              We couldn't locate NADAC pricing for "{slugToSearchTerm(slug)}". Try searching by full drug name or NDC code.
+              {loadError || `We couldn't locate published NADAC pricing for "${slugLabel}". Try searching by full drug name or NDC code.`}
             </p>
             <Button asChild>
               <Link to="/">
@@ -191,6 +177,7 @@ const DrugPage = ({ initialName = "", initialRelated = [] }: { initialName?: str
           </p>
 
           {/* Current NADAC pricing card */}
+          {publicationDate && <p className="text-xs text-muted-foreground mb-3">Published CMS release: {formatDate(publicationDate)}</p>}
           {loading ? (
             <Card className="p-6 mb-8 animate-pulse h-32" />
           ) : primary ? (
@@ -236,7 +223,7 @@ const DrugPage = ({ initialName = "", initialRelated = [] }: { initialName?: str
                     ))}
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-3">
-                    Each NDC shows its most recent effective NADAC record. Earlier records are kept for price history only.
+                    Each NDC shows its record from this published CMS release, with its original price effective date.
                   </p>
                 </div>
               )}
