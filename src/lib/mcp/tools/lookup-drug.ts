@@ -2,6 +2,7 @@ import { defineTool, ToolError } from '@lovable.dev/mcp-js';
 import { z } from 'zod';
 import { supabaseForUser } from '../supabase';
 import { currentDrugs } from '../current-drugs';
+import { publishedDrugSchema } from '../../published-drug';
 
 export default defineTool({
   name: 'lookup_drug', title: 'Look up exact NDC pricing',
@@ -10,9 +11,10 @@ export default defineTool({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ ndc }, ctx) => {
     const db = supabaseForUser(ctx);
-    const { data, error } = await db.from('nadac_drugs').select('*').eq('ndc', ndc).order('effective_date', { ascending: false }).limit(100);
+    const { data, error } = await db.from('nadac_published_drugs').select('*').eq('ndc', ndc).order('effective_date', { ascending: false }).limit(100);
     if (error) throw new ToolError('Unable to read drug pricing.');
-    const drugs = currentDrugs(data ?? []);
-    return { content: [{ type: 'text', text: drugs.length ? JSON.stringify(drugs) : 'No pricing found for this exact NDC.' }], structuredContent: { drugs } };
+    const rows = z.array(publishedDrugSchema).parse(data ?? []);
+    const drugs = currentDrugs(rows);
+    return { content: [{ type: 'text', text: drugs.length ? JSON.stringify(drugs) : 'No pricing found for this exact NDC.' }], structuredContent: { drugs, runId:rows[0]?.run_id ?? null, publicationDate:rows[0]?.publication_date ?? null } };
   },
 });

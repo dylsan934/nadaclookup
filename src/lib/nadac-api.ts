@@ -108,7 +108,7 @@ export const nadacApi = {
     if (!searchTerm || searchTerm.length < 2) return [];
 
     const { data, error } = await supabase
-      .from('nadac_drugs')
+      .from('nadac_published_drugs')
       .select('drug_name')
       .ilike('drug_name', `%${searchTerm}%`)
       .limit(100);
@@ -120,11 +120,12 @@ export const nadacApi = {
     
     data.forEach(drug => {
       const name = drug.drug_name;
+      if (!name) return;
       // Prioritize exact prefix matches
       const isExactPrefix = name.toUpperCase().startsWith(searchTerm.toUpperCase());
       const score = isExactPrefix ? 100 : 0;
       
-      if (!uniqueNames.has(name) || uniqueNames.get(name)! < score) {
+      if ((uniqueNames.get(name) ?? -1) < score) {
         uniqueNames.set(name, score);
       }
     });

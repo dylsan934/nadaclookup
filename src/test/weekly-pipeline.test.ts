@@ -32,7 +32,7 @@ describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)'
   await db.exec(readFileSync('drizzle/migrations/0001_nadac_weekly_finalization.sql','utf8'));
   await db.exec(readFileSync('drizzle/migrations/0002_allow_cms_future_effective_records.sql','utf8'));
   await db.exec(readFileSync('drizzle/migrations/0003_preserve_release_freshness_identity.sql','utf8'));
-  await db.exec(readFileSync('/tmp/nadac-repair/publication.sql','utf8'));
+  await db.exec(readFileSync('drizzle/migrations/0005_unified_published_nadac_snapshot.sql','utf8'));
   await db.query('begin');
   await db.query('update public.nadac_publication set current_run_id=null where id=1');
  });

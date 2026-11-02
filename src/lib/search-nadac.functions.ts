@@ -8,13 +8,14 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import { rankDrugs } from "@/lib/search-ranking";
+import { publishedDrugSchema, type PublishedDrug } from './published-drug';
 
 const InputSchema = z.object({
   searchTerm: z.string().min(1),
   limit: z.number().int().positive().max(500).optional(),
 });
 
-type NadacDrugRow = Database["public"]["Tables"]["nadac_drugs"]["Row"];
+type NadacDrugRow = PublishedDrug;
 
 export interface SearchNadacResult {
   success: boolean;
@@ -30,7 +31,9 @@ function getSupabase() {
     process.env["SUPABASE_PUBLISHABLE_KEY"] ??
     process.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
   if (!url || !key) throw new Error("Supabase environment not configured");
-  return createClient<Database>(url, key);
+  return createClient<Database>(url, key, {auth:{persistSession:false,autoRefreshToken:false},global:{fetch:(input,init)=>{
+    const headers=new Headers(init?.headers);if(key.startsWith('sb_') && headers.get('Authorization')===`Bearer ${key}`)headers.delete('Authorization');headers.set('apikey',key);return fetch(input,{...init,headers});
+  }}});
 }
 
 export const searchNadac = createServerFn({ method: "POST" })
@@ -55,13 +58,13 @@ export const searchNadac = createServerFn({ method: "POST" })
 
       const query = isNDC
         ? supabase
-            .from("nadac_drugs")
+            .from("nadac_published_drugs")
             .select("*")
             .or(`ndc.ilike.%${term}%,ndc.ilike.%${normalizeNDC(term)}%`)
             .order("effective_date", { ascending: false })
             .limit(fetchLimit)
         : supabase
-            .from("nadac_drugs")
+            .from("nadac_published_drugs")
             .select("*")
             .ilike("drug_name", `%${term}%`)
             .order("effective_date", { ascending: false })
@@ -77,7 +80,7 @@ export const searchNadac = createServerFn({ method: "POST" })
       // effective_date). Historical rows stay in the database for price history but
       // must not appear as current prices.
       const uniqueDrugs = new Map<string, NadacDrugRow>();
-      for (const drug of data ?? []) {
+      for (const drug of z.array(publishedDrugSchema).parse(data ?? [])) {
         const key = `${drug.ndc}|${drug.pharmacy_type ?? ""}`;
         const existing = uniqueDrugs.get(key);
         if (!existing || (drug.effective_date ?? "") > (existing.effective_date ?? "")) {
