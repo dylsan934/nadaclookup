@@ -3,9 +3,12 @@
 ## October 21 published-release consistency
 - [x] Inspect current ingestion, publication, search, drug pages and public statistics; confirmed October 28 raw data versus October 14 pointer and unlinked legacy Movers
 - [x] Prepare a non-destructive release-selection repair and October 21 versus October 14 backfill plan; 30 existing safety tests passed
-- [ ] Implement and test shared published-release reads, durable stage gates and cross-surface invariants
-- [ ] Finalize October 21 using immutable CMS snapshots; notifications and emails stay dry-run
-- [ ] Verify exact homepage/Movers text and public date consistency; no scheduling changes or publish without separate permission
+- [x] Implement shared published-release reads, readiness gates, rejected-count accounting and invariant report; all 57 tests pass, preview compilation OK
+- [x] Finalize exact October 21 CMS snapshot versus October 14: 30,095 rows, 28,712 comparable changes; real retry idempotent, no alerts/emails queued
+- [x] Verify exact homepage/Movers processing labels and signed-in search → drug → calculator prefill; all public release dates October 21
+- [ ] Publish repaired price readers and cut over automatic orchestration (blocker: separate explicit publish/scheduler authorization; hosted app remains old)
+- [ ] Finalize October 28 if requested (blocker: approval for subsequent release; artifact verified read-only, remains processing)
+- [ ] Verify admin table presentation (blocker: existing admin page blank/redirected; authenticated repair functions and public flow verified independently)
 
 ## Agent integrations
 - [x] Add OAuth-protected exact-NDC lookup and account watchlist tools, plus browser search-page tools
