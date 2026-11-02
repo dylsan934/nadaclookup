@@ -43,8 +43,10 @@ export const getWeeklyAdmin = createServerFn({method:'POST'}).middleware([requir
  const {supabaseAdmin:db}=await import('@/integrations/supabase/client.server');
  const [runs,preparations]=await Promise.all([db.from('nadac_import_runs').select('*').order('source_date',{ascending:false}).limit(20),db.from('weekly_digest_preparations').select('*').order('prepared_at',{ascending:false}).limit(1000)]);
  if(runs.error || preparations.error)throw new Error('Run history unavailable');
+ const {data:invariant,error:invariantError}=await db.rpc('nadac_public_invariant');
+ if(invariantError)throw new Error('Publication consistency report unavailable');
  const ids=new Set((preparations.data ?? []).map(r=>r.user_id));
  const recipients=[];
  for(const id of ids) { const {data,error}=await db.auth.admin.getUserById(id);if(error)throw new Error('Recipient preview unavailable');recipients.push({userId:id,email:data.user?.email ?? null}); }
- return {runs:runs.data ?? [],preparations:preparations.data ?? [],recipients};
+ return {runs:runs.data ?? [],preparations:preparations.data ?? [],recipients,invariant};
 });

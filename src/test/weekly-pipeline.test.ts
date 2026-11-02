@@ -99,6 +99,19 @@ describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)'
   const p=await completed('2026-10-14',null,true),id=await begin('2026-10-21',p);await stage(id);await db.query('update nadac_import_runs set rejected_count=1 where id=$1',[id]);
   await db.query('savepoint rejected');await expect(rpc('nadac_validate_run',[id])).rejects.toThrow('Incomplete or invalid');await db.query('rollback to savepoint rejected');expect((await status()).runId).not.toBe(id);
  });
+ it('October 21 zero-change result stays valid and retry queues no notifications',async()=>{
+  const p=await completed('2026-10-14',null,true),id=await completed('2026-10-21',p);
+  expect((await status()).totalChanged).toBe(0);expect((await status()).topIncreases).toEqual([]);expect((await status()).topDecreases).toEqual([]);
+  await rpc('nadac_validate_run',[id]);await rpc('nadac_compare_run',[id]);await rpc('nadac_prepare_digest',[id,'[]']);await rpc('nadac_finalize_run',[id]);
+  expect((await db.query<Record<string,any>>('select count(*)::int n from weekly_movers where run_id=$1',[id])).rows[0]?.['n']).toBe(1);
+  expect((await db.query<Record<string,any>>('select (select count(*) from email_send_log)::int logs,(select count(*) from pgmq.q_transactional_emails)::int queue')).rows[0]).toEqual({logs:0,queue:0});
+ });
+ it('reports effective-date mismatch without rewriting the original record date',async()=>{
+  const p=await completed('2026-10-14',null,true),id=await begin('2026-10-21',p);
+  await stage(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_compare_run',[id]);await rpc('nadac_prepare_digest',[id,'[]']);await rpc('nadac_finalize_run',[id]);
+  const report=await rpc('nadac_public_invariant',[]);expect(report.ok).toBe(true);expect(report.effectiveDateMismatch).toBe(true);expect(report.maxSearchableEffectiveDate).toBe('2026-10-07');expect(report.homepagePublicationDate).toBe('2026-10-21');
+  expect((await db.query<Record<string,any>>('select effective_date::text date from nadac_published_drugs')).rows[0]?.['date']).toBe('2026-10-07');
+ });
 });
 it('CSV retains exact decimal price and leading-zero NDC while separating source dates',()=>{
  const csv='NDC,NDC Description,NADAC Per Unit,Effective Date,Pricing Unit,Pharmacy Type Indicator,As of Date\n00052060201,BCG (TICE STRAIN) VIAL,187.77376,10/07/2026,EA,C/I,10/14/2026';

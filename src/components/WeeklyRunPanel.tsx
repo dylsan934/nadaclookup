@@ -39,6 +39,7 @@ export function WeeklyRunPanel() {
  const retry=async(runId:string)=>{setBusy(true);setError('');try{await finish(runId);}catch(e){setError(e instanceof Error ? e.message:'Retry failed.');}finally{await refresh();setBusy(false);}};
  return <section className="mb-8 border-y border-border py-6 space-y-4">
   <h2 className="text-xl font-semibold">Weekly data runs</h2>
+  {data?.invariant && <details className="text-sm"><summary className="cursor-pointer font-medium">Public release consistency</summary><pre className="mt-2 overflow-x-auto text-xs">{JSON.stringify(data.invariant,null,2)}</pre></details>}
   <Button variant="outline" disabled={busy} onClick={async()=>{setBusy(true);setError('');try{setAlerts(await preview());}catch{setError('Saved-drug alert preview unavailable.');}finally{setBusy(false);}}}>Preview saved-drug alerts</Button>
   {alerts && <div className="text-sm space-y-2"><p>Private preview only · no emails queued · {alerts.rows.length} saved drugs checked</p>{alerts.rows.map(a=><p key={a.savedDrugId}>{a.drugName ?? a.ndc} · {a.ndc} · {a.previousDate} → {a.currentDate} · {a.reason ?? 'Verified change'}{a.oldPrice && a.newPrice ? ` · $${a.oldPrice} → $${a.newPrice}`:''}</p>)}</div>}
   <p className="text-sm text-muted-foreground">Historical repair · preview-only digest preparations · no emails sent</p>

@@ -169,7 +169,7 @@ export default function WeeklyMovers() {
           ) : !data?.success ? (
             <Card className="p-8 text-center">
               <p className="text-muted-foreground">
-                {data?.error || "Unable to load weekly movers. Check back after the next data sync."}
+                {publication.invariant?.error || (publication.pendingDate ? "Weekly Movers are still processing. No older ranking is shown as current." : data?.error || "Unable to load weekly movers. Check back after the next data sync.")}
               </p>
             </Card>
           ) : (
