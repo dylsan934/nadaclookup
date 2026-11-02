@@ -242,7 +242,9 @@ export type Database = {
           baseline: boolean
           checksum: string
           completed_at: string | null
+          current_price_status: string
           digest_status: string
+          drug_page_status: string
           expected_count: number
           failure_reason: string | null
           freshness_status: string
@@ -254,6 +256,7 @@ export type Database = {
           non_comparable_count: number
           previous_run_id: string | null
           record_count: number
+          rejected_count: number
           removed_count: number
           search_status: string
           source_date: string
@@ -270,7 +273,9 @@ export type Database = {
           baseline?: boolean
           checksum: string
           completed_at?: string | null
+          current_price_status?: string
           digest_status?: string
+          drug_page_status?: string
           expected_count: number
           failure_reason?: string | null
           freshness_status?: string
@@ -282,6 +287,7 @@ export type Database = {
           non_comparable_count?: number
           previous_run_id?: string | null
           record_count?: number
+          rejected_count?: number
           removed_count?: number
           search_status?: string
           source_date: string
@@ -298,7 +304,9 @@ export type Database = {
           baseline?: boolean
           checksum?: string
           completed_at?: string | null
+          current_price_status?: string
           digest_status?: string
+          drug_page_status?: string
           expected_count?: number
           failure_reason?: string | null
           freshness_status?: string
@@ -310,6 +318,7 @@ export type Database = {
           non_comparable_count?: number
           previous_run_id?: string | null
           record_count?: number
+          rejected_count?: number
           removed_count?: number
           search_status?: string
           source_date?: string
@@ -843,7 +852,31 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      nadac_published_drugs: {
+        Row: {
+          created_at: string | null
+          drug_name: string | null
+          effective_date: string | null
+          explanation: string | null
+          id: string | null
+          nadac_per_unit: number | null
+          ndc: string | null
+          pharmacy_type: string | null
+          pricing_unit: string | null
+          publication_date: string | null
+          run_id: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nadac_release_records_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "nadac_import_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       can_save_drug: { Args: { p_user_id: string }; Returns: boolean }
@@ -913,6 +946,7 @@ export type Database = {
         Returns: number
       }
       nadac_prepare_saved_alert: { Args: { p_saved: string }; Returns: string }
+      nadac_public_invariant: { Args: never; Returns: Json }
       nadac_public_status: { Args: never; Returns: Json }
       nadac_saved_alert_preview: { Args: { p_saved: string }; Returns: Json }
       nadac_stage_records: {

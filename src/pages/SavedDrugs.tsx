@@ -178,7 +178,7 @@ export default function SavedDrugs() {
     for (const ndc of ndcs) {
       try {
         const { data, error } = await supabase
-          .from("nadac_drugs")
+          .from("nadac_published_drugs")
           .select("nadac_per_unit, effective_date, pricing_unit")
           .eq("ndc", ndc)
           .order("effective_date", { ascending: false })

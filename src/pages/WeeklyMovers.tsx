@@ -136,7 +136,7 @@ export default function WeeklyMovers() {
   const { user, isSubscribed } = useAuth();
   const {data:publication} = useSuspenseQuery(weeklyPublicationQuery);
   const loading = false;
-  const data: MoversData = {success:!!publication.runId && !publication.pendingDate,currentDate:publication.currentDate ?? "",previousDate:publication.previousDate ?? "",topIncreases:publication.topIncreases,topDecreases:publication.topDecreases,totalChanged:publication.totalChanged ?? 0};
+  const data: MoversData = {success:!!publication.runId && !publication.pendingDate && publication.invariant?.ok !== false,currentDate:publication.currentDate ?? "",previousDate:publication.previousDate ?? "",topIncreases:publication.topIncreases,topDecreases:publication.topDecreases,totalChanged:publication.totalChanged ?? 0};
 
   return (
     <>
@@ -158,8 +158,8 @@ export default function WeeklyMovers() {
                 Latest changes: {formatDate(data.currentDate)} vs {formatDate(data.previousDate)}
               </p>
             )}
-            {publication?.currentDate && <p className="text-xs text-muted-foreground mt-1">Newest CMS data: {formatDate(publication.currentDate)}</p>}
-            {publication?.pendingDate && <p role="status" className="text-sm text-muted-foreground mt-3">{formatSourceDate(publication.pendingDate, {month:"long",day:"numeric"})} pricing is available; weekly Movers are still processing.</p>}
+            {publication?.currentDate && <p className="text-xs text-muted-foreground mt-1">{publication.pendingDate ? "Last published release" : "Newest published CMS data"}: {formatDate(publication.currentDate)} · comparison: {formatDate(publication.currentDate)} vs {formatDate(publication.previousDate ?? "")}</p>}
+            {publication?.pendingDate && <p role="status" className="text-sm text-muted-foreground mt-3">{formatDate(publication.pendingDate)} data is processing. Last published release: {formatDate(publication.currentDate ?? "")}.</p>}
           </div>
 
           {loading ? (
@@ -169,7 +169,7 @@ export default function WeeklyMovers() {
           ) : !data?.success ? (
             <Card className="p-8 text-center">
               <p className="text-muted-foreground">
-                {data?.error || "Unable to load weekly movers. Check back after the next data sync."}
+                {publication.invariant?.error || (publication.pendingDate ? "Weekly Movers are still processing. No older ranking is shown as current." : data?.error || "Unable to load weekly movers. Check back after the next data sync.")}
               </p>
             </Card>
           ) : (

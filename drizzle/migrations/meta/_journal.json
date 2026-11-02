@@ -36,6 +36,13 @@
       "when": 1792465083095,
       "tag": "0004_verified_saved_drug_alert_events",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793646008394,
+      "tag": "0005_unified_published_nadac_snapshot",
+      "breakpoints": true
     }
   ]
 }

@@ -13,15 +13,15 @@ export interface RelatedDrugLink {
  * from slugToSearchTerm also matches near-names ("abilify%5%mg" matches "ABILIFY 15 MG"),
  * which previously gave different URLs the same drug and the same title.
  */
-export function pickExactSlugMatch<T extends { drug_name: string }>(rows: T[], slug: string): T[] {
-  const exact = rows.filter((r) => drugNameToSlug(r.drug_name) === slug);
+export function pickExactSlugMatch<T extends { drug_name: string | null }>(rows: T[], slug: string): T[] {
+  const exact = rows.filter((r) => r.drug_name && drugNameToSlug(r.drug_name) === slug);
   return exact.length > 0 ? exact : rows;
 }
 
 export async function resolveDrugNameForSlug(slug: string): Promise<{ drug_name: string; ndc: string } | null> {
   const term = slugToSearchTerm(slug);
   const { data } = await supabase
-    .from("nadac_drugs")
+    .from("nadac_published_drugs")
     .select("drug_name, ndc, effective_date")
     .ilike("drug_name", term)
     .order("effective_date", { ascending: false })
@@ -29,7 +29,7 @@ export async function resolveDrugNameForSlug(slug: string): Promise<{ drug_name:
   let rows = data ?? [];
   if (rows.length === 0) {
     const loose = await supabase
-      .from("nadac_drugs")
+      .from("nadac_published_drugs")
       .select("drug_name, ndc, effective_date")
       .ilike("drug_name", `${term}%`)
       .order("effective_date", { ascending: false })
@@ -37,7 +37,7 @@ export async function resolveDrugNameForSlug(slug: string): Promise<{ drug_name:
     rows = loose.data ?? [];
   }
   const row = pickExactSlugMatch(rows, slug)[0];
-  return row ? { drug_name: row.drug_name, ndc: row.ndc } : null;
+  return row?.drug_name && row.ndc ? { drug_name: row.drug_name, ndc: row.ndc } : null;
 }
 
 function dedupe(rows: RelatedDrugLink[], exclude: Set<string>, max: number): RelatedDrugLink[] {
@@ -64,10 +64,10 @@ export async function fetchRelatedDrugs(drugName: string): Promise<RelatedDrugLi
 
   const [sameRoot, after, before] = await Promise.all([
     root
-      ? supabase.from("nadac_drugs").select(cols).ilike("drug_name", `${root}%`).order("effective_date", { ascending: false }).limit(200)
+      ? supabase.from("nadac_published_drugs").select(cols).ilike("drug_name", `${root}%`).order("effective_date", { ascending: false }).limit(200)
       : Promise.resolve({ data: [] as RelatedDrugLink[] }),
-    supabase.from("nadac_drugs").select(cols).gt("drug_name", drugName).order("drug_name", { ascending: true }).limit(80),
-    supabase.from("nadac_drugs").select(cols).lt("drug_name", drugName).order("drug_name", { ascending: false }).limit(80),
+    supabase.from("nadac_published_drugs").select(cols).gt("drug_name", drugName).order("drug_name", { ascending: true }).limit(80),
+    supabase.from("nadac_published_drugs").select(cols).lt("drug_name", drugName).order("drug_name", { ascending: false }).limit(80),
   ]);
 
   const similar = dedupe((sameRoot.data ?? []) as RelatedDrugLink[], seen, 5);
