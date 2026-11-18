@@ -1,6 +1,8 @@
 - Founder identity lives in src/lib/founder.ts; About/footer render it only when non-null — keeps unverified identity off the site.
 - All current-price consumers read nadac_published_drugs, an immutable finalized-run view; homepage/Movers use nadac_public_status() and snapshot counts so history cannot leak into current prices. Drug route loaders use getDrugPageSnapshot for initial price rows and metadata together.
 - Weekly repair uses immutable release staging and service-only transactional RPC stages; a current pointer advances only after all stages succeed.
+- Release detection and download/validation are independent of predecessor completion; private append-only attempts and two-hour stage deadlines prevent hidden stalls, while review actions never finalize or queue notifications.
+- Finalized release-linked Movers are immutable and public consistency checks include counts and rankings, so legacy jobs cannot silently overwrite verified comparisons.
 - Historical repair runs never write nadac_drugs; scheduler cutover requires separate deployment authorization so repair cannot change searchable prices or existing cron behavior.
 - Digest preparations remain private and permanently preview-only; the unsafe legacy digest schedule is paused, while import schedules remain unchanged. Legacy sender retirement is blocked until the migrated app is published and verified.
 - Saved-drug email events use service-only finalized-release validation, an activation cutoff, private account eligibility checks and atomic event-to-queue handoff; this prevents stale, historical, preference-bypassing and duplicate sends.

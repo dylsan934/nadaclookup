@@ -10,6 +10,7 @@ interface DataStatusProps {
   totalRecords: number;
   lastSyncAt?: string | undefined;
   pendingDate?: string | undefined;
+  publicationDelayed?: boolean | undefined;
   biggestMover?: { drugName: string; ndc: string; pctChange: number } | undefined;
   isLoading: boolean;
 }
@@ -18,7 +19,7 @@ const formatSync = (iso: string) =>
   new Date(iso).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short" });
 
 /** Live dataset proof strip: NDC count, last CMS sync, last week's biggest mover. */
-export const DataStatus = ({ hasData, lastUpdate, totalRecords, lastSyncAt, biggestMover, pendingDate, isLoading }: DataStatusProps) => {
+export const DataStatus = ({ hasData, lastUpdate, totalRecords, lastSyncAt, biggestMover, pendingDate, publicationDelayed, isLoading }: DataStatusProps) => {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" aria-busy="true" aria-label="Loading dataset stats">
@@ -40,7 +41,7 @@ export const DataStatus = ({ hasData, lastUpdate, totalRecords, lastSyncAt, bigg
 
   return (
     <>
-    {pendingDate && <p role="status" className="text-sm text-muted-foreground mb-3">{formatSourceDate(pendingDate, {month:"long",day:"numeric",year:"numeric"})} data is processing. Last published release: {lastUpdate ? formatSourceDate(lastUpdate) : "pending"}.</p>}
+    {lastUpdate && <p role="status" className="text-sm text-muted-foreground mb-3">{publicationDelayed ? `Publication delayed — ${formatSourceDate(lastUpdate,{month:'long',day:'numeric'})} remains the last verified release.` : `Last verified CMS release: ${formatSourceDate(lastUpdate)} · ${totalRecords.toLocaleString()} NDCs.`}</p>}
     <dl className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <div className="rounded-xl border border-border/60 bg-card px-4 py-3">
         <dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><Database className="h-3.5 w-3.5" aria-hidden="true" />NDCs in the published release</dt>
@@ -50,7 +51,7 @@ export const DataStatus = ({ hasData, lastUpdate, totalRecords, lastSyncAt, bigg
         <dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><Calendar className="h-3.5 w-3.5" aria-hidden="true" />Last CMS sync</dt>
         <dd className="text-sm font-semibold text-foreground leading-tight mt-1">
           {lastSyncAt ? formatSync(lastSyncAt) : "Awaiting finalized sync"}
-          {lastUpdate && <span className="block text-xs font-normal text-muted-foreground">Prices effective {formatSourceDateShort(lastUpdate)}</span>}
+          {lastUpdate && <span className="block text-xs font-normal text-muted-foreground">CMS release {formatSourceDateShort(lastUpdate)}</span>}
         </dd>
       </div>
       <div className="rounded-xl border border-border/60 bg-card px-4 py-3 min-w-0">
@@ -66,7 +67,7 @@ export const DataStatus = ({ hasData, lastUpdate, totalRecords, lastSyncAt, bigg
             <Link to="/movers" className="text-xs text-muted-foreground hover:underline">See all movers</Link>
           </dd>
         ) : (
-          <dd className="text-sm text-muted-foreground mt-1">{pendingDate ? "Weekly Movers are still processing" : "No price changes this week"}</dd>
+          <dd className="text-sm text-muted-foreground mt-1">{publicationDelayed ? "Weekly Movers publication delayed" : pendingDate ? "Weekly Movers are still processing" : "No price changes this week"}</dd>
         )}
       </div>
     </dl>

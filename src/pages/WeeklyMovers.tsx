@@ -136,7 +136,7 @@ export default function WeeklyMovers() {
   const { user, isSubscribed } = useAuth();
   const {data:publication} = useSuspenseQuery(weeklyPublicationQuery);
   const loading = false;
-  const data: MoversData = {success:!!publication.runId && !publication.pendingDate && publication.invariant?.ok !== false,currentDate:publication.currentDate ?? "",previousDate:publication.previousDate ?? "",topIncreases:publication.topIncreases,topDecreases:publication.topDecreases,totalChanged:publication.totalChanged ?? 0};
+  const data: MoversData = {success:!!publication.runId && !publication.pendingDate && !publication.publicationDelayed && publication.invariant?.ok !== false,currentDate:publication.currentDate ?? "",previousDate:publication.previousDate ?? "",topIncreases:publication.topIncreases,topDecreases:publication.topDecreases,totalChanged:publication.totalChanged ?? 0};
 
   return (
     <>
@@ -159,7 +159,8 @@ export default function WeeklyMovers() {
               </p>
             )}
             {publication?.currentDate && <p className="text-xs text-muted-foreground mt-1">{publication.pendingDate ? "Last published release" : "Newest published CMS data"}: {formatDate(publication.currentDate)} · comparison: {formatDate(publication.currentDate)} vs {formatDate(publication.previousDate ?? "")}</p>}
-            {publication?.pendingDate && <p role="status" className="text-sm text-muted-foreground mt-3">{formatDate(publication.pendingDate)} data is processing. Last published release: {formatDate(publication.currentDate ?? "")}.</p>}
+            {publication.publicationDelayed && <p role="status" className="text-sm text-muted-foreground mt-3">Publication delayed — {formatSourceDate(publication.currentDate ?? '',{month:'long',day:'numeric'})} remains the last verified release.</p>}
+            {!publication.publicationDelayed && publication.pendingDate && <p role="status" className="text-sm text-muted-foreground mt-3">{formatDate(publication.pendingDate)} data is processing. Last verified release: {formatDate(publication.currentDate ?? '')}.</p>}
           </div>
 
           {loading ? (

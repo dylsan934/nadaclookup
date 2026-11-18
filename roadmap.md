@@ -4,7 +4,9 @@
 - [x] Audit scheduler, detected releases, attempts and partial writes without changing live data
 - [x] Dry-run exact October 28, November 4 and November 11 CMS snapshots chronologically and run existing invariant tests; 57 passed
 - [x] Prepare root cause, proposed durable retry/timeout repair, rollback and public wording for review
-- [ ] Implement reviewed repair and verify private admin view (blocker: review of proposal; no deployment, sends or publication-pointer changes authorized)
+- [x] Implement reviewed durable attempts, isolated validation, timeout display, sanitized failures and immutable Movers; 63 tests passed
+- [x] Verify private admin table and exact CMS staging/comparison through real signed-in controls; three missing releases await review, public October 21 unchanged
+- [ ] Finalize missing releases, restore corrupted October 21 derived Movers and connect scheduler orchestration (blocker: separate live finalization/deployment/scheduler authorization)
 
 ## October 21 published-release consistency
 - [x] Inspect current ingestion, publication, search, drug pages and public statistics; confirmed October 28 raw data versus October 14 pointer and unlinked legacy Movers

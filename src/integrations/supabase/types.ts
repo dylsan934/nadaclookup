@@ -238,97 +238,133 @@ export type Database = {
       }
       nadac_import_runs: {
         Row: {
+          active_stage: string | null
           added_count: number
+          artifact_verified: boolean
           baseline: boolean
           checksum: string
           completed_at: string | null
           current_price_status: string
+          dataset_id: string | null
+          deadline_at: string | null
+          detected_at: string
           digest_status: string
+          download_status: string
           drug_page_status: string
           expected_count: number
           failure_reason: string | null
+          failure_stage: string | null
           freshness_status: string
           historical: boolean
           homepage_status: string
           id: string
           ingested_at: string | null
+          last_attempt_at: string | null
           movers_status: string
           non_comparable_count: number
           previous_run_id: string | null
+          published_at: string | null
           record_count: number
           rejected_count: number
           removed_count: number
+          retry_count: number
           search_status: string
           source_date: string
           source_effective_date: string | null
+          source_url: string | null
           started_at: string
           status: string
           top_decreases: Json
           top_increases: Json
           total_changed: number
           unchanged_count: number
+          validation_status: string
         }
         Insert: {
+          active_stage?: string | null
           added_count?: number
+          artifact_verified?: boolean
           baseline?: boolean
           checksum: string
           completed_at?: string | null
           current_price_status?: string
+          dataset_id?: string | null
+          deadline_at?: string | null
+          detected_at?: string
           digest_status?: string
+          download_status?: string
           drug_page_status?: string
           expected_count: number
           failure_reason?: string | null
+          failure_stage?: string | null
           freshness_status?: string
           historical?: boolean
           homepage_status?: string
           id?: string
           ingested_at?: string | null
+          last_attempt_at?: string | null
           movers_status?: string
           non_comparable_count?: number
           previous_run_id?: string | null
+          published_at?: string | null
           record_count?: number
           rejected_count?: number
           removed_count?: number
+          retry_count?: number
           search_status?: string
           source_date: string
           source_effective_date?: string | null
+          source_url?: string | null
           started_at?: string
           status?: string
           top_decreases?: Json
           top_increases?: Json
           total_changed?: number
           unchanged_count?: number
+          validation_status?: string
         }
         Update: {
+          active_stage?: string | null
           added_count?: number
+          artifact_verified?: boolean
           baseline?: boolean
           checksum?: string
           completed_at?: string | null
           current_price_status?: string
+          dataset_id?: string | null
+          deadline_at?: string | null
+          detected_at?: string
           digest_status?: string
+          download_status?: string
           drug_page_status?: string
           expected_count?: number
           failure_reason?: string | null
+          failure_stage?: string | null
           freshness_status?: string
           historical?: boolean
           homepage_status?: string
           id?: string
           ingested_at?: string | null
+          last_attempt_at?: string | null
           movers_status?: string
           non_comparable_count?: number
           previous_run_id?: string | null
+          published_at?: string | null
           record_count?: number
           rejected_count?: number
           removed_count?: number
+          retry_count?: number
           search_status?: string
           source_date?: string
           source_effective_date?: string | null
+          source_url?: string | null
           started_at?: string
           status?: string
           top_decreases?: Json
           top_increases?: Json
           total_changed?: number
           unchanged_count?: number
+          validation_status?: string
         }
         Relationships: [
           {
@@ -397,6 +433,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "nadac_release_records_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "nadac_import_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nadac_run_attempts: {
+        Row: {
+          id: number
+          occurred_at: string
+          outcome: string
+          reason: string | null
+          record_count: number
+          retry_count: number
+          run_id: string
+          stage: string
+        }
+        Insert: {
+          id?: never
+          occurred_at?: string
+          outcome: string
+          reason?: string | null
+          record_count?: number
+          retry_count?: number
+          run_id: string
+          stage: string
+        }
+        Update: {
+          id?: never
+          occurred_at?: string
+          outcome?: string
+          reason?: string | null
+          record_count?: number
+          retry_count?: number
+          run_id?: string
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nadac_run_attempts_run_id_fkey"
             columns: ["run_id"]
             isOneToOne: false
             referencedRelation: "nadac_import_runs"
@@ -931,16 +1008,78 @@ export type Database = {
         Returns: string
       }
       nadac_compare_run: { Args: { p_run: string }; Returns: undefined }
+      nadac_complete_stage: {
+        Args: { p_run: string; p_stage: string }
+        Returns: undefined
+      }
+      nadac_detect_release: {
+        Args: { p_dataset: string; p_source: string; p_url: string }
+        Returns: string
+      }
       nadac_enqueue_saved_alert: {
         Args: { p_event: string; p_payload: Json }
         Returns: Json
       }
+      nadac_expire_runs: { Args: never; Returns: number }
       nadac_fail_run: {
         Args: { p_reason: string; p_run: string; p_stage: string }
         Returns: undefined
       }
       nadac_finalize_run: { Args: { p_run: string }; Returns: undefined }
+      nadac_link_previous: { Args: { p_run: string }; Returns: undefined }
       nadac_ndc_count: { Args: never; Returns: number }
+      nadac_pipeline_status: {
+        Args: never
+        Returns: {
+          active_stage: string | null
+          added_count: number
+          artifact_verified: boolean
+          baseline: boolean
+          checksum: string
+          completed_at: string | null
+          current_price_status: string
+          dataset_id: string | null
+          deadline_at: string | null
+          detected_at: string
+          digest_status: string
+          download_status: string
+          drug_page_status: string
+          expected_count: number
+          failure_reason: string | null
+          failure_stage: string | null
+          freshness_status: string
+          historical: boolean
+          homepage_status: string
+          id: string
+          ingested_at: string | null
+          last_attempt_at: string | null
+          movers_status: string
+          non_comparable_count: number
+          previous_run_id: string | null
+          published_at: string | null
+          record_count: number
+          rejected_count: number
+          removed_count: number
+          retry_count: number
+          search_status: string
+          source_date: string
+          source_effective_date: string | null
+          source_url: string | null
+          started_at: string
+          status: string
+          top_decreases: Json
+          top_increases: Json
+          total_changed: number
+          unchanged_count: number
+          validation_status: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "nadac_import_runs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       nadac_prepare_digest: {
         Args: { p_recipients: Json; p_run: string }
         Returns: number
@@ -952,6 +1091,10 @@ export type Database = {
       nadac_stage_records: {
         Args: { p_records: Json; p_run: string }
         Returns: number
+      }
+      nadac_start_stage: {
+        Args: { p_retry?: boolean; p_run: string; p_stage: string }
+        Returns: undefined
       }
       nadac_validate_run: { Args: { p_run: string }; Returns: undefined }
       read_email_batch: {

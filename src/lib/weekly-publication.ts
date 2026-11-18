@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 export const moverSchema = z.object({ ndc: z.string(), drugName: z.string(), oldPrice: z.number(), newPrice: z.number(), pctChange: z.number(), pricingUnit: z.string() });
 export const publicationSchema = z.object({
+  publicationDelayed:z.boolean().optional(),
   runId: z.string().nullable(), currentDate: z.string().nullable(), previousDate: z.string().nullable(), completedAt: z.string().nullable(), pendingDate: z.string().nullable(), totalRecords: z.number(),
   topIncreases: z.array(moverSchema), topDecreases: z.array(moverSchema), totalChanged: z.number().nullable(), added: z.number().nullable(), removed: z.number().nullable(), nonComparable: z.number().nullable(),
   rejected:z.number().nullable().optional(), currentPriceStatus:z.string().nullable().optional(), drugPageStatus:z.string().nullable().optional(),
@@ -32,7 +33,7 @@ export function parseRelease(csv: string, sourceDate: string): ReleaseRecord[] {
   });
 }
 export function visiblePublication(p: WeeklyPublication) {
-  const current = !!p.runId && !p.pendingDate && p.invariant?.ok !== false;
+  const current = !!p.runId && !p.pendingDate && !p.publicationDelayed && p.invariant?.ok !== false;
   const movers = current ? [...p.topIncreases,...p.topDecreases] : [];
   const biggestMover = movers.reduce<z.infer<typeof moverSchema> | undefined>((best,m) => !best || Math.abs(m.pctChange)>Math.abs(best.pctChange) ? m : best, undefined);
   return { current, date: p.currentDate, previousDate: p.previousDate, completedAt: p.completedAt, biggestMover };

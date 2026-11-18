@@ -33,6 +33,10 @@ describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)'
   await db.exec(readFileSync('drizzle/migrations/0002_allow_cms_future_effective_records.sql','utf8'));
   await db.exec(readFileSync('drizzle/migrations/0003_preserve_release_freshness_identity.sql','utf8'));
   await db.exec(readFileSync('drizzle/migrations/0005_unified_published_nadac_snapshot.sql','utf8'));
+  await db.exec(readFileSync('drizzle/migrations/0006_durable_weekly_release_attempts.sql','utf8'));
+  await db.exec(readFileSync('drizzle/migrations/0007_complete_retryable_release_stages.sql','utf8'));
+  await db.exec(readFileSync('drizzle/migrations/0008_validated_snapshot_preview_comparisons.sql','utf8'));
+  await db.exec(readFileSync('drizzle/migrations/0009_mark_review_ready_releases.sql','utf8'));
   await db.query('begin');
   await db.query('update public.nadac_publication set current_run_id=null where id=1');
  });
@@ -45,7 +49,7 @@ describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)'
  });
  it('Movers failure after ingestion remains unfinalized and records failure',async()=>{
   const p=await completed('2026-10-07',null,true);const id=await begin('2026-10-14',p);await stage(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_fail_run',[id,'movers','fixture comparison failure']);
-  const r=await row(id);expect(r['search_status']).toBe('completed');expect(r['movers_status']).toBe('failed');expect(r['completed_at']).toBeNull();expect(r['failure_reason']).toContain('fixture comparison failure');expect((await status()).pendingDate).toBe('2026-10-14');
+  const r=await row(id);expect(r['search_status']).toBe('completed');expect(r['movers_status']).toBe('failed');expect(r['completed_at']).toBeNull();expect(r['failure_reason']).toContain('Stage failed');expect((await status()).pendingDate).toBe('2026-10-14');
  });
  it('safe retry preserves run identity, record count and one finalized result',async()=>{
   const p=await completed('2026-10-07',null,true);const id=await begin('2026-10-14',p);await stage(id);await stage(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_fail_run',[id,'movers','retry']);
@@ -78,7 +82,7 @@ describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)'
  it('newer legacy ingestion is processing without superseding finalized publication identity',async()=>{
   const p=await completed('2026-10-07',null,true);await completed('2026-10-14',p);
   await db.query("insert into public.nadac_drugs values ('00052060201','BCG (TICE STRAIN) VIAL',187.77376,'2026-10-15','EA','Community/Independent',null)");
-  const s=await status();expect(s.currentDate).toBe('2026-10-14');expect(s.pendingDate).toBe('2026-10-15');
+  const s=await status();expect(s.currentDate).toBe('2026-10-14');expect(s.pendingDate).toBeNull();
  });
  it('October 21 versus October 14 uses one immutable snapshot across public surfaces',async()=>{
   const p=await completed('2026-10-14',null,true),id=await completed('2026-10-21',p,false,'190');
@@ -109,8 +113,31 @@ describe('weekly pipeline PostgreSQL engine integration (isolated, rolled back)'
  it('reports effective-date mismatch without rewriting the original record date',async()=>{
   const p=await completed('2026-10-14',null,true),id=await begin('2026-10-21',p);
   await stage(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_compare_run',[id]);await rpc('nadac_prepare_digest',[id,'[]']);await rpc('nadac_finalize_run',[id]);
-  const report=await rpc('nadac_public_invariant',[]);expect(report.ok).toBe(true);expect(report.effectiveDateMismatch).toBe(true);expect(report.maxSearchableEffectiveDate).toBe('2026-10-07');expect(report.homepagePublicationDate).toBe('2026-10-21');
+  const report=await rpc('nadac_public_invariant',[]);expect(report.ok).toBe(true);expect(report.effectiveDateMismatch).toBe(false);expect(report.maxSearchableEffectiveDate).toBe('2026-10-07');expect(report.homepagePublicationDate).toBe('2026-10-21');
   expect((await db.query<Record<string,any>>('select effective_date::text date from nadac_published_drugs')).rows[0]?.['date']).toBe('2026-10-07');
+ });
+ it('later release validates independently after earlier failure',async()=>{
+  const p=await completed('2026-10-21',null,true),a=await begin('2026-10-28',p);await rpc('nadac_fail_run',[a,'download','failure']);
+  const b=await begin('2026-11-04',a);await stage(b);await rpc('nadac_validate_run',[b]);expect((await row(b))['validation_status']).toBe('completed');
+  await db.query('savepoint gap');await expect(rpc('nadac_compare_run',[b])).rejects.toThrow('Immediately preceding');await db.query('rollback to savepoint gap');expect((await row(a))['status']).toBe('failed');
+ });
+ it('two-hour deadline exposes and persists timeout, retry increments once',async()=>{
+  const p=await completed('2026-10-21',null,true),id=await begin('2026-10-28',p);await rpc('nadac_start_stage',[id,'download',false]);
+  await db.query("update nadac_import_runs set deadline_at=now()-interval '1 second' where id=$1",[id]);
+  const rows=(await db.query<Record<string,any>>('select * from nadac_pipeline_status()')).rows;expect(rows.find(r=>r['id']===id)?.['status']).toBe('failed');expect((await status()).publicationDelayed).toBe(true);
+  expect(await rpc('nadac_expire_runs',[])).toBe(1);expect(await rpc('nadac_expire_runs',[])).toBe(0);expect((await row(id))['failure_stage']).toBe('download');await rpc('nadac_start_stage',[id,'download',true]);expect((await row(id))['retry_count']).toBe(1);
+ });
+ it('distinct release detections retain independent identities',async()=>{
+  const url='https://data.medicaid.gov/api/test',dataset='fbb83258-11c7-47f5-8b18-5f8e79f7e704';const a=await rpc('nadac_detect_release',['2026-10-28',url,dataset]),b=await rpc('nadac_detect_release',['2026-11-04',url,dataset]);expect(a).not.toBe(b);expect(await rpc('nadac_detect_release',['2026-10-28',url,dataset])).toBe(a);
+ });
+ it('finalized Movers resist legacy overwrite',async()=>{
+  const p=await completed('2026-10-21',null,true),id=await completed('2026-10-28',p);await db.query('savepoint overwrite');await expect(db.query('update weekly_movers set total_changed=1000 where run_id=$1',[id])).rejects.toThrow('immutable');await db.query('rollback to savepoint overwrite');expect((await rpc('nadac_public_invariant',[])).ok).toBe(true);
+ });
+ it('private completed preparation awaits review without changing public release',async()=>{
+  const p=await completed('2026-10-21',null,true),id=await begin('2026-10-28',p);await stage(id);await rpc('nadac_validate_run',[id]);await rpc('nadac_compare_run',[id]);await rpc('nadac_prepare_digest',[id,'[]']);await rpc('nadac_complete_stage',[id,'digest']);expect((await row(id))['status']).toBe('awaiting_review');expect((await row(id))['deadline_at']).toBeNull();expect((await status()).runId).not.toBe(id);
+ });
+ it('sanitizes failure details before saving history',async()=>{
+  const p=await completed('2026-10-21',null,true),id=await begin('2026-10-28',p);await rpc('nadac_fail_run',[id,'download','https://private.test?token=SECRET person@example.test']);const r=await row(id);expect(r['failure_reason']).not.toContain('SECRET');expect(r['failure_reason']).not.toContain('@');expect(r['failure_stage']).toBe('download');
  });
 });
 it('CSV retains exact decimal price and leading-zero NDC while separating source dates',()=>{
